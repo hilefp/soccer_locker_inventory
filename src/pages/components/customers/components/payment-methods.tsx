@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { toAbsoluteUrl } from "@/lib/helpers";    
+import { toAbsoluteUrl } from "@/shared/lib/helpers";    
 import { Link } from "react-router";
 
 const paymentMethods = [

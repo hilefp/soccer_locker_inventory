@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Column } from '@tanstack/react-table';
 import { Check, CirclePlus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {

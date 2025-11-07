@@ -4,7 +4,7 @@ import * as React from 'react';
 import { cva, VariantProps } from 'class-variance-authority';
 import { Circle } from 'lucide-react';
 import { RadioGroup as RadioGroupPrimitive } from 'radix-ui';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 type RadioVariant = 'primary' | 'mono';
 type RadioSize = 'sm' | 'md' | 'lg';

@@ -7,7 +7,7 @@ import {
   SortingState,
   Table,
 } from '@tanstack/react-table';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 declare module '@tanstack/react-table' {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

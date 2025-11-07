@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Slider, SliderThumb } from "@/components/ui/slider"
 import { Bolt, FolderSymlink, Radar, TrendingUp } from "lucide-react"
-import { toAbsoluteUrl } from "@/lib/helpers"
+import { toAbsoluteUrl } from "@/shared/lib/helpers"
 import { Separator } from "@/components/ui/separator" 
 
 const tiers = [

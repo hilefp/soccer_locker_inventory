@@ -1,5 +1,5 @@
 import { LoaderCircleIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 export function ContentLoader({ className }: { className?: string }) {
   return (

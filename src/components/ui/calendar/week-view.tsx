@@ -18,7 +18,7 @@ import {
   startOfWeek,
 } from "date-fns"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/shared/lib/utils"
 import type { CalendarEvent } from "./types"
 import { EndHour, StartHour, WeekCellsHeight } from "./constants"
 import { DraggableEvent } from "./draggable-event"

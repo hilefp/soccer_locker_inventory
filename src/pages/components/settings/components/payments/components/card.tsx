@@ -1,7 +1,7 @@
 'use client';
 
 import { Card } from "@/components/ui/card";
-import { toAbsoluteUrl } from "@/lib/helpers";
+import { toAbsoluteUrl } from "@/shared/lib/helpers";
 import { Circle, CircleCheck } from "lucide-react";
 import { useState } from "react";
 

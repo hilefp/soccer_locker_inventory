@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { toAbsoluteUrl } from "@/lib/helpers";
+import { toAbsoluteUrl } from "@/shared/lib/helpers";
 import { useState } from "react";
 
 export function DigitalWallets() {

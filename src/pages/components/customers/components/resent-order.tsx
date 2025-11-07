@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, TrendingUp } from "lucide-react";
-import { toAbsoluteUrl } from "@/lib/helpers";
+import { toAbsoluteUrl } from "@/shared/lib/helpers";
 import { Link } from "react-router";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 

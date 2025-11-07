@@ -1,8 +1,8 @@
 import { ChevronDown } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { MenuConfig } from '@/config/types';
-import { cn } from '@/lib/utils';
-import { useMenu } from '@/hooks/use-menu';
+import { cn } from '@/shared/lib/utils';
+import { useMenu } from '@/shared/hooks/use-menu';
 import {
   Menubar,
   MenubarContent,

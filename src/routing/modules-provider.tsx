@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { DefaultLayout } from '@/layout';
+import { DefaultLayout } from '@/layout/DefaultLayout';
 import { AllStock } from '@/pages/all-stock/page';
 import { CategoryDetails } from '@/pages/category-details/page';
 import { CategoryList } from '@/pages/category-list/page';
@@ -28,6 +28,10 @@ import { StockPlanner } from '@/pages/stock-planner/page';
 import { TrackShippingPage } from '@/pages/track-shipping/page';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ScreenLoader } from '@/components/screen-loader';
+import { authRoutes } from '@/modules/auth/routes';
+import { RenderRouteTree } from '@/shared/lib/router-helper';
+import { ProtectedRoute } from '@/modules/auth/components/ProtectedRoute';
+import { AuthRedirect } from './AuthRedirect';
 
 export function ModulesProvider() {
   return (
@@ -37,9 +41,14 @@ export function ModulesProvider() {
         element={
           <Suspense fallback={<ScreenLoader />}>
             <Routes>
-              <Route element={<DefaultLayout />}>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
+              <Route path="auth/*" element={<RenderRouteTree route={authRoutes} />} />
+              <Route index element={<AuthRedirect />} />
+              <Route path="login" element={<AuthRedirect />} />
+
+              {/* Protected Routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route element={<DefaultLayout />}>
+                  <Route path="dashboard" element={<Dashboard />} />
                 <Route path="dark-sidebar" element={<Dashboard />} />
                 <Route path="all-stock" element={<AllStock />} />
                 <Route path="current-stock" element={<CurrentStock />} />
@@ -88,6 +97,7 @@ export function ModulesProvider() {
                 <Route path="order-details" element={<OrderDetailsPage />} />
                 <Route path="order-tracking" element={<OrderTrackingPage />} />
                 <Route path="customer-list" element={<CustomerList />} />
+                </Route>
               </Route>
             </Routes>
           </Suspense>

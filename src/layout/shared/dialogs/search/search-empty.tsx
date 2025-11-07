@@ -1,4 +1,4 @@
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import { Button } from '@/components/ui/button';
 
 export function SearchEmpty() {

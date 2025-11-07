@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Check, ChevronRight, Circle } from 'lucide-react';
 import { Menubar as MenubarPrimitive } from 'radix-ui';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 function MenubarMenu({
   ...props

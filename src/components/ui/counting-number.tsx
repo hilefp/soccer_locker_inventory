@@ -8,7 +8,7 @@ import {
   type UseInViewOptions,
   useMotionValue,
 } from 'motion/react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 interface CountingNumberProps {
   from?: number;

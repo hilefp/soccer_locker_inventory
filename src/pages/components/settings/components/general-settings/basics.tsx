@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input, InputAddon, InputGroup } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { toAbsoluteUrl } from "@/lib/helpers";
+import { toAbsoluteUrl } from "@/shared/lib/helpers";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
