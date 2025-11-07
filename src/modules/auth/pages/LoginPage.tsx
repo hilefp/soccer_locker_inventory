@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Icons } from '@/layout/shared/common/icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   AlertCircle,
@@ -9,7 +8,7 @@ import {
   LoaderCircleIcon,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -26,15 +25,14 @@ import {
   getSigninSchema,
   SigninSchemaType,
 } from '@/modules/auth/schemas/signin-schema';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
 
 export function LoginPage() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const { login, isLoading, error: authError, clearError } = useAuth();
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   // Check for success message from password reset or error messages
   useEffect(() => {
@@ -79,16 +77,34 @@ export function LoginPage() {
   const form = useForm<SigninSchemaType>({
     resolver: zodResolver(getSigninSchema()),
     defaultValues: {
-      email: 'demo@kt.com',
-      password: 'demo123',
+      email: 'superadmin@soccerlocker.com',
+      password: 'Admin123456',
       rememberMe: true,
     },
   });
 
-  async function onSubmit(values: SigninSchemaType) {}
+  async function onSubmit(values: SigninSchemaType) {
+    clearError();
+    setError(null);
 
-  // Handle Google Sign In with Supabase OAuth
-  const handleGoogleSignIn = async () => {};
+    try {
+      await login({
+        email: values.email,
+        password: values.password,
+      });
+      // Navigation is handled by useAuth hook
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
+      setError(errorMessage);
+    }
+  }
+
+  // Sync auth store error with local error state
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
 
   return (
     <Form {...form}>
@@ -101,45 +117,6 @@ export function LoginPage() {
           <p className="text-sm text-muted-foreground">
             Welcome back! Log in with your credentials.
           </p>
-        </div>
-
-        <Alert appearance="light" size="sm" close={false}>
-          <AlertIcon>
-            <AlertCircle className="text-primary" />
-          </AlertIcon>
-          <AlertTitle className="text-accent-foreground">
-            Use <strong>demo@kt.com</strong> username and {` `}
-            <strong>demo123</strong> password for demo access.
-          </AlertTitle>
-        </Alert>
-
-        <div className="flex flex-col gap-3.5">
-          <Button
-            variant="outline"
-            type="button"
-            onClick={handleGoogleSignIn}
-            disabled={isGoogleLoading}
-          >
-            {isGoogleLoading ? (
-              <span className="flex items-center gap-2">
-                <LoaderCircleIcon className="size-4! animate-spin" /> Signing in
-                with Google...
-              </span>
-            ) : (
-              <>
-                <Icons.googleColorful className="size-5!" /> Sign in with Google
-              </>
-            )}
-          </Button>
-        </div>
-
-        <div className="relative py-1.5">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">or</span>
-          </div>
         </div>
 
         {error && (
@@ -239,25 +216,17 @@ export function LoginPage() {
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isProcessing}>
-          {isProcessing ? (
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
             <span className="flex items-center gap-2">
-              <LoaderCircleIcon className="h-4 w-4 animate-spin" /> Loading...
+              <LoaderCircleIcon className="h-4 w-4 animate-spin" /> Signing In...
             </span>
           ) : (
             'Sign In'
           )}
         </Button>
 
-        <div className="text-center text-sm text-muted-foreground">
-          Don't have an account?{' '}
-          <Link
-            to="/auth/signup"
-            className="text-sm font-semibold text-foreground hover:text-primary"
-          >
-            Sign Up
-          </Link>
-        </div>
+
       </form>
     </Form>
   );

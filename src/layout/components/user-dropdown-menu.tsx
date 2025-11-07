@@ -33,12 +33,18 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
 
 export function UserDropdownMenu() {
   const { theme, setTheme } = useTheme();
+  const { user, logout } = useAuth();
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
+  const handleLogout = () => {
+    logout();
   };
 
   return (
@@ -66,16 +72,22 @@ export function UserDropdownMenu() {
           <Avatar>
             <AvatarImage
               src={toAbsoluteUrl('/media/avatars/300-2.png')}
-              alt="@reui"
+              alt={user?.email || 'User'}
             />
-            <AvatarFallback>S</AvatarFallback>
+            <AvatarFallback>
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
+            </AvatarFallback>
             <AvatarIndicator className="-end-1.5 -top-1.5">
               <AvatarStatus variant="online" className="size-2.5" />
             </AvatarIndicator>
           </Avatar>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-foreground">Sean</span>
-            <span className="text-xs text-muted-foreground">Online</span>
+            <span className="text-sm font-semibold text-foreground">
+              {user?.email?.split('@')[0] || 'User'}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {user?.roles?.join(', ') || 'Online'}
+            </span>
           </div>
         </div>
 
@@ -160,7 +172,7 @@ export function UserDropdownMenu() {
         <DropdownMenuSeparator />
 
         {/* Action Items */}
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
           <LogOut />
           <span>Log out</span>
         </DropdownMenuItem>
