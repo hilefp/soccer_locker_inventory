@@ -29,7 +29,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Slot } from '@radix-ui/react-slot';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 interface KanbanContextProps<T> {
   columns: Record<string, T[]>;

@@ -5,7 +5,7 @@ import * as React from 'react';
 import { ItemInstance } from '@headless-tree/core';
 import { ChevronDownIcon, SquareMinus, SquarePlus } from 'lucide-react';
 import { Slot as SlotPrimitive } from 'radix-ui';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 type ToggleIconType = 'chevron' | 'plus-minus';
 

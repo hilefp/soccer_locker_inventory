@@ -1,6 +1,6 @@
 import { EllipsisVertical } from 'lucide-react';
 import { Link } from 'react-router';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import {
   AccordionMenu,
   AccordionMenuGroup,

@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

@@ -13,7 +13,7 @@ import {
   startOfDay,
 } from "date-fns"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/shared/lib/utils"
 import type { CalendarEvent } from "./types"
 import { DraggableEvent } from "./draggable-event"
 import { DroppableCell } from "./droppable-cell"

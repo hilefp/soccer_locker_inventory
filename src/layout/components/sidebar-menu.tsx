@@ -4,7 +4,7 @@ import { type JSX, useCallback } from 'react';
 import { MENU_SIDEBAR } from   '@/config/app.config';
 import { type MenuConfig, type MenuItem } from '@/config/types';
 import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import {
   AccordionMenu,
   type AccordionMenuClassNames,

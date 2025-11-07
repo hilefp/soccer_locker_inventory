@@ -4,7 +4,7 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { ChevronDown, Plus } from 'lucide-react';
 import { Accordion as AccordionPrimitive } from 'radix-ui';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 // Variants
 const accordionRootVariants = cva('', {

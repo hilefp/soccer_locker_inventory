@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import {
   Card,
   CardFooter,
@@ -50,7 +50,7 @@ import type { VariantProps } from 'class-variance-authority';
 import { Settings, Pencil } from 'lucide-react';
 import { DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 // ---- DATA TYPE ----
 export interface OrderItemData {

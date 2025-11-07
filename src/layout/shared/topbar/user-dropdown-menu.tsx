@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Link } from 'react-router';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {

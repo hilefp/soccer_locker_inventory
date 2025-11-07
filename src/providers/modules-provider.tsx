@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
-import { DefaultLayout } from '@/layout';
+import { DefaultLayout } from '@/layout/DefaultLayout';
+import { BrandedLayout } from '@/layout/branded';
+import { LoginPage } from '@/modules/auth/pages/LoginPage';
 import { AllStock } from '@/pages/all-stock/page';
 import { CategoryDetails } from '@/pages/category-details/page';
 import { CategoryList } from '@/pages/category-list/page';
@@ -28,6 +30,8 @@ import { StockPlanner } from '@/pages/stock-planner/page';
 import { TrackShippingPage } from '@/pages/track-shipping/page';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ScreenLoader } from '@/components/screen-loader';
+import { authRoutes } from '@/modules/auth/routes';
+import { RenderRouteTree } from '@/shared/lib/router-helper';
 
 export function ModulesProvider() {
   return (
@@ -37,6 +41,8 @@ export function ModulesProvider() {
         element={
           <Suspense fallback={<ScreenLoader />}>
             <Routes>
+              <Route path="auth/*" element={<RenderRouteTree route={authRoutes} />} />
+
               <Route element={<DefaultLayout />}>
                 <Route index element={<Navigate to="dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />

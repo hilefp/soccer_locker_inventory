@@ -8,7 +8,7 @@ import {
   UseInViewOptions,
   Variants,
 } from 'motion/react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 interface WordRotateProps extends Omit<MotionProps, 'children'> {
   words: string[];

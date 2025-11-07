@@ -14,7 +14,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import {
   Avatar,
   AvatarFallback,

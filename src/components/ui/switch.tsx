@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Switch as SwitchPrimitive } from 'radix-ui';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 // Define a context for `permanent` state
 const SwitchContext = React.createContext<{ permanent: boolean }>({

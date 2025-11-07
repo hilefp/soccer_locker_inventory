@@ -25,7 +25,7 @@ import {
   Link,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,

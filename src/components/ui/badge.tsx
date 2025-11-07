@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot as SlotPrimitive } from 'radix-ui';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,

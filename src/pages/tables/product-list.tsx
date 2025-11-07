@@ -24,7 +24,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -62,7 +62,7 @@ import {
 import { ProductFormSheet } from '../components/product-form-sheet';
 import { ProductDetailsAnalyticsSheet } from '../components/product-details-analytics-sheet';
 import { ManageVariantsSheet } from '../components/manage-variants';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 interface IColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>;

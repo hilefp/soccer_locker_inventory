@@ -9,7 +9,7 @@ import {
   useSpring,
   useTransform,
 } from 'motion/react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 type AnimationVariantType =
   | 'spring'

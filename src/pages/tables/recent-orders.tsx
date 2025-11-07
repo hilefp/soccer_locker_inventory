@@ -15,7 +15,7 @@ import {
 } from '@tanstack/react-table';
 import { Info, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

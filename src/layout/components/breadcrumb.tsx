@@ -3,8 +3,8 @@ import { MENU_SIDEBAR } from '@/config/app.config';
 import { type MenuItem } from '@/config/types';
 import { ChevronRight } from 'lucide-react';
 import { useLocation } from 'react-router';
-import { cn } from '@/lib/utils';
-import { useMenu } from '@/hooks/use-menu';
+import { cn } from '@/shared/lib/utils';
+import { useMenu } from '@/shared/hooks/use-menu';
 
 export function Breadcrumb() {
   const { pathname } = useLocation();

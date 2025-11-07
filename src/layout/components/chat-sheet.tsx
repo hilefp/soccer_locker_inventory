@@ -9,8 +9,8 @@ import {
   Users,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { toAbsoluteUrl } from '@/lib/helpers';
-import { cn } from '@/lib/utils';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
+import { cn } from '@/shared/lib/utils';
 import {
   Avatar,
   AvatarFallback,

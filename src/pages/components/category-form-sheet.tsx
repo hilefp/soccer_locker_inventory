@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { X, Image as ImageIcon } from 'lucide-react';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

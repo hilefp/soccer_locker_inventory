@@ -25,7 +25,7 @@ import {
   StepperTitle,
   StepperTrigger,
 } from '@/components/ui/stepper';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 
 interface TrackShippingSheetProps {
   open: boolean;

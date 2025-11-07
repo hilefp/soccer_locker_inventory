@@ -26,7 +26,7 @@ import {
   TriangleAlert,
   XIcon,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import {
   Alert,
   AlertContent,
@@ -37,7 +37,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 
 interface ImageFile {
   id: string;

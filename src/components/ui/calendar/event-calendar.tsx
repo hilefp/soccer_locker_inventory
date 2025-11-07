@@ -22,7 +22,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/shared/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,

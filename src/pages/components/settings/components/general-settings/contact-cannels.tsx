@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input, InputAddon, InputGroup, InputWrapper } from "@/components/ui/input";
 import { Label } from "@/components/ui/label"; 
-import { toAbsoluteUrl } from "@/lib/helpers";
+import { toAbsoluteUrl } from "@/shared/lib/helpers";
 import { CircleCheck, SquarePlus } from "lucide-react"; 
 
 export function ContactChannels() { 
