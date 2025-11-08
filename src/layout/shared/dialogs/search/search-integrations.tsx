@@ -4,9 +4,9 @@ import {
   AccordionMenu,
   AccordionMenuGroup,
   AccordionMenuItem,
-} from '@/components/ui/accordion-menu';
-import { Button } from '@/components/ui/button';
-import { AvatarGroup } from '@/components/layouts/layout-1/shared/common/avatar-group';
+} from '@/shared/components/ui/accordion-menu';
+import { Button } from '@/shared/components/ui/button';
+import { AvatarGroup } from '@/shared/components/layouts/layout-1/shared/common/avatar-group';
 import { SearchIntegrationsItem } from './types';
 
 export function SearchIntegrations({

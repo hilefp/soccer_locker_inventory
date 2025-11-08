@@ -12,7 +12,7 @@ import {
   UserRoundPen,
   UserRoundPlus,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import {
   Dialog,
   DialogBody,
@@ -21,11 +21,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DropdownMenu4 } from '@/components/layouts/layout-1/shared/dropdown-menu/dropdown-menu-4';
+} from '@/shared/components/ui/dialog';
+import { Input } from '@/shared/components/ui/input';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { DropdownMenu4 } from '@/shared/components/layouts/layout-1/shared/dropdown-menu/dropdown-menu-4';
 import {
   SearchDocs,
   SearchDocsItem,

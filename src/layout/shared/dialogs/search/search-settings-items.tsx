@@ -1,4 +1,4 @@
-import { AccordionMenuItem } from '@/components/ui/accordion-menu';
+import { AccordionMenuItem } from '@/shared/components/ui/accordion-menu';
 import { SearchSettingsItem } from './types';
 
 export function SearchSettingsItems({
