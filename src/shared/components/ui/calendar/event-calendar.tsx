@@ -23,14 +23,14 @@ import {
 import { toast } from "sonner"
 
 import { cn } from "@/shared/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/shared/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/shared/components/ui/dropdown-menu"
 import type { CalendarEvent, CalendarView } from "./types"
 import { AgendaDaysToShow, EventGap, EventHeight, WeekCellsHeight } from "./constants"
 import { AgendaView } from "./agenda-view"

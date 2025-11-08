@@ -3,8 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { MenuConfig } from '@/config/types';
 import { cn } from '@/shared/lib/utils';
 import { useMenu } from '@/shared/hooks/use-menu';
-import { Badge } from '@/components/ui/badge';
-import { NavigationMenuLink } from '@/components/ui/navigation-menu';
+import { Badge } from '@/shared/components/ui/badge';
+import { NavigationMenuLink } from '@/shared/components/ui/navigation-menu';
 
 const MegaMenuSubDefault = (items: MenuConfig) => {
   const { pathname } = useLocation();

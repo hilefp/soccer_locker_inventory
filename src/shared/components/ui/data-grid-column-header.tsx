@@ -13,8 +13,8 @@ import {
   Settings2,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
-import { Button } from '@/components/ui/button';
-import { useDataGrid } from '@/components/ui/data-grid';
+import { Button } from '@/shared/components/ui/button';
+import { useDataGrid } from '@/shared/components/ui/data-grid';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -27,7 +27,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/shared/components/ui/dropdown-menu';
 
 interface DataGridColumnHeaderProps<TData, TValue>
   extends HTMLAttributes<HTMLDivElement> {

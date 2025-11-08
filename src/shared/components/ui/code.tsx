@@ -4,7 +4,7 @@ import { Check, Copy } from 'lucide-react';
 import { Slot as SlotPrimitive } from 'radix-ui';
 import { cn } from '@/shared/lib/utils';
 import { useCopyToClipboard } from '@/shared/hooks/use-copy-to-clipboard';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 
 export interface CodeProps
   extends React.HTMLAttributes<HTMLElement>,

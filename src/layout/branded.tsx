@@ -1,6 +1,6 @@
 import { Link, Outlet } from 'react-router-dom';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/shared/components/ui/card';
 
 export function BrandedLayout() {
   return (

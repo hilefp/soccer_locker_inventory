@@ -15,7 +15,7 @@ import {
   TimeValue as TimeValueRa,
 } from 'react-aria-components';
 import { cn } from '@/shared/lib/utils';
-import { inputVariants } from '@/components/ui/input';
+import { inputVariants } from '@/shared/components/ui/input';
 
 function DateField<T extends DateValueRa>({
   className,

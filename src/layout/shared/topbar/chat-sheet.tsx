@@ -17,8 +17,8 @@ import {
   AvatarImage,
   AvatarIndicator,
   AvatarStatus,
-} from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+} from '@/shared/components/ui/avatar';
+import { Button } from '@/shared/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,8 +28,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
+} from '@/shared/components/ui/dropdown-menu';
+import { Input } from '@/shared/components/ui/input';
 import {
   Sheet,
   SheetBody,
@@ -38,8 +38,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
-import { AvatarGroup } from '@/components/layouts/layout-1/shared/common/avatar-group';
+} from '@/shared/components/ui/sheet';
+import { AvatarGroup } from '@/shared/components/layouts/layout-1/shared/common/avatar-group';
 
 interface Message {
   avatar: string;

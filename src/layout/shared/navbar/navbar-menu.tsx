@@ -12,7 +12,7 @@ import {
   MenubarSubContent,
   MenubarSubTrigger,
   MenubarTrigger,
-} from '@/components/ui/menubar';
+} from '@/shared/components/ui/menubar';
 
 const NavbarMenu = ({ items }: { items: MenuConfig }) => {
   const { pathname } = useLocation();

@@ -10,8 +10,8 @@ import {
 } from '@tanstack/react-table';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/shared/lib/utils';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useDataGrid } from '@/components/ui/data-grid';
+import { Checkbox } from '@/shared/components/ui/checkbox';
+import { useDataGrid } from '@/shared/components/ui/data-grid';
 
 const headerCellSpacingVariants = cva('', {
   variants: {

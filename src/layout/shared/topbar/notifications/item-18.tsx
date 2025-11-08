@@ -6,8 +6,8 @@ import {
   AvatarImage,
   AvatarIndicator,
   AvatarStatus,
-} from '@/components/ui/avatar';
-import { Card } from '@/components/ui/card';
+} from '@/shared/components/ui/avatar';
+import { Card } from '@/shared/components/ui/card';
 
 interface IItem18Item {
   image: string;

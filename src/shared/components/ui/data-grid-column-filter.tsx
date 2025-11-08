@@ -2,8 +2,8 @@ import * as React from 'react';
 import { Column } from '@tanstack/react-table';
 import { Check, CirclePlus } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -12,13 +12,13 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from '@/components/ui/command';
+} from '@/shared/components/ui/command';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
+} from '@/shared/components/ui/popover';
+import { Separator } from '@/shared/components/ui/separator';
 
 interface DataGridColumnFilterProps<TData, TValue> {
   column?: Column<TData, TValue>;

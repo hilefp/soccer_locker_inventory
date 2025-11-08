@@ -1,5 +1,5 @@
 import { MenuConfig, MenuItem } from '@/config/types';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/shared/components/ui/badge';
 import {
   MegaMenuFooter,
   MegaMenuSubDefault,

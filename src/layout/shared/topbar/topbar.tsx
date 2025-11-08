@@ -1,8 +1,8 @@
 import { Heart, Search, ShoppingCart, UserCircle } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
 import { useStoreClient } from './context';
 import { UserDropdownMenu } from './user-dropdown-menu';
 

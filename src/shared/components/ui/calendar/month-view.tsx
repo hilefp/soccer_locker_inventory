@@ -18,7 +18,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/shared/components/ui/popover"
 import type { CalendarEvent } from "./types"
 import { DefaultStartHour, EventGap, EventHeight } from "./constants"
 import { DraggableEvent } from "./draggable-event"

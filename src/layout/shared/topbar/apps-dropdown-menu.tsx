@@ -1,13 +1,13 @@
 import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Switch } from '@/components/ui/switch';
+} from '@/shared/components/ui/dropdown-menu';
+import { Switch } from '@/shared/components/ui/switch';
 
 interface DropdownAppsItem {
   logo: string;

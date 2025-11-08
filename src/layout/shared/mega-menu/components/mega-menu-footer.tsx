@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { NavigationMenuLink } from '@/components/ui/navigation-menu';
+import { Button } from '@/shared/components/ui/button';
+import { NavigationMenuLink } from '@/shared/components/ui/navigation-menu';
 
 const MegaMenuFooter = () => {
   return (

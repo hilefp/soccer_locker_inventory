@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { ImageInput, ImageInputFile } from '@/components/image-input';
+} from '@/shared/components/ui/tooltip';
+import { ImageInput, ImageInputFile } from '@/shared/components/image-input';
 
 export function AvatarInput() {
   const [avatar, setAvatar] = useState<ImageInputFile[]>([
