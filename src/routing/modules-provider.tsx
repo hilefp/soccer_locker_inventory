@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 import { DefaultLayout } from '@/layout/DefaultLayout';
 import { AllStock } from '@/pages/all-stock/page';
 import { CategoryDetails } from '@/pages/category-details/page';
-import { CategoryList } from '@/pages/category-list/page';
 import { CreateCategoryPage } from '@/pages/create-category/page';
 import { CreateProductPage } from '@/pages/create-product/page';
 import { CreateShippingLabelPage } from '@/pages/create-shipping-label/page';
@@ -27,10 +26,11 @@ import { SettingsModal } from '@/pages/settings-modal/page';
 import { StockPlanner } from '@/pages/stock-planner/page';
 import { TrackShippingPage } from '@/pages/track-shipping/page';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { ScreenLoader } from '@/components/screen-loader';
+import { ScreenLoader } from '@/shared/components/screen-loader';
 import { authRoutes } from '@/modules/auth/routes';
+import { productsRoutes } from '@/modules/products/routes';
 import { RenderRouteTree } from '@/shared/lib/router-helper';
-import { ProtectedRoute } from '@/modules/auth/components/ProtectedRoute';
+import { ProtectedRoute } from '@/modules/auth/components/protected-route';
 import { AuthRedirect } from './AuthRedirect';
 
 export function ModulesProvider() {
@@ -48,6 +48,7 @@ export function ModulesProvider() {
               {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>
                 <Route element={<DefaultLayout />}>
+                  <Route path="products/*" element={<RenderRouteTree route={productsRoutes} />} />
                   <Route path="dashboard" element={<Dashboard />} />
                 <Route path="dark-sidebar" element={<Dashboard />} />
                 <Route path="all-stock" element={<AllStock />} />
@@ -82,7 +83,6 @@ export function ModulesProvider() {
                   path="manage-variants"
                   element={<ManageVariantsPage />}
                 />
-                <Route path="category-list" element={<CategoryList />} />
                 <Route
                   path="create-category"
                   element={<CreateCategoryPage />}

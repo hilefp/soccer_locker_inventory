@@ -14,9 +14,9 @@ import {
   AccordionMenuSub,
   AccordionMenuSubContent,
   AccordionMenuSubTrigger,
-} from '@/components/ui/accordion-menu';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from '@/shared/components/ui/accordion-menu';
+import { Badge } from '@/shared/components/ui/badge';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
 
 export function SidebarMenu() {
   const { pathname } = useLocation();

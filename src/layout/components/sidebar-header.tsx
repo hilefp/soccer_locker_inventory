@@ -2,7 +2,7 @@ import { ChevronFirst } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import { cn } from '@/shared/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { useLayout } from './context';
 
 export function SidebarHeader() {

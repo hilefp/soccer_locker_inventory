@@ -1,8 +1,8 @@
 import type { RouteObject } from "react-router-dom";
 import { BrandedLayout } from "@/layout/branded";
-import { LoginPage } from "./pages/LoginPage";
-import { ResetPasswordPage } from "./pages/ForgotPasswordPage";
-import { GuestRoute } from "./components/GuestRoute";
+import { LoginPage } from "./pages/login-page";
+import { ResetPasswordPage } from "./pages/forgot-password-page";
+import { GuestRoute } from "./components/guest-route";
 
 export const authRoutes: RouteObject = {
   path: "",

@@ -6,14 +6,14 @@ import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import { cn } from '@/shared/lib/utils';
 import { useIsMobile } from '@/shared/hooks/use-mobile';
 import { useScrollPosition } from '@/shared/hooks/use-scroll-position';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import {
   Sheet,
   SheetBody,
   SheetContent,
   SheetHeader,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@/shared/components/ui/sheet';
 import { AppsDropdownMenu } from './apps-dropdown-menu';
 import { Breadcrumb } from './breadcrumb';
 import { ChatSheet } from './chat-sheet';

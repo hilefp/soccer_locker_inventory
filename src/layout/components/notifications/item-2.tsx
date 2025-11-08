@@ -5,8 +5,8 @@ import {
   AvatarImage,
   AvatarIndicator,
   AvatarStatus,
-} from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+} from '@/shared/components/ui/avatar';
+import { Badge } from '@/shared/components/ui/badge';
 
 export default function Item2() {
   return (

@@ -1,4 +1,4 @@
-import { AvatarGroup } from '@/partials/common/avatar-group';
+import { AvatarGroup } from '@/layout/shared/common/avatar-group';
 import {
   CalendarDays,
   Lock,
@@ -10,14 +10,14 @@ import {
 import { Link } from 'react-router-dom';
 import {
   Avatar,
-  AvatarFallback,
+  AvatarFallback, 
   AvatarImage,
   AvatarIndicator,
   AvatarStatus,
-} from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+} from '@/shared/components/ui/avatar';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card } from '@/shared/components/ui/card';
 
 export default function Item7() {
   return (

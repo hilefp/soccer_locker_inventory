@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { PlusIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CategoryFormSheet } from '../components/category-form-sheet';
-import { CategoryListTable } from '../tables/category-list';
+import { CategoryFormSheet } from '../../modules/products/components/category-form-sheet';
+import { CategoryListTable } from '../../modules/products/components/category-list';
 
 export function CreateCategoryPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(true);

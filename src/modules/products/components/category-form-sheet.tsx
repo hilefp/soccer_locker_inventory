@@ -3,16 +3,16 @@
 import { useState } from 'react';
 import { X, Image as ImageIcon } from 'lucide-react';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/components/ui/select';
 import {
   Sheet,
   SheetBody,
@@ -20,10 +20,10 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from '@/shared/components/ui/sheet';
+import { Checkbox } from '@/shared/components/ui/checkbox';
+import { Textarea } from '@/shared/components/ui/textarea';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
 
 function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
   const isNewMode = mode === 'new';

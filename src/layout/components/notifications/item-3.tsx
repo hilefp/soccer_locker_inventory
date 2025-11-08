@@ -5,10 +5,10 @@ import {
   AvatarImage,
   AvatarIndicator,
   AvatarStatus,
-} from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+} from '@/shared/components/ui/avatar';
+import { Button } from '@/shared/components/ui/button';
 
-interface Item3Props {
+interface Item3Props {  
   userName: string;
   avatar: string;
   badgeColor: 'online' | 'offline' | 'busy' | 'away' | null | undefined;

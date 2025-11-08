@@ -6,14 +6,14 @@ import {
   AvatarImage,
   AvatarIndicator,
   AvatarStatus,
-} from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+} from '@/shared/components/ui/avatar';
+import { Button } from '@/shared/components/ui/button';
+import { Card } from '@/shared/components/ui/card';
 
 export default function Item11() {
   return (
     <div className="flex grow gap-2.5 px-5">
-      <Avatar>
+      <Avatar>  
         <AvatarImage src="/media/avatars/300-12.png" alt="avatar" />
         <AvatarFallback>CH</AvatarFallback>
         <AvatarIndicator className="-end-1.5 -bottom-1.5">

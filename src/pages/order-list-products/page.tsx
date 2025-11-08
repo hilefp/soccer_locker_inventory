@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { CategoryFormSheet } from '../components/category-form-sheet';
+import { CategoryFormSheet } from '../../modules/products/components/category-form-sheet';
 
 export function OrderListProducts() {
   // Date range picker state

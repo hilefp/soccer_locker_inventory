@@ -4,11 +4,11 @@ import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage,
+  AvatarImage,  
   AvatarIndicator,
   AvatarStatus,
-} from '@/components/ui/avatar';
-import { Card } from '@/components/ui/card';
+} from '@/shared/components/ui/avatar';
+import { Card } from '@/shared/components/ui/card';
 
 export default function Item8() {
   return (

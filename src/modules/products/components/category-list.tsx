@@ -17,29 +17,29 @@ import { Eye, Info, Search, SquarePen, Trash, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
-import { Badge, BadgeProps } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
+import { Badge, BadgeProps } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import {
   Card,
   CardFooter,
   CardHeader,
   CardTable,
   CardToolbar,
-} from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { DataGrid } from '@/components/ui/data-grid';
-import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
-import { DataGridPagination } from '@/components/ui/data-grid-pagination';
+} from '@/shared/components/ui/card';
+import { Checkbox } from '@/shared/components/ui/checkbox';
+import { DataGrid } from '@/shared/components/ui/data-grid';
+import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
+import { DataGridPagination } from '@/shared/components/ui/data-grid-pagination';
 import {
   DataGridTable,
   DataGridTableRowSelect,
   DataGridTableRowSelectAll,
-} from '@/components/ui/data-grid-table';
-import { Input, InputWrapper } from '@/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { CategoryDetailsEditSheet } from '../components/category-details-edit-sheet';
-import { CategoryFormSheet } from '../components/category-form-sheet';
+} from '@/shared/components/ui/data-grid-table';
+import { Input, InputWrapper } from '@/shared/components/ui/input';
+import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
+import { CategoryDetailsEditSheet } from '../../../pages/components/category-details-edit-sheet';
+import { CategoryFormSheet } from '@/modules/products/components/category-form-sheet';
 
 interface IColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>;

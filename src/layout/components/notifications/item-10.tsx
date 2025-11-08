@@ -5,10 +5,10 @@ import {
   AvatarImage,
   AvatarIndicator,
   AvatarStatus,
-} from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { AvatarGroup } from '../avatar-group';
+} from '@/shared/components/ui/avatar';
+import { Button } from '@/shared/components/ui/button';
+import { Card } from '@/shared/components/ui/card';
+import { AvatarGroup } from '@/layout/components/avatar-group';
 
 export default function Item10() {
   return (
