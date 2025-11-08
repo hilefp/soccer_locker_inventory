@@ -1,9 +1,9 @@
 'use client';
 
-import { Card, CardContent } from "@/components/ui/card"; 
-import { Separator } from "@/components/ui/separator";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; 
+import { Card, CardContent } from "@/shared/components/ui/card"; 
+import { Separator } from "@/shared/components/ui/separator";
+import { Label } from "@/shared/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"; 
 import { RiGatsbyLine, RiNextjsLine } from '@remixicon/react';
 import { Euro, Info } from "lucide-react";
 import { CardPayment } from "./components/card";

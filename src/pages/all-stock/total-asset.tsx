@@ -1,6 +1,6 @@
-import { BadgeDot } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { BadgeDot } from '@/shared/components/ui/badge';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { Separator } from '@/shared/components/ui/separator';
 
 interface InventoryRow {
   name: string;

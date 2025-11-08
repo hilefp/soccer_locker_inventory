@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Slider, SliderThumb } from "@/components/ui/slider"
+import { Card, CardContent } from "@/shared/components/ui/card"
+import { Button } from "@/shared/components/ui/button"
+import { Badge } from "@/shared/components/ui/badge"
+import { Slider, SliderThumb } from "@/shared/components/ui/slider"
 import { Bolt, FolderSymlink, Radar, TrendingUp } from "lucide-react"
 import { toAbsoluteUrl } from "@/shared/lib/helpers"
-import { Separator } from "@/components/ui/separator" 
+import { Separator } from "@/shared/components/ui/separator" 
 
 const tiers = [
   { name: "Lite", color: "#e879f9", points: 0, nextGoal: 1000 },

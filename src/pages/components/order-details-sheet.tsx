@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Badge, BadgeDot } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input, InputWrapper } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge, BadgeDot } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Input, InputWrapper } from '@/shared/components/ui/input';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import {
   Sheet,
   SheetBody,
@@ -14,13 +14,13 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
+} from '@/shared/components/ui/sheet';
 import { CircleCheck } from 'lucide-react';
 import { Circle } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { Separator } from '@/shared/components/ui/separator';
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Stepper, StepperItem, StepperNav, StepperTrigger } from '@/components/ui/stepper'; 
+import { Stepper, StepperItem, StepperNav, StepperTrigger } from '@/shared/components/ui/stepper'; 
 
 // Interface for current stock data
 interface CurrentStockData {

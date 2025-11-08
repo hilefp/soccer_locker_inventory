@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
 import { UserIcon } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@/shared/components/ui/separator";
 import { Link } from "react-router"; 
 import { toAbsoluteUrl } from "@/shared/lib/helpers";
 

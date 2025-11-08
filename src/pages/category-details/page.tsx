@@ -1,7 +1,7 @@
 'use client';
 
 import { PlusIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { CategoryListTable } from '../../modules/products/components/category-list';
 import { CategoryFormSheet } from '../../modules/products/components/category-form-sheet';
 import { useState } from 'react';

@@ -1,7 +1,7 @@
 import { ThemeProvider } from 'next-themes';
 import { BrowserRouter } from 'react-router-dom';
 import { LoadingBarContainer } from 'react-top-loading-bar';
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@/shared/components/ui/sonner';
 import { ModulesProvider } from './routing/modules-provider';
 
 const { BASE_URL } = import.meta.env;

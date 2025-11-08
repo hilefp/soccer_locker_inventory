@@ -16,24 +16,24 @@ import {
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
-import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
-import { Badge, BadgeProps } from '@/components/ui/badge';
+import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
+import { Badge, BadgeProps } from '@/shared/components/ui/badge';
 import {
   Card,
   CardTable,
-} from '@/components/ui/card';
-import { DataGrid } from '@/components/ui/data-grid';
-import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
+} from '@/shared/components/ui/card';
+import { DataGrid } from '@/shared/components/ui/data-grid';
+import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
 import {
   DataGridTable,
-} from '@/components/ui/data-grid-table';
-import { Input } from '@/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+} from '@/shared/components/ui/data-grid-table';
+import { Input } from '@/shared/components/ui/input';
+import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/shared/components/ui/tooltip';
 import { Info } from 'lucide-react';
 
 interface IColumnFilterProps<TData, TValue> {

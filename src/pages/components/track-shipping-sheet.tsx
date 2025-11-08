@@ -5,11 +5,11 @@ import { useState } from 'react';
 import { Circle, CircleCheck, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 // import type { OrderListData } from '../tables/order-list';
-import { Badge, BadgeDot } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import { Badge, BadgeDot } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
+import { Separator } from '@/shared/components/ui/separator';
 import {
   Sheet,
   SheetBody,
@@ -17,14 +17,14 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
+} from '@/shared/components/ui/sheet';
 import {
   Stepper,
   StepperItem,
   StepperNav,
   StepperTitle,
   StepperTrigger,
-} from '@/components/ui/stepper';
+} from '@/shared/components/ui/stepper';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
 
 interface TrackShippingSheetProps {

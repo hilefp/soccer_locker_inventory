@@ -2,11 +2,11 @@
 
 import { CalendarClock, SquareDashedBottomCode } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { AvatarGroup } from '@/components/ui/avatar-group';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/shared/components/ui/button';
+import { Card } from '@/shared/components/ui/card';
+import { Progress } from '@/shared/components/ui/progress';
+import { AvatarGroup } from '@/shared/components/ui/avatar-group';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { TimelineItem } from './timeline-item';
 
 const ActivitiesProductWebinar = () => {

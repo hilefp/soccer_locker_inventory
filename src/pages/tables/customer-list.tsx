@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,38 +36,38 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Badge, BadgeProps } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+} from '@/shared/components/ui/alert-dialog';
+import { Badge, BadgeProps } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import {
   Card,
   CardFooter,
   CardHeader,
   CardTable,
   CardToolbar,
-} from '@/components/ui/card';
-import { DataGrid } from '@/components/ui/data-grid';
-import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
+} from '@/shared/components/ui/card';
+import { DataGrid } from '@/shared/components/ui/data-grid';
+import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
 
-import { DataGridPagination } from '@/components/ui/data-grid-pagination';
+import { DataGridPagination } from '@/shared/components/ui/data-grid-pagination';
 import {
   DataGridTable,
   DataGridTableRowSelect,
   DataGridTableRowSelectAll,
-} from '@/components/ui/data-grid-table';
+} from '@/shared/components/ui/data-grid-table';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input, InputWrapper } from '@/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+} from '@/shared/components/ui/dropdown-menu';
+import { Input, InputWrapper } from '@/shared/components/ui/input';
+import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 import { CustomerDetailsSheet } from '../components/customer-details-sheet';
 import { CustomerFormSheet } from '../components/customer-form-sheet';
-import { Avatar, AvatarImage, AvatarFallback, AvatarIndicator, AvatarStatus } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback, AvatarIndicator, AvatarStatus } from '@/shared/components/ui/avatar';
 import { VariantProps } from 'class-variance-authority';
-import { Separator } from '@/components/ui/separator';
+import { Separator } from '@/shared/components/ui/separator';
 
 interface IColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>;

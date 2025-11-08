@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardToolbar } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/shared/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardToolbar } from '@/shared/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { CartesianGrid, ComposedChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 

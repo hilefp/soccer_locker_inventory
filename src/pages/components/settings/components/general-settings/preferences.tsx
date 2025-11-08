@@ -1,19 +1,19 @@
 'use client'; 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/shared/components/ui/button';
+import { Switch } from '@/shared/components/ui/switch';
+import { Label } from '@/shared/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Card, CardContent } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+} from '@/shared/components/ui/select';
+import { Separator } from '@/shared/components/ui/separator';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
+import { Calendar } from '@/shared/components/ui/calendar';
 import { CalendarDays, ChevronDown, X } from 'lucide-react';
 import { format } from 'date-fns';
 

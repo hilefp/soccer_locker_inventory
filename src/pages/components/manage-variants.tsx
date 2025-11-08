@@ -3,29 +3,29 @@
 import { useState } from 'react';
 import { GripVertical, Minus, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardToolbar,
-} from '@/components/ui/card';
+} from '@/shared/components/ui/card';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from '@/shared/components/ui/collapsible';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/components/ui/select';
 import {
   Sheet,
   SheetBody,
@@ -33,12 +33,12 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
+} from '@/shared/components/ui/sheet';
 import {
   Sortable,
   SortableItem,
   SortableItemHandle,
-} from '@/components/ui/sortable';
+} from '@/shared/components/ui/sortable';
 
 interface OptionValue {
   id: string;

@@ -1,12 +1,12 @@
 'use client';
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { Separator } from "@/shared/components/ui/separator";
 import { FilePlus, FileMinus, Globe, Globe2 } from "lucide-react"; 
 import { RiMapPinLine } from "@remixicon/react"; 
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/shared/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
 import { useState } from "react";
 
 export function TaxSettings() {

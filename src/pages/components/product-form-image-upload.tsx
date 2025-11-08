@@ -33,10 +33,10 @@ import {
   AlertDescription,
   AlertIcon,
   AlertTitle,
-} from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+} from '@/shared/components/ui/alert';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { Progress } from '@/shared/components/ui/progress';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
 
 interface ImageFile {

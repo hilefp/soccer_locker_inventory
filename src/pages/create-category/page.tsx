@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { PlusIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { CategoryFormSheet } from '../../modules/products/components/category-form-sheet';
 import { CategoryListTable } from '../../modules/products/components/category-list';
 

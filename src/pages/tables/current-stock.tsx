@@ -27,10 +27,10 @@ import { DateRange } from 'react-day-picker';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
-import { Badge, BadgeProps } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
+import { Badge, BadgeProps } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Calendar } from '@/shared/components/ui/calendar';
 import {
   Card,
   CardFooter,
@@ -38,8 +38,8 @@ import {
   CardHeading,
   CardTable,
   CardToolbar,
-} from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+} from '@/shared/components/ui/card';
+import { Checkbox } from '@/shared/components/ui/checkbox';
 import {
   Command,
   CommandEmpty,
@@ -47,15 +47,15 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
-import { DataGrid } from '@/components/ui/data-grid';
-import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
-import { DataGridPagination } from '@/components/ui/data-grid-pagination';
+} from '@/shared/components/ui/command';
+import { DataGrid } from '@/shared/components/ui/data-grid';
+import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
+import { DataGridPagination } from '@/shared/components/ui/data-grid-pagination';
 import {
   DataGridTable,
   DataGridTableRowSelect,
   DataGridTableRowSelectAll,
-} from '@/components/ui/data-grid-table';
+} from '@/shared/components/ui/data-grid-table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,20 +63,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input, InputWrapper } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from '@/shared/components/ui/dropdown-menu';
+import { Input, InputWrapper } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+} from '@/shared/components/ui/popover';
+import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/shared/components/ui/tooltip';
 import { PerProductStockSheet } from '../components/per-product-stock-sheet';
 
 interface IColumnFilterProps<TData, TValue> {

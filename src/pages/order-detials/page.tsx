@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { OrderDetailsSheet } from '../components/order-details-sheet';
 import { OrderListTable } from '../tables/order-list';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { PlusIcon, Upload } from 'lucide-react';  
 import { ProductFormSheet } from '../components/product-form-sheet';
 

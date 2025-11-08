@@ -1,11 +1,11 @@
 'use client';
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Input, InputAddon, InputGroup } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { Switch } from "@/shared/components/ui/switch";
+import { Button } from "@/shared/components/ui/button";
+import { Input, InputAddon, InputGroup } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Separator } from "@/shared/components/ui/separator";
 import { Mail } from "lucide-react";
 import { useState } from "react";
 

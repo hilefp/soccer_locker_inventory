@@ -10,10 +10,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group';
 
 interface IOrdersProps {
   className?: string;

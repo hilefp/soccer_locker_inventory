@@ -25,40 +25,40 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
-import { Badge, BadgeProps } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
+import { Badge, BadgeProps } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import {
   Card,
   CardFooter,
   CardHeader,
   CardTable,
   CardToolbar,
-} from '@/components/ui/card';
-import { DataGrid } from '@/components/ui/data-grid';
-import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
-import { DataGridColumnVisibility } from '@/components/ui/data-grid-column-visibility';
-import { DataGridPagination } from '@/components/ui/data-grid-pagination';
+} from '@/shared/components/ui/card';
+import { DataGrid } from '@/shared/components/ui/data-grid';
+import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
+import { DataGridColumnVisibility } from '@/shared/components/ui/data-grid-column-visibility';
+import { DataGridPagination } from '@/shared/components/ui/data-grid-pagination';
 import {
   DataGridTable,
   DataGridTableRowSelect,
   DataGridTableRowSelectAll,
-} from '@/components/ui/data-grid-table';
+} from '@/shared/components/ui/data-grid-table';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input, InputWrapper } from '@/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from '@/shared/components/ui/dropdown-menu';
+import { Input, InputWrapper } from '@/shared/components/ui/input';
+import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/shared/components/ui/tooltip';
 import { ProductFormSheet } from '../components/product-form-sheet';
 import { ProductDetailsAnalyticsSheet } from '../components/product-details-analytics-sheet';
 import { ManageVariantsSheet } from '../components/manage-variants';

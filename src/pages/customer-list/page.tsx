@@ -1,6 +1,6 @@
 'use client';
 import { Plus, Upload, ChevronDown, BarChart3, User, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { CustomerListDisplaySheet, CustomerListTable } from '../tables/customer-list';
 
 import {
@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/shared/components/ui/dropdown-menu';
 import { useState } from 'react';
 
 

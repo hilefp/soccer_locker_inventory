@@ -4,13 +4,13 @@ import { useRef, useState } from 'react';
 import { addDays, format } from 'date-fns';
 import { ChevronDown, PlusIcon, Upload } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { Button } from '@/shared/components/ui/button';
+import { Calendar } from '@/shared/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@/shared/components/ui/popover';
 import { OrderListTable } from '../tables/order-list';
 import { OrderDetailsSheet } from '../components/order-details-sheet';
 import {
@@ -19,7 +19,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/components/ui/select';
 
 
 export function OrderList() {

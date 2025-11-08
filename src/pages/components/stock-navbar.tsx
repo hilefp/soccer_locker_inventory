@@ -1,7 +1,7 @@
 'use client';
 
 import { Link, useLocation } from 'react-router';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 
 export const StockNavbar = () => {
   const location = useLocation();

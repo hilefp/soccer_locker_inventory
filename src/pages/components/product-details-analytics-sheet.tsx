@@ -5,17 +5,17 @@ import { SquarePen, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Badge, BadgeDot } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge, BadgeDot } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardToolbar,
-} from '@/components/ui/card';
-import { Rating } from '@/components/ui/rating';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from '@/shared/components/ui/card';
+import { Rating } from '@/shared/components/ui/rating';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import {
   Sheet,
   SheetBody,
@@ -23,7 +23,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
+} from '@/shared/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -31,8 +31,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+} from '@/shared/components/ui/table';
+import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group';
 
 export function ProductDetailsAnalyticsSheet({
   open,

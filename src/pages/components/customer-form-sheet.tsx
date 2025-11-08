@@ -3,16 +3,16 @@
 import { useState } from 'react';
 import { X, User } from 'lucide-react';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/components/ui/select';
 import {
   Sheet,
   SheetBody,
@@ -20,8 +20,8 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from '@/shared/components/ui/sheet';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import {
   Command,
   CommandCheck,
@@ -30,8 +30,8 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+} from '@/shared/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 
 // Country data for phone number input
 const countries = [

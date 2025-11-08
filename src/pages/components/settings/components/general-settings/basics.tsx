@@ -1,11 +1,11 @@
 'use client';
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Input, InputAddon, InputGroup } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { Input, InputAddon, InputGroup } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Separator } from "@/shared/components/ui/separator";
 import { toAbsoluteUrl } from "@/shared/lib/helpers";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
 import { useState } from "react";
 
 // Country data for phone number input

@@ -1,8 +1,8 @@
 'use client';
 
-import { Badge, BadgeDot } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge, BadgeDot } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import {
   Sheet,
   SheetBody,
@@ -10,8 +10,8 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
-  import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+} from '@/shared/components/ui/sheet';
+  import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/components/ui/tabs';
   import { CustomerDetailsOverviews } from './customers/customer-details-overviews'; 
   import { CustomerDetailsOrders } from './customers/customer-details-orders'; 
   import { CustomerDetailsInvoice } from './customers/customer-details-invoice'; 

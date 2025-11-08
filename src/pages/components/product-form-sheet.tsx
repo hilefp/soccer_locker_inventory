@@ -3,26 +3,26 @@
 import { useState } from 'react';
 import { CircleX } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Badge, BadgeButton } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge, BadgeButton } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardToolbar,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from '@/shared/components/ui/card';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+} from '@/shared/components/ui/select';
+import { Separator } from '@/shared/components/ui/separator';
 import {
   Sheet,
   SheetBody,
@@ -30,9 +30,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+} from '@/shared/components/ui/sheet';
+import { Switch } from '@/shared/components/ui/switch';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { ProductFormImageUpload } from './product-form-image-upload';
 import { ProductFormVariants } from './product-form-variants';
 

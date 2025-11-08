@@ -16,9 +16,9 @@ import {
 import { Info, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
-import { Badge, BadgeProps } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
+import { Badge, BadgeProps } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import {
   Card,
   CardFooter,
@@ -26,17 +26,17 @@ import {
   CardTable,
   CardTitle,
   CardToolbar,
-} from '@/components/ui/card';
-import { DataGrid } from '@/components/ui/data-grid';
-import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
-import { DataGridPagination } from '@/components/ui/data-grid-pagination';
+} from '@/shared/components/ui/card';
+import { DataGrid } from '@/shared/components/ui/data-grid';
+import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
+import { DataGridPagination } from '@/shared/components/ui/data-grid-pagination';
 import {
   DataGridTable,
   DataGridTableRowSelect,
   DataGridTableRowSelectAll,
-} from '@/components/ui/data-grid-table';
-import { Input, InputWrapper } from '@/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+} from '@/shared/components/ui/data-grid-table';
+import { Input, InputWrapper } from '@/shared/components/ui/input';
+import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 
 interface IColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>;

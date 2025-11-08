@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { PlusIcon, Upload } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { ProductFormSheet } from '../components/product-form-sheet';
 import { ProductListTable } from '../tables/product-list';
 
