@@ -59,9 +59,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/shared/components/ui/tooltip';
-import { ProductFormSheet } from '../components/product-form-sheet';
-import { ProductDetailsAnalyticsSheet } from '../components/product-details-analytics-sheet';
-import { ManageVariantsSheet } from '../components/manage-variants';
+import { ProductFormSheet } from './product-form-sheet';
+import { ProductDetailsAnalyticsSheet } from './product-details-analytics-sheet';
+import { ManageVariantsSheet } from '../../../pages/components/manage-variants';
 import { cn } from '@/shared/lib/utils';
 
 interface IColumnFilterProps<TData, TValue> {

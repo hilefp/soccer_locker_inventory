@@ -21,7 +21,7 @@ import { OutboundStock } from '@/pages/outbound-stock/page';
 import { PerProductStockPage } from '@/pages/per-product-stock/page';
 import { ProductDetailsPage } from '@/pages/product-details/page';
 import { ProductInfoPage } from '@/pages/product-info/page';
-import { ProductList } from '@/pages/product-list/page';
+import { ProductList } from '@/modules/products/pages/product-list-page';
 import { SettingsModal } from '@/pages/settings-modal/page';
 import { StockPlanner } from '@/pages/stock-planner/page';
 import { TrackShippingPage } from '@/pages/track-shipping/page';
@@ -56,7 +56,6 @@ export function ModulesProvider() {
                 <Route path="inbound-stock" element={<InboundStock />} />
                 <Route path="outbound-stock" element={<OutboundStock />} />
                 <Route path="stock-planner" element={<StockPlanner />} />
-                <Route path="product-list" element={<ProductList />} />
                 <Route
                   path="product-details"
                   element={<ProductDetailsPage />}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { TrackShippingSheet } from '../components/track-shipping-sheet';
-import { ProductListTable } from '../tables/product-list';
+import { ProductListTable } from '../../modules/products/components/product-list';
 
 export function TrackShippingPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(true);

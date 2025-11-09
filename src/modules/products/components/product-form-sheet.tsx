@@ -33,8 +33,8 @@ import {
 } from '@/shared/components/ui/sheet';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { ProductFormImageUpload } from './product-form-image-upload';
-import { ProductFormVariants } from './product-form-variants';
+import { ProductFormImageUpload } from '@/modules/products/components/product-form-image-upload';
+import { ProductFormVariants } from '@/modules/products/components/product-form-variants';
 
 function ProductFormTagInput({ mode }: { mode: 'new' | 'edit' }) {
   const isEditMode = mode === 'edit';

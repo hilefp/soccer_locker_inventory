@@ -79,7 +79,7 @@ import {
   TooltipTrigger,
 } from '@/shared/components/ui/tooltip';
 import { TrackShippingSheet } from '../components/track-shipping-sheet';
-import { PerProductStockSheet } from '../components/per-product-stock-sheet';
+import { PerProductStockSheet } from '../../modules/products/components/per-product-stock-sheet';
 
 interface IColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>;

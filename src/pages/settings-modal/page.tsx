@@ -2,7 +2,7 @@
 import { Upload, ChevronDown, BarChart3, User, Trash2, Settings } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { SettingsSheet } from '../components/settings-sheet';
-import { ProductListTable } from '../tables/product-list';
+import { ProductListTable } from '../../modules/products/components/product-list';
 
 import {
   DropdownMenu,

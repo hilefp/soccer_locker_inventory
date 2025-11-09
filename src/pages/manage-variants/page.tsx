@@ -1,6 +1,6 @@
 'use client';
 
-import { ProductListTable } from '../tables/product-list';
+import { ProductListTable } from '../../modules/products/components/product-list';
 
 export function ManageVariantsPage() {
 

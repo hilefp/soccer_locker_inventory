@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { PerProductStockSheet } from '../components/per-product-stock-sheet';
-import { ProductListTable } from '../tables/product-list';
+import { PerProductStockSheet } from '../../modules/products/components/per-product-stock-sheet';
+import { ProductListTable } from '../../modules/products/components/product-list';
 
 export function PerProductStockPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(true);

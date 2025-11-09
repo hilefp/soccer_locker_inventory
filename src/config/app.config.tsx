@@ -19,6 +19,24 @@ export const MENU_SIDEBAR: MenuConfig  = [
     ],
   },
   { heading: 'Store Inventory' },
+
+  {
+    title: 'Products',
+    icon: Package,
+    children: [
+      
+      {
+        title: 'Product',
+        path: '/products',
+      },
+      {
+        title: 'Categories',
+        path: '/products/categories',
+      }
+ 
+      
+    ],
+  },
   {
     title: 'Inventory',
     icon: Boxes,
@@ -57,29 +75,7 @@ export const MENU_SIDEBAR: MenuConfig  = [
       },
     ],
   },
-  {
-    title: 'Products',
-    icon: Package,
-    children: [
-      {
-        title: 'Product List',
-        path: '/product-list',
-      },
-      {
-        title: 'Product Details',
-        path: '/product-details',
-      },
-      { title: 'Create Product', path: '/create-product' },
-      {
-        title: 'Manage Variants',
-          path: '/manage-variants',
-      },
-      {
-        title: 'Edit Product',
-        path: '/store-inventory/edit-product',
-      },
-    ],
-  },
+
   {
     title: 'Categories',
     icon: LayoutList,

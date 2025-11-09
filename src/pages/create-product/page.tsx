@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { ProductFormSheet } from '../components/product-form-sheet';
-import { ProductListTable } from '../tables/product-list';
+import { ProductFormSheet } from '../../modules/products/components/product-form-sheet';
+import { ProductListTable } from '../../modules/products/components/product-list';
 
 export function CreateProductPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(true);

@@ -44,7 +44,7 @@ import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { CreateShippingLabelSheet } from '../components/create-shipping-label-sheet';
 import { TrackShippingSheet } from '../components/track-shipping-sheet';
-import { ProductInfoSheet } from '../components/product-info-sheet';
+import { ProductInfoSheet } from '../../modules/products/components/product-info-sheet';
 import { OrderDetailsSheet } from '../components/order-details-sheet';
 import type { VariantProps } from 'class-variance-authority';
 import { Settings, Pencil } from 'lucide-react';

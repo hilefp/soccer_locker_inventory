@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { CreateShippingLabelSheet } from '../components/create-shipping-label-sheet';
-import { ProductListTable } from '../tables/product-list';
+import { ProductListTable } from '../../modules/products/components/product-list';
 
 export function CreateShippingLabelPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(true);

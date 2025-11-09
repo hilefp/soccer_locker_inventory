@@ -3,7 +3,7 @@ import { OrderDetailsSheet } from '../components/order-details-sheet';
 import { OrderListTable } from '../tables/order-list';
 import { Button } from '@/shared/components/ui/button';
 import { PlusIcon, Upload } from 'lucide-react';  
-import { ProductFormSheet } from '../components/product-form-sheet';
+import { ProductFormSheet } from '../../modules/products/components/product-form-sheet';
 
 export function OrderDetailsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(true); 

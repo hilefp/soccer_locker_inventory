@@ -76,8 +76,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/shared/components/ui/tooltip';
-import { PerProductStockSheet } from '../components/per-product-stock-sheet';
-import { ProductDetailsAnalyticsSheet } from '../components/product-details-analytics-sheet';
+import { PerProductStockSheet } from '../../modules/products/components/per-product-stock-sheet';
+import { ProductDetailsAnalyticsSheet } from '../../modules/products/components/product-details-analytics-sheet';
 
 interface IColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>;
