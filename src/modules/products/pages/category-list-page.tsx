@@ -6,10 +6,20 @@ import { CategoryListTable } from '@/modules/products/components/category-list';
 import { CategoryFormSheet } from '@/modules/products/components/category-form-sheet';
 import { useState } from 'react';
 import { ProductNavigationTabs } from '@/modules/products/components/product-navigation-tabs';
+import { useProductCategories } from '@/modules/products/hooks/use-product-categories';
 
 export function CategoryList() {
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
-  
+
+  // Use React Query hook for data fetching
+  const { data: categories = [], isLoading, error } = useProductCategories();
+
+  const activeCategories = categories.filter(cat => cat.isActive);
+  const totalCategories = categories.length;
+  const inactivePercentage = totalCategories > 0
+    ? Math.round(((totalCategories - activeCategories.length) / totalCategories) * 100)
+    : 0;
+
   return (
     <div className="container-fluid space-y-5 lg:space-y-9">
         <ProductNavigationTabs />
@@ -19,7 +29,12 @@ export function CategoryList() {
             Categories
           </h3>
           <span className="text-sm text-muted-foreground">
-            84 categories found. 12% needs your attention.
+            {isLoading
+              ? 'Loading categories...'
+              : error
+                ? `Error loading categories: ${error.message}`
+                : `${totalCategories} categories found. ${inactivePercentage}% needs your attention.`
+            }
           </span>
         </div>
 
@@ -28,9 +43,13 @@ export function CategoryList() {
           Add Category
         </Button>
       </div>
-      <CategoryListTable />
+      <CategoryListTable
+        categories={categories}
+        isLoading={isLoading}
+        error={error?.message || null}
+      />
       <CategoryFormSheet
-        mode="new"  
+        mode="new"
         open={isCreateCategoryOpen}
         onOpenChange={setIsCreateCategoryOpen}
       />

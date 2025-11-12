@@ -32,6 +32,10 @@ export const MENU_SIDEBAR: MenuConfig  = [
       {
         title: 'Categories',
         path: '/products/categories',
+      },
+      {
+        title: 'Brands',
+        path: '/products/brands',
       }
  
       

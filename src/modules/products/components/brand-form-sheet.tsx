@@ -25,13 +25,13 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { toast } from 'sonner';
 import {
-  useProductCategories,
-  useCreateProductCategory,
-  useUpdateProductCategory,
-  useDeleteProductCategory,
-} from '@/modules/products/hooks/use-product-categories';
+  useProductBrands,
+  useCreateProductBrand,
+  useUpdateProductBrand,
+  useDeleteProductBrand,
+} from '@/modules/products/hooks/use-product-brands';
 
-function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
+function BrandImageUpload({ mode }: { mode: 'new' | 'edit' }) {
   const isNewMode = mode === 'new';
   const isEditMode = mode === 'edit';
 
@@ -78,7 +78,7 @@ function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
               ) : (
                 <img
                   src={selectedImage}
-                  alt="Category"
+                  alt="Brand"
                   className={
                     isEditMode
                       ? 'cursor-pointer h-[140px] object-contain'
@@ -103,9 +103,9 @@ function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
                 accept="image/*"
                 onChange={handleImageUpload}
                 className="hidden"
-                id="category-image-upload"
+                id="brand-image-upload"
               />
-              <label htmlFor="category-image-upload" className="absolute bottom-3 right-3">
+              <label htmlFor="brand-image-upload" className="absolute bottom-3 right-3">
                 <Button size="sm" variant="outline" asChild>
                   <span>{isEditMode ? 'Change' : 'Upload'}</span>
                 </Button>
@@ -119,9 +119,9 @@ function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
                 accept="image/*"
                 onChange={handleImageUpload}
                 className="hidden"
-                id="category-image-upload"
+                id="brand-image-upload"
               />
-              <label htmlFor="category-image-upload" className="absolute bottom-3 right-3">
+              <label htmlFor="brand-image-upload" className="absolute bottom-3 right-3">
                 <Button size="sm" variant="outline" asChild>
                   <span>Upload</span>
                 </Button>
@@ -134,113 +134,128 @@ function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
   );
 }
 
-export function CategoryFormSheet({
+export function BrandFormSheet({
   mode,
   open,
   onOpenChange,
-  categoryId,
+  brandId,
   onSuccess,
 }: {
   mode: 'new' | 'edit';
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  categoryId?: string;
+  brandId?: string;
   onSuccess?: () => void;
 }) {
   const isNewMode = mode === 'new';
   const isEditMode = mode === 'edit';
 
-  const [categoryName, setCategoryName] = useState('');
+  const [brandName, setBrandName] = useState('');
   const [slug, setSlug] = useState('');
+  const [code, setCode] = useState('');
   const [status, setStatus] = useState('active');
   const [description, setDescription] = useState('');
-  const [parentId, setParentId] = useState<string>('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
 
   // React Query hooks
-  const { data: categories = [], isLoading: isFetching } = useProductCategories();
-  const createMutation = useCreateProductCategory();
-  const updateMutation = useUpdateProductCategory();
-  const deleteMutation = useDeleteProductCategory();
+  const { data: brands = [], isLoading: isFetching } = useProductBrands();
+  const createMutation = useCreateProductBrand();
+  const updateMutation = useUpdateProductBrand();
+  const deleteMutation = useDeleteProductBrand();
 
   const isLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
-  // Load category data when editing
+  // Load brand data when editing
   useEffect(() => {
-    if (!isEditMode || !categoryId || !open) {
+    if (!isEditMode || !brandId || !open) {
       return;
     }
 
-    const category = categories.find(cat => cat.id === categoryId);
-    if (category) {
-      setCategoryName(category.name);
-      setSlug(category.slug);
-      setStatus(category.isActive ? 'active' : 'inactive');
-      setDescription(category.description || '');
-      setParentId(category.parentId || '');
+    const brand = brands.find(b => b.id === brandId);
+    if (brand) {
+      setBrandName(brand.name);
+      setSlug(brand.slug);
+      setCode(brand.code);
+      setStatus(brand.isActive ? 'active' : 'inactive');
+      setDescription(brand.description || '');
+      setWebsiteUrl(brand.websiteUrl || '');
     }
-  }, [isEditMode, categoryId, open, categories]);
+  }, [isEditMode, brandId, open, brands]);
 
   // Reset form when closed
   useEffect(() => {
     if (!open) {
-      setCategoryName('');
+      setBrandName('');
       setSlug('');
+      setCode('');
       setStatus('active');
       setDescription('');
-      setParentId('');
+      setWebsiteUrl('');
     }
   }, [open]);
 
-  // Auto-generate slug from category name
+  // Auto-generate slug from brand name
   useEffect(() => {
-    if (isNewMode && categoryName) {
-      const generatedSlug = categoryName
+    if (isNewMode && brandName) {
+      const generatedSlug = brandName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
       setSlug(generatedSlug);
     }
-  }, [categoryName, isNewMode]);
+  }, [brandName, isNewMode]);
+
+  // Auto-generate code from brand name
+  useEffect(() => {
+    if (isNewMode && brandName) {
+      const generatedCode = brandName
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, '')
+        .substring(0, 50);
+      setCode(generatedCode);
+    }
+  }, [brandName, isNewMode]);
 
   const handleSave = async () => {
-    if (!categoryName.trim() || !slug.trim()) {
+    if (!brandName.trim() || !slug.trim() || !code.trim()) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    const categoryData = {
-      name: categoryName,
+    const brandData = {
+      name: brandName,
       slug: slug,
+      code: code,
       description: description,
+      websiteUrl: websiteUrl || undefined,
       isActive: status === 'active',
-      parentId: parentId || undefined, // Only include if not empty
     };
 
     try {
       if (isNewMode) {
-        await createMutation.mutateAsync(categoryData);
-      } else if (categoryId) {
-        await updateMutation.mutateAsync({ id: categoryId, data: categoryData });
+        await createMutation.mutateAsync(brandData);
+      } else if (brandId) {
+        await updateMutation.mutateAsync({ id: brandId, data: brandData });
       }
 
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {
       // Error handling is done in the mutation hooks
-      console.error('Error saving category:', error);
+      console.error('Error saving brand:', error);
     }
   };
 
   const handleDelete = async () => {
-    if (!categoryId) return;
+    if (!brandId) return;
 
     try {
-      await deleteMutation.mutateAsync(categoryId);
+      await deleteMutation.mutateAsync(brandId);
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {
       // Error handling is done in the mutation hook
-      console.error('Error deleting category:', error);
+      console.error('Error deleting brand:', error);
     }
   };
 
@@ -253,7 +268,7 @@ export function CategoryFormSheet({
       <SheetContent className="gap-0 w-[500px] p-0 inset-5 border start-auto h-auto rounded-lg [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-4 px-6">
           <SheetTitle className="font-medium">
-            {isNewMode ? 'Add Category' : 'Edit Category'}
+            {isNewMode ? 'Add Brand' : 'Edit Brand'}
           </SheetTitle>
         </SheetHeader>
 
@@ -264,15 +279,15 @@ export function CategoryFormSheet({
           >
             <div className="space-y-6">
               {/* Image Upload */}
-              <CategoryImageUpload mode={mode} />
+              <BrandImageUpload mode={mode} />
 
-              {/* Category Name */}
+              {/* Brand Name */}
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Category Name *</Label>
+                <Label className="text-xs font-medium">Brand Name *</Label>
                 <Input
-                  placeholder="Category Name"
-                  value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
+                  placeholder="Brand Name"
+                  value={brandName}
+                  onChange={(e) => setBrandName(e.target.value)}
                   disabled={isLoading || isFetching}
                 />
               </div>
@@ -281,7 +296,7 @@ export function CategoryFormSheet({
               <div className="space-y-2">
                 <Label className="text-xs font-medium">Slug *</Label>
                 <Input
-                  placeholder="category-slug"
+                  placeholder="brand-slug"
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   disabled={isLoading || isFetching}
@@ -291,26 +306,33 @@ export function CategoryFormSheet({
                 </span>
               </div>
 
-              {/* Parent Category */}
+              {/* Brand Code */}
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Parent Category</Label>
-                <Select value={parentId || 'none'} onValueChange={(value) => setParentId(value === 'none' ? '' : value)} disabled={isLoading || isFetching}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="None (Top Level)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None (Top Level)</SelectItem>
-                    {categories
-                      .filter(cat => cat.id !== categoryId) // Don't allow selecting self as parent
-                      .map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id || 'none'}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                <Label className="text-xs font-medium">Brand Code *</Label>
+                <Input
+                  placeholder="BRAND"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  disabled={isLoading || isFetching}
+                  maxLength={50}
+                />
                 <span className="text-xs text-muted-foreground">
-                  Optional: Select a parent to create a subcategory
+                  Unique brand code (auto-generated, max 50 characters)
+                </span>
+              </div>
+
+              {/* Website URL */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Website URL</Label>
+                <Input
+                  placeholder="https://www.example.com"
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  disabled={isLoading || isFetching}
+                  type="url"
+                />
+                <span className="text-xs text-muted-foreground">
+                  Official brand website
                 </span>
               </div>
 
@@ -332,7 +354,7 @@ export function CategoryFormSheet({
               <div className="space-y-2">
                 <Label className="text-xs font-medium">Description</Label>
                 <Textarea
-                  placeholder="Category Description"
+                  placeholder="Brand Description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}

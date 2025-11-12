@@ -5,7 +5,7 @@ import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/components/ui/button';
 
 const alertVariants = cva(
-  'flex items-stretch w-full gap-2 group-[.toaster]:w-(--width)',
+  'flex items-stretch w-full gap-2 group-[.toaster]:w-[--width]',
   {
     variants: {
       variant: {

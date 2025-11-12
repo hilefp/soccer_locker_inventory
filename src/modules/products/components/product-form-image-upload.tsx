@@ -136,41 +136,24 @@ function SortableImageItem({
   );
 }
 
-export function ProductFormImageUpload({ 
+interface ProductFormImageUploadProps extends ImageUploadProps {
+  mode: 'new' | 'edit';
+  initialImages?: string[]; // Array of image URLs from the product
+}
+
+export function ProductFormImageUpload({
   mode,
-  maxFiles = 5, 
-  maxSize = 5 * 1024 * 1024, // 5MB 
-  accept = 'image/*', 
-  className, 
-  onImagesChange, 
-  onUploadComplete 
-}: ImageUploadProps & { mode: 'new' | 'edit' }) {
+  initialImages = [],
+  maxFiles = 5,
+  maxSize = 5 * 1024 * 1024, // 5MB
+  accept = 'image/*',
+  className,
+  onImagesChange,
+  onUploadComplete
+}: ProductFormImageUploadProps) {
   const isEditMode = mode === 'edit';
-  
-  const [allImages, setAllImages] = useState<SortableImage[]>(
-    isEditMode ? [
-      {
-        id: 'default-1',
-        src: toAbsoluteUrl('/media/store/client/1200x1200/3.png'),
-        alt: 'Product view 1',
-      },
-      {
-        id: 'default-2',
-        src: toAbsoluteUrl('/media/store/client/1200x1200/20.png'),
-        alt: 'Product view 2',
-      },
-      {
-        id: 'default-3',
-        src: toAbsoluteUrl('/media/store/client/1200x1200/21.png'),
-        alt: 'Product view 3',
-      },
-      {
-        id: 'default-4',
-        src: toAbsoluteUrl('/media/store/client/1200x1200/19.png'),
-        alt: 'Product view 4',
-      },
-    ] : []
-  );
+
+  const [allImages, setAllImages] = useState<SortableImage[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -183,6 +166,18 @@ export function ProductFormImageUpload({
       },
     }),
   );
+
+  // Load initial images when in edit mode
+  useEffect(() => {
+    if (isEditMode && initialImages.length > 0) {
+      const defaultImages: DefaultImage[] = initialImages.map((url, index) => ({
+        id: `default-${index}`,
+        src: url,
+        alt: `Product image ${index + 1}`,
+      }));
+      setAllImages(defaultImages);
+    }
+  }, [isEditMode, initialImages]);
 
   // Ensure array never contains undefined items
   useEffect(() => {

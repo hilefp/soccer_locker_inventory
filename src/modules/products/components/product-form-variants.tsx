@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   CheckCircle,
   ClipboardPenLine,
@@ -31,71 +31,24 @@ import {
   TableRow,
 } from '@/shared/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { ProductVariantRequest, ProductVariantAttributes } from '@/modules/products/types/product.type';
+import { useProductAttributes } from '@/modules/products/hooks/use-product-attributes';
 
-interface Variant {
-  id: string;
-  size: string;
-  color: string;
-  onHand: string;
-  price: string;
-  available: string;
+interface Variant extends Omit<ProductVariantRequest, 'attributes'> {
+  id?: string;
+  attributes: ProductVariantAttributes;
+  displayAttributes?: string; // For display purposes
 }
 
-export function ProductFormVariants({ mode }: { mode: 'new' | 'edit' }) {
-  const isEditMode = mode === 'edit';
-  
-  const [variants, setVariants] = useState<Variant[]>(
-    isEditMode ? [
-      {
-        id: '1',
-        size: '40',
-        color: 'White',
-        price: '96.00',
-        available: 'Yes',
-        onHand: '24',
-      },
-      {
-        id: '2',
-        size: '39',
-        color: 'White',
-        price: '96.00',
-        available: 'Yes',
-        onHand: '18',
-      },
-      {
-        id: '3',
-        size: '42',
-        color: 'Black',
-        price: '96.00',
-        available: 'Yes',
-        onHand: '12',
-      },
-      {
-        id: '4',
-        size: '41',
-        color: 'White',
-        price: '96.00',
-        available: 'No',
-        onHand: '30',
-      },
-      {
-        id: '5',
-        size: '44',
-        color: 'Red',
-        price: '96.00',
-        available: 'Yes',
-        onHand: '27',
-      },
-      {
-        id: '6',
-        size: '43',
-        color: 'Black',
-        price: '96.00',
-        available: 'No',
-        onHand: '15',
-      },
-    ] : []
-  );
+interface ProductFormVariantsProps {
+  mode: 'new' | 'edit';
+  variants?: any[];
+  onVariantsChange?: (variants: any[]) => void;
+}
+
+export function ProductFormVariants({ mode, variants: externalVariants = [], onVariantsChange }: ProductFormVariantsProps) {
+  // Use external variants directly - no local state for variants data
+  const variants = externalVariants;
   const [activeTab, setActiveTab] = useState('list');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newVariant, setNewVariant] = useState<Omit<Variant, 'id'>>({
@@ -130,9 +83,8 @@ export function ProductFormVariants({ mode }: { mode: 'new' | 'edit' }) {
     ) {
       if (editingId) {
         // Update existing variant
-        setVariants((prev) =>
-          prev.map((v) => (v.id === editingId ? { ...v, ...newVariant } : v)),
-        );
+        const updatedVariants = variants.map((v) => (v.id === editingId ? { ...v, ...newVariant } : v));
+        onVariantsChange?.(updatedVariants);
 
         toast.custom(
           (t) => (
@@ -159,7 +111,7 @@ export function ProductFormVariants({ mode }: { mode: 'new' | 'edit' }) {
           id: Date.now().toString(),
           ...newVariant,
         };
-        setVariants([...variants, variant]);
+        onVariantsChange?.([...variants, variant]);
 
         toast.custom(
           (t) => (
@@ -186,7 +138,7 @@ export function ProductFormVariants({ mode }: { mode: 'new' | 'edit' }) {
   };
 
   const handleDeleteVariant = (id: string) => {
-    setVariants(variants.filter((variant) => variant.id !== id));
+    onVariantsChange?.(variants.filter((variant) => variant.id !== id));
 
     toast.custom(
       (t) => (

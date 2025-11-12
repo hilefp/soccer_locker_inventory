@@ -6,18 +6,33 @@ import { Button } from '@/shared/components/ui/button';
 import { ProductFormSheet } from '../components/product-form-sheet';
 import { ProductListTable } from '../components/product-list';
 import { ProductNavigationTabs } from '@/modules/products/components/product-navigation-tabs';
+import { useProducts } from '@/modules/products/hooks/use-products';
 
 export function ProductList() {
   const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
 
+  // Use React Query hook for data fetching
+  const { data: products = [], isLoading, error } = useProducts();
+
+  const activeProducts = products.filter(product => product.isActive);
+  const totalProducts = products.length;
+  const activePercentage = totalProducts > 0
+    ? Math.round((activeProducts.length / totalProducts) * 100)
+    : 0;
+
   return (
     <div className="container-fluid space-y-5 lg:space-y-9">
       <ProductNavigationTabs />
-      <div className="flex items-center flex-wrap dap-2.5 justify-between">
+      <div className="flex items-center flex-wrap gap-2.5 justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-bold text-foreground">Product List</h1>
           <span className="text-sm text-muted-foreground">
-            1424 products found. 83% are active.
+            {isLoading
+              ? 'Loading products...'
+              : error
+                ? `Error loading products: ${error.message}`
+                : `${totalProducts} products found. ${activePercentage}% are active.`
+            }
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -37,7 +52,11 @@ export function ProductList() {
       </div>
 
       {/* Product List Table */}
-      <ProductListTable />
+      <ProductListTable
+        products={products}
+        isLoading={isLoading}
+        error={error?.message || null}
+      />
 
       {/* Create Product Modal */}
       <ProductFormSheet

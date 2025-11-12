@@ -29,7 +29,7 @@ export function ProductNavigationTabs() {
       <TabsList variant="line" size="md">
         <TabsTrigger value="/products">Products</TabsTrigger>
         <TabsTrigger value="/products/categories">Categories</TabsTrigger>
-        <TabsTrigger value="/products/variants">Variants</TabsTrigger>
+        <TabsTrigger value="/products/brands">Brands</TabsTrigger>
         <TabsTrigger value="/products/attributes">Attributes</TabsTrigger>
       </TabsList>
     </Tabs>
