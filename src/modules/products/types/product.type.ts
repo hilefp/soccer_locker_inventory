@@ -62,7 +62,7 @@ export interface ProductRequest {
   model?: string;
   categoryId?: string;
   brandId?: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   tags?: string[];
   imageUrls?: string[];
   isActive?: boolean;

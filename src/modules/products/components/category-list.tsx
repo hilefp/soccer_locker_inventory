@@ -1,5 +1,29 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CategoryFormSheet } from '@/modules/products/components/category-form-sheet';
+import { useDeleteProductCategory } from '@/modules/products/hooks/use-product-categories';
+import { ProductCategory } from '@/modules/products/types/product-category.type';
+import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
+import { Badge, BadgeProps } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import {
+  Card,
+  CardFooter,
+  CardHeader,
+  CardTable,
+  CardToolbar,
+} from '@/shared/components/ui/card';
+import { DataGrid } from '@/shared/components/ui/data-grid';
+import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
+import { DataGridPagination } from '@/shared/components/ui/data-grid-pagination';
+import {
+  DataGridTable,
+  DataGridTableRowSelect,
+  DataGridTableRowSelectAll,
+} from '@/shared/components/ui/data-grid-table';
+import { Input, InputWrapper } from '@/shared/components/ui/input';
+import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import {
   Column,
   ColumnDef,
@@ -14,39 +38,13 @@ import {
 import { Eye, Info, Search, SquarePen, Trash, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
-import { Badge, BadgeProps } from '@/shared/components/ui/badge';
-import { Button } from '@/shared/components/ui/button';
-import {
-  Card,
-  CardFooter,
-  CardHeader,
-  CardTable,
-  CardToolbar,
-} from '@/shared/components/ui/card';
-import { Checkbox } from '@/shared/components/ui/checkbox';
-import { DataGrid } from '@/shared/components/ui/data-grid';
-import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
-import { DataGridPagination } from '@/shared/components/ui/data-grid-pagination';
-import {
-  DataGridTable,
-  DataGridTableRowSelect,
-  DataGridTableRowSelectAll,
-} from '@/shared/components/ui/data-grid-table';
-import { Input, InputWrapper } from '@/shared/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 import { CategoryDetailsEditSheet } from '../../../pages/components/category-details-edit-sheet';
-import { CategoryFormSheet } from '@/modules/products/components/category-form-sheet';
-import { ProductCategory } from '@/modules/products/types/product-category.type';
-import { useDeleteProductCategory } from '@/modules/products/hooks/use-product-categories';
 
 interface IColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>;
 }
 
 export interface IData {
-  totalEarnings: string;
   productsQty: string;
   id: string;
   productInfo: {
@@ -58,18 +56,16 @@ export interface IData {
     label: string;
     variant: string;
   };
-  featured: boolean;
   created?: string;
   updated?: string;
 }
 
 interface CategoryListProps {
-  displaySheet  ?: "categoryDetails" | "createCategory" | "editCategory";
+  displaySheet?: 'categoryDetails' | 'createCategory' | 'editCategory';
   categories?: ProductCategory[];
   isLoading?: boolean;
   error?: string | null;
 }
-
 
 // Helper function to convert ProductCategory to IData format
 const convertCategoryToIData = (category: ProductCategory): IData => {
@@ -80,13 +76,11 @@ const convertCategoryToIData = (category: ProductCategory): IData => {
       title: category.name,
       label: category.slug,
     },
-    productsQty: '0', // This would need to come from a products count API
-    totalEarnings: '$0.00', // This would need to come from earnings API
+    productsQty: '0',
     status: {
       label: category.isActive ? 'Active' : 'Inactive',
       variant: category.isActive ? 'success' : 'destructive',
     },
-    featured: false, // Not in ProductCategory type yet
     created: category.createdAt,
     updated: category.updatedAt,
   };
@@ -98,8 +92,6 @@ export function CategoryListTable({
   isLoading = false,
   error = null,
 }: CategoryListProps) {
-  // CRITICAL FIX: Memoize data conversion to prevent infinite re-renders
-  // Without this, categories.map creates a new array reference on every render
   const data = useMemo(() => {
     if (!categories || categories.length === 0) return [];
     return categories.map(convertCategoryToIData);
@@ -114,9 +106,9 @@ export function CategoryListTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'id', desc: false },
   ]);
-  // FIXED: Initialize as empty object to prevent infinite loop from data dependency
-  const [featuredState, setFeaturedState] = useState<Record<string, boolean>>({});
-
+  const [featuredState, setFeaturedState] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // React Query hook for delete mutation
   const deleteMutation = useDeleteProductCategory();
@@ -128,12 +120,12 @@ export function CategoryListTable({
     undefined,
   );
 
-  // Sheet state for displaySheet prop
   const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<
+    string | undefined
+  >(undefined);
 
-  // Auto-open sheet based on displaySheet prop
   useEffect(() => {
     if (!displaySheet) {
       return;
@@ -152,28 +144,6 @@ export function CategoryListTable({
     }
   }, [displaySheet]);
 
-  // FIXED: Sync featuredState with data only when data reference changes
-  // data is memoized, so this only runs when categories actually change
-  useEffect(() => {
-    if (data.length > 0) {
-      setFeaturedState(
-        Object.fromEntries(data.map((item) => [item.id, item.featured]))
-      );
-    }
-  }, [data]); 
-
-  const ColumnInputFilter = <TData, TValue>({
-    column,
-  }: IColumnFilterProps<TData, TValue>) => {
-    return (
-      <Input
-        placeholder="Filter..."
-        value={(column.getFilterValue() as string) ?? ''}
-        onChange={(event) => column.setFilterValue(event.target.value)}
-        className="w-40"
-      />
-    );
-  };
 
   const handleFeaturedChange = useCallback((id: string, checked: boolean) => {
     setFeaturedState((prev) => ({ ...prev, [id]: checked }));
@@ -241,10 +211,7 @@ export function CategoryListTable({
         id: 'productInfo',
         accessorFn: (row) => row.productInfo,
         header: ({ column }) => (
-          <DataGridColumnHeader
-            title="Category"
-            column={column}
-          />
+          <DataGridColumnHeader title="Category" column={column} />
         ),
         cell: (info) => {
           const productInfo = info.row.getValue(
@@ -299,16 +266,7 @@ export function CategoryListTable({
         enableSorting: true,
         size: 65,
       },
-      {
-        id: 'totalEarnings',
-        accessorFn: (row) => row.totalEarnings,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Total Earnings" column={column} />
-        ),
-        cell: (info) => info.getValue() as string,
-        enableSorting: true,
-        size: 80,
-      },
+
       {
         id: 'status',
         accessorFn: (row) => row.status,
@@ -327,30 +285,7 @@ export function CategoryListTable({
         enableSorting: true,
         size: 80,
       },
-      {
-        id: 'featured',
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Featured" column={column} />
-        ),
-        enableSorting: true,
-        cell: (info) => {
-          const id = info.row.getValue('id') as string;
-          // FIXED: Use info.row.original.featured instead of featuredState to prevent dependency issues
-          return (
-            <div className="flex justify-center">
-              <Checkbox
-                size="sm"
-                id={`featured-${id}`}
-                checked={!!info.row.original.featured}
-                onCheckedChange={(checked: unknown) =>
-                  handleFeaturedChange(id, Boolean(checked))
-                }
-              />
-            </div>
-          );
-        },
-        size: 45,
-      },
+
       {
         id: 'actions',
         header: () => '',
@@ -462,55 +397,61 @@ export function CategoryListTable({
           cellBorder: true,
         }}
       >
-      <Card>
-        <CardHeader className="py-3.5">
-          <CardToolbar className="flex items-center gap-2">
-            <InputWrapper className="w-full lg:w-[200px]">
-              <Search/>
-              <Input
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <Button
-                  variant="dim"
-                  size="sm"
-                  className="-me-3.5"
-                  onClick={() => setSearchQuery('')}
-                >
-                  {searchQuery && <X/>}
-                </Button>
-              )}
-            </InputWrapper>
-          </CardToolbar>
-        </CardHeader>
-        <CardTable>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-10">
-              <span className="text-muted-foreground">Loading categories...</span>
-            </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center py-10 gap-2">
-              <span className="text-destructive">Error loading categories</span>
-              <span className="text-sm text-muted-foreground">{error}</span>
-            </div>
-          ) : filteredData.length === 0 ? (
-            <div className="flex items-center justify-center py-10">
-              <span className="text-muted-foreground">
-                {searchQuery ? 'No categories found matching your search' : 'No categories yet'}
-              </span>
-            </div>
-          ) : (
-            <ScrollArea>
-              <DataGridTable />
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-          )}
-        </CardTable>
-        <CardFooter>
-          <DataGridPagination />
-        </CardFooter>
+        <Card>
+          <CardHeader className="py-3.5">
+            <CardToolbar className="flex items-center gap-2">
+              <InputWrapper className="w-full lg:w-[200px]">
+                <Search />
+                <Input
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <Button
+                    variant="dim"
+                    size="sm"
+                    className="-me-3.5"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    {searchQuery && <X />}
+                  </Button>
+                )}
+              </InputWrapper>
+            </CardToolbar>
+          </CardHeader>
+          <CardTable>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <span className="text-muted-foreground">
+                  Loading categories...
+                </span>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2">
+                <span className="text-destructive">
+                  Error loading categories
+                </span>
+                <span className="text-sm text-muted-foreground">{error}</span>
+              </div>
+            ) : filteredData.length === 0 ? (
+              <div className="flex items-center justify-center py-10">
+                <span className="text-muted-foreground">
+                  {searchQuery
+                    ? 'No categories found matching your search'
+                    : 'No categories yet'}
+                </span>
+              </div>
+            ) : (
+              <ScrollArea>
+                <DataGridTable />
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            )}
+          </CardTable>
+          <CardFooter>
+            <DataGridPagination />
+          </CardFooter>
         </Card>
       </DataGrid>
 

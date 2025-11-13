@@ -4,7 +4,7 @@ export interface productCategoryRequest {
     slug: string;
     isActive: boolean;
     parentId?: string;
-    imageUrl?: string;
+    imageUrl?: string | null;
 }
 
 export interface ProductCategory extends productCategoryRequest {

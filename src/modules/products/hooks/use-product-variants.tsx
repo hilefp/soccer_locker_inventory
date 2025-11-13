@@ -12,17 +12,15 @@ export const productVariantKeys = {
   detail: (variantId: string) => [...productVariantKeys.all, variantId] as const,
 };
 
-// Hook to fetch variants by product
 export function useProductVariants(productId: string) {
   return useQuery({
     queryKey: productVariantKeys.byProduct(productId),
     queryFn: () => productVariantService.getVariantsByProduct(productId),
     enabled: !!productId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 }
 
-// Hook to fetch a single variant
 export function useProductVariant(variantId: string) {
   return useQuery({
     queryKey: productVariantKeys.detail(variantId),
@@ -40,7 +38,6 @@ export function useCreateProductVariant() {
     mutationFn: ({ productId, data }: { productId: string; data: ProductVariantRequest }) =>
       productVariantService.createVariant(productId, data),
     onSuccess: (_, variables) => {
-      // Invalidate variants for this product
       queryClient.invalidateQueries({ queryKey: productVariantKeys.byProduct(variables.productId) });
 
       toast.custom(
@@ -69,7 +66,6 @@ export function useCreateProductVariant() {
   });
 }
 
-// Hook to update a variant
 export function useUpdateProductVariant() {
   const queryClient = useQueryClient();
 
@@ -77,7 +73,6 @@ export function useUpdateProductVariant() {
     mutationFn: ({ variantId, data }: { variantId: string; data: ProductVariantRequest }) =>
       productVariantService.updateVariant(variantId, data),
     onSuccess: (data, variables) => {
-      // Invalidate specific variant and all variants
       queryClient.invalidateQueries({ queryKey: productVariantKeys.detail(variables.variantId) });
       if (data.productId) {
         queryClient.invalidateQueries({ queryKey: productVariantKeys.byProduct(data.productId) });
@@ -109,7 +104,6 @@ export function useUpdateProductVariant() {
   });
 }
 
-// Hook to delete a variant
 export function useDeleteProductVariant() {
   const queryClient = useQueryClient();
 

@@ -34,11 +34,12 @@ import {
 } from '@/shared/components/ui/sheet';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { ProductFormImageUpload } from '@/modules/products/components/product-form-image-upload';
+import { ImageFile, ProductFormImageUpload } from '@/modules/products/components/product-form-image-upload';
 import { ProductFormVariants } from '@/modules/products/components/product-form-variants';
 import { useProductCategories } from '@/modules/products/hooks/use-product-categories';
 import { useProductBrands } from '@/modules/products/hooks/use-product-brands';
 import { useProducts, useCreateProduct, useUpdateProduct } from '@/modules/products/hooks/use-products';
+import { ProductRequest } from '../types/product.type';
 
 function ProductFormTagInput({
   tags,
@@ -123,6 +124,7 @@ export function ProductFormSheet({
   const [status, setStatus] = useState('draft');
   const [isFeatured, setIsFeatured] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [variants, setVariants] = useState<any[]>([]); // Store variants
 
   // Fetch data
@@ -136,7 +138,6 @@ export function ProductFormSheet({
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
-  // Load product data when editing
   useEffect(() => {
     if (!isEditMode || !productId || !open) {
       return;
@@ -198,7 +199,7 @@ export function ProductFormSheet({
       return;
     }
 
-    const productData = {
+    const productData: ProductRequest = {
       name: productName,
       slug: slug,
       model: model || undefined,
@@ -207,9 +208,10 @@ export function ProductFormSheet({
       brandId: brandId || undefined,
       isActive: status === 'published',
       isFeatured: isFeatured,
+      imageUrl: imageUrls.length > 0 ? imageUrls[0] : null,
+      imageUrls: imageUrls,
       tags: tags.length > 0 ? tags : undefined,
       variants: variants.length > 0 ? variants.map(v => {
-        // Remove temporary id field and displayAttributes for API
         const { id, displayAttributes, ...variantData } = v;
         return isEditMode && id ? { ...variantData, id } : variantData;
       }) : undefined,
@@ -227,6 +229,10 @@ export function ProductFormSheet({
     } catch (error) {
       console.error('Error saving product:', error);
     }
+  };
+
+  const handleUploadComplete = (images: ImageFile[]) => {
+    setImageUrls(images.map(img => img.uploadResponse?.url || ''));
   };
 
   return (
@@ -403,6 +409,8 @@ export function ProductFormSheet({
                 <ProductFormImageUpload
                   mode={mode}
                   initialImages={isEditMode && productId ? (products.find(p => p.id === productId)?.imageUrls || []) : []}
+                  onUploadComplete={handleUploadComplete}
+                
                 />
 
                 <Separator className="w-full"></Separator>

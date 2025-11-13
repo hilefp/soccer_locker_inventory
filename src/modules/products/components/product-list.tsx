@@ -25,7 +25,7 @@ import {
   Package,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { toAbsoluteUrl } from '@/shared/lib/helpers';
+import { formatDate, toAbsoluteUrl } from '@/shared/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
 import { Badge, BadgeProps } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -143,7 +143,6 @@ export function ProductListTable({
   onRowClick,
   displaySheet,
 }: ProductListProps) {
-  // CRITICAL FIX: Memoize data conversion to prevent infinite re-renders
   const data = useMemo(() => {
     if (!products || products.length === 0) return [];
     return products.map(convertProductToIData);
@@ -210,6 +209,11 @@ export function ProductListTable({
     console.log('Viewing details for product:', product);
     setSelectedProductId(product.id);
     setIsProductDetailsOpen(true);
+  };
+
+  const handleDeleteProduct = (product: IData) => {
+    console.log('Deleting product:', product);
+    deleteMutation.mutate(product.id);
   };
 
   const ColumnInputFilter = <TData, TValue>({
@@ -410,7 +414,7 @@ export function ProductListTable({
           <DataGridColumnHeader title="Created" column={column} />
         ),
         cell: (info) => {
-          return info.row.original.created;
+          return formatDate(new Date(info.row.original.created));
         },
         enableSorting: true,
         size: 120,
@@ -425,7 +429,7 @@ export function ProductListTable({
           <DataGridColumnHeader title="Updated" column={column} />
         ),
         cell: (info) => {
-          return info.row.original.updated;
+          return formatDate(new Date(info.row.original.updated));
         },
         enableSorting: true,
         size: 120,
@@ -459,7 +463,7 @@ export function ProductListTable({
                       <Info className="size-4" />
                       View Details
                     </DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive">
+                  <DropdownMenuItem variant="destructive" onClick={() => handleDeleteProduct(row.original)}>
                     <Trash className="size-4" />
                     Delete
                   </DropdownMenuItem>

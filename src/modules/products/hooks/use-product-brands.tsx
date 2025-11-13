@@ -5,22 +5,19 @@ import { toast } from 'sonner';
 import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
 import { Info } from 'lucide-react';
 
-// Query keys
 export const productBrandKeys = {
   all: ['product-brands'] as const,
   detail: (id: string) => [...productBrandKeys.all, id] as const,
 };
 
-// Hook to fetch all product brands
 export function useProductBrands() {
   return useQuery({
     queryKey: productBrandKeys.all,
     queryFn: () => productBrandService.getProductBrands(),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 }
 
-// Hook to create a product brand
 export function useCreateProductBrand() {
   const queryClient = useQueryClient();
 
@@ -28,7 +25,6 @@ export function useCreateProductBrand() {
     mutationFn: (data: ProductBrandRequest) =>
       productBrandService.createProductBrand(data),
     onSuccess: () => {
-      // Invalidate and refetch brands
       queryClient.invalidateQueries({ queryKey: productBrandKeys.all });
 
       toast.custom(
@@ -95,14 +91,12 @@ export function useUpdateProductBrand() {
   });
 }
 
-// Hook to delete a product brand
 export function useDeleteProductBrand() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => productBrandService.deleteProductBrand(id),
     onSuccess: (_, id) => {
-      // Invalidate specific brand and all brands
       queryClient.invalidateQueries({ queryKey: productBrandKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: productBrandKeys.all });
 

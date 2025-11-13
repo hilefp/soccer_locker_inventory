@@ -11,12 +11,11 @@ export const productKeys = {
   detail: (id: string) => [...productKeys.all, id] as const,
 };
 
-// Hook to fetch all products
 export function useProducts() {
   return useQuery({
     queryKey: productKeys.all,
     queryFn: () => productService.getProducts(),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5, 
   });
 }
 
@@ -25,8 +24,8 @@ export function useProduct(id: string) {
   return useQuery({
     queryKey: productKeys.detail(id),
     queryFn: () => productService.getProduct(id),
-    enabled: !!id, // Only fetch if id is provided
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!id, 
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -38,7 +37,7 @@ export function useCreateProduct() {
     mutationFn: (data: ProductRequest) =>
       productService.createProduct(data),
     onSuccess: () => {
-      // Invalidate and refetch products
+     
       queryClient.invalidateQueries({ queryKey: productKeys.all });
 
       toast.custom(
@@ -67,7 +66,6 @@ export function useCreateProduct() {
   });
 }
 
-// Hook to update a product
 export function useUpdateProduct() {
   const queryClient = useQueryClient();
 

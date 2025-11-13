@@ -2,7 +2,7 @@ export interface ProductBrandRequest {
   name: string;
   description?: string;
   slug: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   websiteUrl?: string;
   code: string;
   isActive: boolean;

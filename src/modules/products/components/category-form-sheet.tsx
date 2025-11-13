@@ -155,7 +155,7 @@ export function CategoryFormSheet({
   const [status, setStatus] = useState('active');
   const [description, setDescription] = useState('');
   const [parentId, setParentId] = useState<string>('');
-
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   // React Query hooks
   const { data: categories = [], isLoading: isFetching } = useProductCategories();
   const createMutation = useCreateProductCategory();
@@ -164,7 +164,6 @@ export function CategoryFormSheet({
 
   const isLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
-  // Load category data when editing
   useEffect(() => {
     if (!isEditMode || !categoryId || !open) {
       return;
@@ -177,6 +176,7 @@ export function CategoryFormSheet({
       setStatus(category.isActive ? 'active' : 'inactive');
       setDescription(category.description || '');
       setParentId(category.parentId || '');
+      setImageUrl(category.imageUrl || null);
     }
   }, [isEditMode, categoryId, open, categories]);
 
@@ -188,10 +188,10 @@ export function CategoryFormSheet({
       setStatus('active');
       setDescription('');
       setParentId('');
+      setImageUrl(null);
     }
   }, [open]);
 
-  // Auto-generate slug from category name
   useEffect(() => {
     if (isNewMode && categoryName) {
       const generatedSlug = categoryName
@@ -213,7 +213,8 @@ export function CategoryFormSheet({
       slug: slug,
       description: description,
       isActive: status === 'active',
-      parentId: parentId || undefined, // Only include if not empty
+      parentId: parentId || undefined, 
+      imageUrl: imageUrl || null,
     };
 
     try {
@@ -226,7 +227,6 @@ export function CategoryFormSheet({
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {
-      // Error handling is done in the mutation hooks
       console.error('Error saving category:', error);
     }
   };
@@ -239,7 +239,6 @@ export function CategoryFormSheet({
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {
-      // Error handling is done in the mutation hook
       console.error('Error deleting category:', error);
     }
   };
