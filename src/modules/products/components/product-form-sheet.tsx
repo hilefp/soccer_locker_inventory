@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CircleX } from 'lucide-react';
+import { CircleX, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Badge, BadgeButton } from '@/shared/components/ui/badge';
@@ -38,7 +38,7 @@ import { ImageFile, ProductFormImageUpload } from '@/modules/products/components
 import { ProductFormVariants } from '@/modules/products/components/product-form-variants';
 import { useProductCategories } from '@/modules/products/hooks/use-product-categories';
 import { useProductBrands } from '@/modules/products/hooks/use-product-brands';
-import { useProducts, useCreateProduct, useUpdateProduct } from '@/modules/products/hooks/use-products';
+import { useProducts, useCreateProduct, useUpdateProduct, useProduct } from '@/modules/products/hooks/use-products';
 import { ProductRequest } from '../types/product.type';
 
 function ProductFormTagInput({
@@ -117,7 +117,8 @@ export function ProductFormSheet({
   // Form state
   const [productName, setProductName] = useState('');
   const [slug, setSlug] = useState('');
-  const [model, setModel] = useState('');
+  const [sku, setSku] = useState('');
+  const [price, setPrice] = useState(0);
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
   const [brandId, setBrandId] = useState<string>('');
@@ -130,7 +131,7 @@ export function ProductFormSheet({
   // Fetch data
   const { data: categories = [], isLoading: categoriesLoading } = useProductCategories();
   const { data: brands = [], isLoading: brandsLoading } = useProductBrands();
-  const { data: products = [] } = useProducts();
+  const { data: product = null } = useProduct(productId || '');
 
   // Mutations
   const createMutation = useCreateProduct();
@@ -144,15 +145,13 @@ export function ProductFormSheet({
     }
 
     console.log('Loading product for edit. ProductId:', productId);
-    console.log('Available products:', products);
-
-    const product = products.find(p => p.id === productId);
 
     if (product) {
       console.log('Found product:', product);
       setProductName(product.name);
       setSlug(product.slug);
-      setModel(product.model || '');
+      setSku(product.defaultVariant.sku || '');
+      setPrice(product.defaultVariant.price || 0);
       setDescription(product.description || '');
       setCategoryId(product.categoryId || '');
       setBrandId(product.brandId || '');
@@ -164,14 +163,13 @@ export function ProductFormSheet({
       console.log('Product not found with id:', productId);
       toast.error('Product not found');
     }
-  }, [isEditMode, productId, open, products]);
+  }, [isEditMode, productId, open, product]);
 
   // Reset form when closed
   useEffect(() => {
     if (!open) {
       setProductName('');
       setSlug('');
-      setModel('');
       setDescription('');
       setCategoryId('');
       setBrandId('');
@@ -202,8 +200,9 @@ export function ProductFormSheet({
     const productData: ProductRequest = {
       name: productName,
       slug: slug,
-      model: model || undefined,
       description: description || undefined,
+      sku: sku,
+      price: price,
       categoryId: categoryId || undefined,
       brandId: brandId || undefined,
       isActive: status === 'published',
@@ -318,14 +317,26 @@ export function ProductFormSheet({
                         />
                       </div>
                       <div className="flex flex-col gap-2">
-                        <Label className="text-xs">Model</Label>
+                        <Label className="text-xs">Sku</Label>
                         <Input
-                          placeholder="Model Number"
-                          value={model}
-                          onChange={(e) => setModel(e.target.value)}
+                          placeholder="SKU"
+                          value={sku}
+                          onChange={(e) => setSku(e.target.value)}
                           disabled={isLoading}
                         />
                       </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 mb-2.5">
+                      <Label className="text-xs">Price *</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={price}
+                        onChange={(e) => setPrice(parseFloat(e.target.value))}
+                        disabled={isLoading}
+                      />
                     </div>
 
                     <div className="flex flex-col gap-2">
@@ -402,13 +413,13 @@ export function ProductFormSheet({
                   </CardContent>
                 </Card>
 
-                <ProductFormVariants mode={mode} variants={variants} onVariantsChange={setVariants} />
+                <ProductFormVariants productId={productId || null} mode={mode} variants={variants} onVariantsChange={setVariants} />
               </div>
 
               <div className="w-full lg:w-[420px] shrink-0 lg:mt-5 space-y-5 lg:ps-5">
                 <ProductFormImageUpload
                   mode={mode}
-                  initialImages={isEditMode && productId ? (products.find(p => p.id === productId)?.imageUrls || []) : []}
+                  initialImages={isEditMode && productId ? (product?.imageUrls || []) : []}
                   onUploadComplete={handleUploadComplete}
                 
                 />

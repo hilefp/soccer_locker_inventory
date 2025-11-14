@@ -1,10 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { SquarePen, TrendingUp, Package } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
-import { toAbsoluteUrl } from '@/shared/lib/helpers';
+import { useEffect, useState } from 'react';
 import { useProducts } from '@/modules/products/hooks/use-products';
 import { Product } from '@/modules/products/types/product.type';
 import { Badge, BadgeDot } from '@/shared/components/ui/badge';
@@ -34,7 +30,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table';
-import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group';
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from '@/shared/components/ui/toggle-group';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
+import { Package, SquarePen, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface ProductDetailsAnalyticsSheetProps {
   open: boolean;
@@ -51,7 +54,9 @@ export function ProductDetailsAnalyticsSheet({
   const { data: products = [] } = useProducts();
 
   // Find the current product
-  const product: Product | undefined = productId ? products.find(p => p.id === productId) : undefined;
+  const product: Product | undefined = productId
+    ? products.find((p) => p.id === productId)
+    : undefined;
 
   // Chart data for Recharts
   const salesPriceData = [
@@ -78,7 +83,8 @@ export function ProductDetailsAnalyticsSheet({
   const variants = product?.variants || [];
 
   // Use product images or show placeholder
-  const productImages = product?.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : [];
+  const productImages =
+    product?.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : [];
   const [selectedImage, setSelectedImage] = useState(productImages[0] || '');
 
   // Prevent auto-focus when sheet opens
@@ -95,7 +101,9 @@ export function ProductDetailsAnalyticsSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="gap-0 lg:w-[1080px] sm:max-w-none inset-5 border start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-3.5 px-5 border-border">
-          <SheetTitle tabIndex={0} className="focus:outline-none font-medium">Product Details & Analytics</SheetTitle>
+          <SheetTitle tabIndex={0} className="focus:outline-none font-medium">
+            Product Details & Analytics
+          </SheetTitle>
         </SheetHeader>
 
         <SheetBody className="p-0 grow">
@@ -107,25 +115,41 @@ export function ProductDetailsAnalyticsSheet({
                     <span className="lg:text-[22px] font-semibold text-foreground leading-none">
                       {product.name}
                     </span>
-                    <Badge size="sm" variant={product.isActive ? 'success' : 'warning'} appearance="light">
+                    <Badge
+                      size="sm"
+                      variant={product.isActive ? 'success' : 'warning'}
+                      appearance="light"
+                    >
                       {product.isActive ? 'Live' : 'Draft'}
                     </Badge>
                   </div>
                   <div className="flex items-center flex-wrap gap-1.5 text-2sm">
-                    <span className="font-normal text-muted-foreground">SKU</span>
-                    <span className="font-medium text-foreground/80">{product.slug}</span>
+                    <span className="font-normal text-muted-foreground">
+                      SKU
+                    </span>
+                    <span className="font-medium text-foreground/80">
+                      {product.slug}
+                    </span>
                     {product.createdAt && (
                       <>
                         <BadgeDot className="bg-muted-foreground/60 size-1 mx-1" />
-                        <span className="font-normal text-muted-foreground">Created</span>
-                        <span className="font-medium text-foreground/80">{product.createdAt}</span>
+                        <span className="font-normal text-muted-foreground">
+                          Created
+                        </span>
+                        <span className="font-medium text-foreground/80">
+                          {product.createdAt}
+                        </span>
                       </>
                     )}
                     {product.updatedAt && (
                       <>
                         <BadgeDot className="bg-muted-foreground/60 size-1 mx-1" />
-                        <span className="font-normal text-muted-foreground">Last Updated</span>
-                        <span className="font-medium text-foreground/80">{product.updatedAt}</span>
+                        <span className="font-normal text-muted-foreground">
+                          Last Updated
+                        </span>
+                        <span className="font-medium text-foreground/80">
+                          {product.updatedAt}
+                        </span>
                       </>
                     )}
                   </div>
@@ -133,14 +157,16 @@ export function ProductDetailsAnalyticsSheet({
               </>
             ) : (
               <div className="flex flex-col gap-3">
-                <span className="text-muted-foreground">No product selected</span>
+                <span className="text-muted-foreground">
+                  No product selected
+                </span>
               </div>
             )}
-            <div className="flex items-center gap-2.5">
+            {/* <div className="flex items-center gap-2.5">
               <Button variant="ghost">Customer View</Button>
               <Button variant="outline">Remove</Button>
               <Button variant="mono">Edit Product</Button>
-            </div>
+            </div> */}
           </div>
           <ScrollArea
             className="flex flex-col h-[calc(100dvh-15.8rem)] mx-1.5"
@@ -185,7 +211,7 @@ export function ProductDetailsAnalyticsSheet({
                   </CardContent>
                 </Card>
 
-                {/* Analytics */}
+                {/* Analytics
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
                     <CardTitle className="text-2sm">Analytics</CardTitle>
@@ -205,7 +231,6 @@ export function ProductDetailsAnalyticsSheet({
                         </Badge>
                       </div>
 
-                      {/* Recharts Area Chart */}
                       <div className="relative">
                         <div className="h-[100px] w-full">
                           <ResponsiveContainer width="100%" height="100%">
@@ -295,7 +320,6 @@ export function ProductDetailsAnalyticsSheet({
                         </span>
                       </div>
 
-                      {/* Recharts Area Chart */}
                       <div className="relative">
                         <div className="h-[100px] w-full">
                           <ResponsiveContainer width="100%" height="100%">
@@ -368,7 +392,7 @@ export function ProductDetailsAnalyticsSheet({
                       </div>
                     </div>
                   </CardContent>
-                </Card>
+                </Card> */}
 
                 {/* Variants table */}
                 <Card className="rounded-md">
@@ -407,7 +431,10 @@ export function ProductDetailsAnalyticsSheet({
                       <TableBody>
                         {variants.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                            <TableCell
+                              colSpan={6}
+                              className="text-center py-4 text-muted-foreground"
+                            >
                               No variants found
                             </TableCell>
                           </TableRow>
@@ -421,10 +448,12 @@ export function ProductDetailsAnalyticsSheet({
                                 {variant.sku}
                               </TableCell>
                               <TableCell className="py-1 border-e border-border">
-                                {Object.entries(variant.attributes || {}).map(([key, value]) => `${key}: ${value}`).join(', ') || 'N/A'}
+                                {Object.entries(variant.attributes || {})
+                                  .map(([key, value]) => `${key}: ${value}`)
+                                  .join(', ') || 'N/A'}
                               </TableCell>
                               <TableCell className="py-1 border-e border-border">
-                                ${variant.price?.toFixed(2) || '0.00'}
+                                ${(variant?.price && variant.price) || '0.00'}
                               </TableCell>
                               <TableCell className="py-1 border-e border-border">
                                 {variant.isActive ? 'Yes' : 'No'}
@@ -522,65 +551,20 @@ export function ProductDetailsAnalyticsSheet({
                       </div>
                     </div>
                   )}
-                  <div className="flex items-center lg:gap-13 gap-5">
-                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">
-                      Fit
-                    </div>
-                    <div className="text-2sm text-secondary-foreground font-medium">
-                      True to size
-                    </div>
-                  </div>
-                  <div className="flex items-center lg:gap-13 gap-5">
-                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">
-                      Colors
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4.5 h-4.5 rounded-xs bg-background border border-border-input"></div>
-                      <div className="w-4 h-4 rounded-xs bg-foreground"></div>
-                      <div className="w-4 h-4 rounded-xs bg-destructive"></div>
-                    </div>
-                  </div>
-                  <div className="flex items-center lg:gap-13 gap-5">
-                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">
-                      Sizes
-                    </div>
-                    <div className="flex items-center gap-3.5">
-                      <span className="text-2sm text-secondary-foreground font-medium">
-                        EU: 39-45
-                      </span>
-                      <span className="text-2sm text-secondary-foreground font-medium">
-                        US: 6-12
-                      </span>
-                      <span className="text-2sm text-secondary-foreground font-medium">
-                        UK: 5.5-11.5
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center lg:gap-13 gap-5">
-                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">
-                      Rating
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <Rating rating={4} size="sm" />
-                      <Link
-                        to="#"
-                        className="hover:text-primary text-xs font-medium text-primary"
-                      >
-                        834 reviews
-                      </Link>
-                    </div>
-                  </div>
+                
+                  
+                 
                 </div>
               </div>
             </div>
           </ScrollArea>
         </SheetBody>
 
-        <SheetFooter className="flex-row border-t pb-4 p-5 border-border gap-2.5 lg:gap-0">
+        {/* <SheetFooter className="flex-row border-t pb-4 p-5 border-border gap-2.5 lg:gap-0">
           <Button variant="ghost">Customer View</Button>
           <Button variant="outline">Remove</Button>
           <Button variant="mono">Edit Product</Button>
-        </SheetFooter>
+        </SheetFooter> */}
       </SheetContent>
     </Sheet>
   );

@@ -67,6 +67,8 @@ export interface ProductRequest {
   imageUrls?: string[];
   isActive?: boolean;
   isFeatured?: boolean;
+  sku?: string;
+  price?: number;
   variants?: ProductVariantRequest[];
 }
 
@@ -75,6 +77,7 @@ export interface Product extends ProductRequest {
   category?: ProductCategory;
   brand?: ProductBrand;
   variants?: ProductVariant[];
+  defaultVariant: ProductVariantRequest;
   minPrice?: number;
   maxPrice?: number;
   createdAt?: string;

@@ -1,11 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Image as ImageIcon } from 'lucide-react';
-import { toAbsoluteUrl } from '@/shared/lib/helpers';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  useCreateProductCategory,
+  useDeleteProductCategory,
+  useProductCategories,
+  useUpdateProductCategory,
+} from '@/modules/products/hooks/use-product-categories';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -22,21 +27,20 @@ import {
   SheetTitle,
 } from '@/shared/components/ui/sheet';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { ScrollArea } from '@/shared/components/ui/scroll-area';
+import { useFileUpload } from '@/shared/hooks/use-file-upload';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
+import { fileUploadService } from '@/shared/services/file-upload.service';
+import { Image as ImageIcon, X } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  useProductCategories,
-  useCreateProductCategory,
-  useUpdateProductCategory,
-  useDeleteProductCategory,
-} from '@/modules/products/hooks/use-product-categories';
 
 function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
   const isNewMode = mode === 'new';
   const isEditMode = mode === 'edit';
 
   const [selectedImage, setSelectedImage] = useState<string | null>(
-    isEditMode ? toAbsoluteUrl('/media/store/client/icons/light/running-shoes.svg') : null
+    isEditMode
+      ? toAbsoluteUrl('/media/store/client/icons/light/running-shoes.svg')
+      : null,
   );
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,7 +54,17 @@ function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
     }
   };
 
-  // If selected image points to icons path, extract file name for light/dark rendering
+  const uploadFile = useCallback(async (file: File) => {
+    try {
+      const response = await fileUploadService.uploadImage(file, 'categories');
+      if (response) {
+        setSelectedImage(response.url);
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  }, []);
+
   const iconFileName: string | null =
     selectedImage && selectedImage.includes('/icons/')
       ? (selectedImage.split('/').pop() as string)
@@ -65,12 +79,16 @@ function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
               {iconFileName ? (
                 <>
                   <img
-                    src={toAbsoluteUrl(`/media/store/client/icons/light/${iconFileName}`)}
+                    src={toAbsoluteUrl(
+                      `/media/store/client/icons/light/${iconFileName}`,
+                    )}
                     className="cursor-pointer h-[140px] object-contain dark:hidden"
                     alt="light-icon"
                   />
                   <img
-                    src={toAbsoluteUrl(`/media/store/client/icons/dark/${iconFileName}`)}
+                    src={toAbsoluteUrl(
+                      `/media/store/client/icons/dark/${iconFileName}`,
+                    )}
                     className="cursor-pointer h-[140px] object-contain light:hidden"
                     alt="dark-icon"
                   />
@@ -105,7 +123,10 @@ function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
                 className="hidden"
                 id="category-image-upload"
               />
-              <label htmlFor="category-image-upload" className="absolute bottom-3 right-3">
+              <label
+                htmlFor="category-image-upload"
+                className="absolute bottom-3 right-3"
+              >
                 <Button size="sm" variant="outline" asChild>
                   <span>{isEditMode ? 'Change' : 'Upload'}</span>
                 </Button>
@@ -121,7 +142,10 @@ function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
                 className="hidden"
                 id="category-image-upload"
               />
-              <label htmlFor="category-image-upload" className="absolute bottom-3 right-3">
+              <label
+                htmlFor="category-image-upload"
+                className="absolute bottom-3 right-3"
+              >
                 <Button size="sm" variant="outline" asChild>
                   <span>Upload</span>
                 </Button>
@@ -157,19 +181,23 @@ export function CategoryFormSheet({
   const [parentId, setParentId] = useState<string>('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   // React Query hooks
-  const { data: categories = [], isLoading: isFetching } = useProductCategories();
+  const { data: categories = [], isLoading: isFetching } =
+    useProductCategories();
   const createMutation = useCreateProductCategory();
   const updateMutation = useUpdateProductCategory();
   const deleteMutation = useDeleteProductCategory();
 
-  const isLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const isLoading =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending;
 
   useEffect(() => {
     if (!isEditMode || !categoryId || !open) {
       return;
     }
 
-    const category = categories.find(cat => cat.id === categoryId);
+    const category = categories.find((cat) => cat.id === categoryId);
     if (category) {
       setCategoryName(category.name);
       setSlug(category.slug);
@@ -213,7 +241,7 @@ export function CategoryFormSheet({
       slug: slug,
       description: description,
       isActive: status === 'active',
-      parentId: parentId || undefined, 
+      parentId: parentId || undefined,
       imageUrl: imageUrl || null,
     };
 
@@ -221,7 +249,10 @@ export function CategoryFormSheet({
       if (isNewMode) {
         await createMutation.mutateAsync(categoryData);
       } else if (categoryId) {
-        await updateMutation.mutateAsync({ id: categoryId, data: categoryData });
+        await updateMutation.mutateAsync({
+          id: categoryId,
+          data: categoryData,
+        });
       }
 
       onSuccess?.();
@@ -293,14 +324,20 @@ export function CategoryFormSheet({
               {/* Parent Category */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium">Parent Category</Label>
-                <Select value={parentId || 'none'} onValueChange={(value) => setParentId(value === 'none' ? '' : value)} disabled={isLoading || isFetching}>
+                <Select
+                  value={parentId || 'none'}
+                  onValueChange={(value) =>
+                    setParentId(value === 'none' ? '' : value)
+                  }
+                  disabled={isLoading || isFetching}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="None (Top Level)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None (Top Level)</SelectItem>
                     {categories
-                      .filter(cat => cat.id !== categoryId) // Don't allow selecting self as parent
+                      .filter((cat) => cat.id !== categoryId) // Don't allow selecting self as parent
                       .map((cat) => (
                         <SelectItem key={cat.id} value={cat.id || 'none'}>
                           {cat.name}
@@ -316,7 +353,11 @@ export function CategoryFormSheet({
               {/* Status */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium">Status</Label>
-                <Select value={status} onValueChange={setStatus} disabled={isLoading || isFetching}>
+                <Select
+                  value={status}
+                  onValueChange={setStatus}
+                  disabled={isLoading || isFetching}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
@@ -348,12 +389,26 @@ export function CategoryFormSheet({
               Close
             </Button>
             {isEditMode && (
-              <Button variant="outline" onClick={handleDelete} disabled={isLoading || isFetching}>
+              <Button
+                variant="outline"
+                onClick={handleDelete}
+                disabled={isLoading || isFetching}
+              >
                 Delete
               </Button>
             )}
-            <Button variant="mono" onClick={handleSave} disabled={isLoading || isFetching}>
-              {isLoading ? 'Saving...' : isFetching ? 'Loading...' : isNewMode ? 'Create' : 'Save'}
+            <Button
+              variant="mono"
+              onClick={handleSave}
+              disabled={isLoading || isFetching}
+            >
+              {isLoading
+                ? 'Saving...'
+                : isFetching
+                  ? 'Loading...'
+                  : isNewMode
+                    ? 'Create'
+                    : 'Save'}
             </Button>
           </div>
         </SheetFooter>

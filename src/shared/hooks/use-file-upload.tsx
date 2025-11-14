@@ -115,7 +115,6 @@ export function useFileUpload(options: UseFileUploadOptions) {
 
       setIsUploading(true);
 
-      // Create upload progress entries for all files
       const newUploads: UploadProgress[] = files.map((file) => ({
         id: `${Date.now()}-${Math.random()}`,
         file,
@@ -126,7 +125,6 @@ export function useFileUpload(options: UseFileUploadOptions) {
       setUploads((prev) => [...prev, ...newUploads]);
 
       try {
-        // Simulate progress
         const progressInterval = setInterval(() => {
           setUploads((prev) =>
             prev.map((upload) =>
@@ -163,7 +161,6 @@ export function useFileUpload(options: UseFileUploadOptions) {
       } catch (error) {
         const err = error as Error;
 
-        // Mark all as error
         setUploads((prev) =>
           prev.map((upload) =>
             newUploads.some((nu) => nu.id === upload.id)
