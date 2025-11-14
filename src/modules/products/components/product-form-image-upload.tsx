@@ -141,6 +141,7 @@ function SortableImageItem({
 interface ProductFormImageUploadProps extends ImageUploadProps {
   mode: 'new' | 'edit';
   initialImages?: string[]; // Array of image URLs from the product
+  onAllImagesChange?: (imageUrls: string[]) => void; // Callback for all image URLs in order
 }
 
 export function ProductFormImageUpload({
@@ -151,7 +152,8 @@ export function ProductFormImageUpload({
   accept = 'image/*',
   className,
   onImagesChange,
-  onUploadComplete
+  onUploadComplete,
+  onAllImagesChange
 }: ProductFormImageUploadProps) {
   const isEditMode = mode === 'edit';
 
@@ -207,6 +209,17 @@ export function ProductFormImageUpload({
 
   useEffect(() => {
     setAllImages((prev) => prev.filter((item) => item && item.id));
+  }, []);
+
+  // Helper function to extract all image URLs in order
+  const getAllImageUrls = useCallback((images: SortableImage[]): string[] => {
+    return images.map((img) => {
+      if (img.id.startsWith('default-')) {
+        return (img as DefaultImage).src;
+      } else {
+        return (img as ImageFile).uploadResponse?.url || '';
+      }
+    }).filter(Boolean);
   }, []);
 
   useEffect(() => {
@@ -310,12 +323,15 @@ export function ProductFormImageUpload({
 
         if (uploadedImages.every((img) => img.status === 'completed')) {
           onUploadComplete?.(uploadedImages);
+          // Notify parent with all image URLs
+          const allUrls = getAllImageUrls(current);
+          onAllImagesChange?.(allUrls);
         }
 
         return current;
       });
     },
-    [validateFile, allImages.length, fileUpload, onImagesChange, onUploadComplete],
+    [validateFile, allImages.length, fileUpload, onImagesChange, onUploadComplete, getAllImageUrls, onAllImagesChange],
   );
 
   const removeImage = useCallback(async (id: string) => {
@@ -331,8 +347,19 @@ export function ProductFormImageUpload({
       URL.revokeObjectURL(imageFile.preview);
     }
 
-    setAllImages((prev) => prev.filter((img) => img.id !== id));
-  }, [allImages, fileUpload]);
+    setAllImages((prev) => {
+      const updated = prev.filter((img) => img.id !== id);
+
+      // Notify parent with updated images
+      onUploadComplete?.(updated.filter((item): item is ImageFile => !item.id.startsWith('default-')));
+
+      // Notify parent with all image URLs
+      const allUrls = getAllImageUrls(updated);
+      onAllImagesChange?.(allUrls);
+
+      return updated;
+    });
+  }, [allImages, fileUpload, onUploadComplete, getAllImageUrls, onAllImagesChange]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -352,7 +379,19 @@ export function ProductFormImageUpload({
 
         if (oldIndex !== -1 && newIndex !== -1) {
           // Reorder the array
-          return arrayMove(prev, oldIndex, newIndex);
+          const reordered = arrayMove(prev, oldIndex, newIndex);
+
+          // Notify parent with updated order
+          const uploadedImages = reordered.filter(
+            (item): item is ImageFile => !item.id.startsWith('default-'),
+          );
+          onUploadComplete?.(uploadedImages);
+
+          // Notify parent with all image URLs in new order
+          const allUrls = getAllImageUrls(reordered);
+          onAllImagesChange?.(allUrls);
+
+          return reordered;
         }
         return prev;
       });

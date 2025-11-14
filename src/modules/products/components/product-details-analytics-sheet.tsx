@@ -34,7 +34,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@/shared/components/ui/toggle-group';
-import { toAbsoluteUrl } from '@/shared/lib/helpers';
+import { formatDate, toAbsoluteUrl } from '@/shared/lib/helpers';
 import { Package, SquarePen, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
@@ -79,14 +79,12 @@ export function ProductDetailsAnalyticsSheet({
     { value: 50 },
   ];
 
-  // Use real variants from product
   const variants = product?.variants || [];
 
   // Use product images or show placeholder
   // Combine imageUrl and imageUrls, prioritizing imageUrl as the main image
   const productImages = product
     ? [
-        ...(product.imageUrl ? [product.imageUrl] : []),
         ...(product.imageUrls || [])
       ].filter(Boolean) // Remove any null/undefined values
     : [];
@@ -152,7 +150,7 @@ export function ProductDetailsAnalyticsSheet({
                           Created
                         </span>
                         <span className="font-medium text-foreground/80">
-                          {product.createdAt}
+                          {formatDate(new Date(product.createdAt))}
                         </span>
                       </>
                     )}
@@ -163,7 +161,7 @@ export function ProductDetailsAnalyticsSheet({
                           Last Updated
                         </span>
                         <span className="font-medium text-foreground/80">
-                          {product.updatedAt}
+                          {formatDate(new Date(product.updatedAt))}
                         </span>
                       </>
                     )}
@@ -439,7 +437,6 @@ export function ProductDetailsAnalyticsSheet({
                           <TableHead className="w-[100px] h-8.5 border-e border-border">
                             On Hand
                           </TableHead>
-                          <TableHead className="w-[50px] h-8.5"></TableHead>
                         </TableRow>
                       </TableHeader>
 
@@ -476,11 +473,7 @@ export function ProductDetailsAnalyticsSheet({
                               <TableCell className="py-1 border-e border-border">
                                 N/A
                               </TableCell>
-                              <TableCell className="text-center py-1">
-                                <Button variant="ghost" mode="icon" size="sm">
-                                  <SquarePen />
-                                </Button>
-                              </TableCell>
+                              
                             </TableRow>
                           ))
                         )}

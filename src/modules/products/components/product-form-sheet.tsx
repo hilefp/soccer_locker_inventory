@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CircleX, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -202,7 +202,7 @@ export function ProductFormSheet({
       slug: slug,
       description: description || undefined,
       sku: sku,
-      price: price,
+      price: parseFloat(price.toString()),
       categoryId: categoryId || undefined,
       brandId: brandId || undefined,
       isActive: status === 'published',
@@ -210,10 +210,6 @@ export function ProductFormSheet({
       imageUrl: imageUrls.length > 0 ? imageUrls[0] : null,
       imageUrls: imageUrls,
       tags: tags.length > 0 ? tags : undefined,
-      variants: variants.length > 0 ? variants.map(v => {
-        const { id, displayAttributes, ...variantData } = v;
-        return isEditMode && id ? { ...variantData, id } : variantData;
-      }) : undefined,
     };
 
     try {
@@ -230,9 +226,19 @@ export function ProductFormSheet({
     }
   };
 
-  const handleUploadComplete = (images: ImageFile[]) => {
-    setImageUrls(images.map(img => img.uploadResponse?.url || ''));
-  };
+  const handleUploadComplete = useCallback((images: ImageFile[]) => {
+    // Get URLs from uploaded images
+    const uploadedUrls = images
+      .map(img => img.uploadResponse?.url)
+      .filter((url): url is string => !!url);
+
+    setImageUrls(uploadedUrls);
+  }, []);
+
+  const handleAllImagesChange = useCallback((urls: string[]) => {
+    // Update imageUrls with all image URLs in order
+    setImageUrls(urls);
+  }, []);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -419,9 +425,13 @@ export function ProductFormSheet({
               <div className="w-full lg:w-[420px] shrink-0 lg:mt-5 space-y-5 lg:ps-5">
                 <ProductFormImageUpload
                   mode={mode}
-                  initialImages={isEditMode && productId ? (product?.imageUrls || []) : []}
+                  initialImages={
+                    isEditMode && productId && product
+                      ? (product.imageUrls || [])
+                      : []
+                  }
                   onUploadComplete={handleUploadComplete}
-                
+                  onAllImagesChange={handleAllImagesChange}
                 />
 
                 <Separator className="w-full"></Separator>
