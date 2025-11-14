@@ -1,7 +1,29 @@
-'use client';
-
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useMemo, useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CategoryFormSheet } from '@/modules/products/components/category-form-sheet';
+import { useDeleteProductCategory } from '@/modules/products/hooks/use-product-categories';
+import { ProductCategory } from '@/modules/products/types/product-category.type';
+import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
+import { Badge, BadgeProps } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import {
+  Card,
+  CardFooter,
+  CardHeader,
+  CardTable,
+  CardToolbar,
+} from '@/shared/components/ui/card';
+import { DataGrid } from '@/shared/components/ui/data-grid';
+import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
+import { DataGridPagination } from '@/shared/components/ui/data-grid-pagination';
+import {
+  DataGridTable,
+  DataGridTableRowSelect,
+  DataGridTableRowSelectAll,
+} from '@/shared/components/ui/data-grid-table';
+import { Input, InputWrapper } from '@/shared/components/ui/input';
+import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
+import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import {
   Column,
   ColumnDef,
@@ -16,37 +38,13 @@ import {
 import { Eye, Info, Search, SquarePen, Trash, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
-import { Badge, BadgeProps } from '@/shared/components/ui/badge';
-import { Button } from '@/shared/components/ui/button';
-import {
-  Card,
-  CardFooter,
-  CardHeader,
-  CardTable,
-  CardToolbar,
-} from '@/shared/components/ui/card';
-import { Checkbox } from '@/shared/components/ui/checkbox';
-import { DataGrid } from '@/shared/components/ui/data-grid';
-import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
-import { DataGridPagination } from '@/shared/components/ui/data-grid-pagination';
-import {
-  DataGridTable,
-  DataGridTableRowSelect,
-  DataGridTableRowSelectAll,
-} from '@/shared/components/ui/data-grid-table';
-import { Input, InputWrapper } from '@/shared/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 import { CategoryDetailsEditSheet } from '../../../pages/components/category-details-edit-sheet';
-import { CategoryFormSheet } from '@/modules/products/components/category-form-sheet';
 
 interface IColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>;
 }
 
 export interface IData {
-  totalEarnings: string;
   productsQty: string;
   id: string;
   productInfo: {
@@ -58,364 +56,47 @@ export interface IData {
     label: string;
     variant: string;
   };
-  featured: boolean;
   created?: string;
   updated?: string;
 }
 
 interface CategoryListProps {
-  mockData?: IData[];
-  displaySheet  ?: "categoryDetails" | "createCategory" | "editCategory";
+  displaySheet?: 'categoryDetails' | 'createCategory' | 'editCategory';
+  categories?: ProductCategory[];
+  isLoading?: boolean;
+  error?: string | null;
 }
 
-const mockData: IData[] = [
-  {
-    id: '1',
-    productInfo: { image: 'running-shoes.svg', title: 'Running Shoes', label: 'WM-8421' },
-    productsQty: '120',
-    totalEarnings: '$2,583.00',
-    status: { label: 'Active', variant: 'success' },
-    featured: true,
-  },
-  {
-    id: '2',
-    productInfo: { image: 'flip-flops.svg', title: 'Flip-flops', label: 'UC-3990' },
-    productsQty: '245',
-    totalEarnings: '$10,110.00',
-    status: { label: 'Active', variant: 'success' },
-    featured: false,
-  },
-  {
-    id: '3',
-    productInfo: { image: 'slip-on-shoe.svg', title: 'Slip-on-shoe', label: 'KB-8820' },
-    productsQty: '560',
-    totalEarnings: '$59,476.50',
-    status: { label: 'Inactive', variant: 'destructive' },
-    featured: false,
-  },
-  {
-    id: '4',
-    productInfo: { image: 'sport-sneaker.svg', title: 'Sport Sneakers', label: 'LS-1033' },
-    productsQty: '98',
-    totalEarnings: '$102,369.99',
-    status: { label: 'Active', variant: 'success' },
-    featured: true,
-  },
-  {
-    id: '5',
-    productInfo: { image: 'ski-boots.svg', title: 'Ski Boots', label: 'WC-5510' },
-    productsQty: '33',
-    totalEarnings: '$929.00',
-    status: { label: 'Active', variant: 'success' },
-    featured: true,
-  },
-  {
-    id: '6',
+// Helper function to convert ProductCategory to IData format
+const convertCategoryToIData = (category: ProductCategory): IData => {
+  return {
+    id: category.id || '',
     productInfo: {
-      image: 'stiletto-heel.svg',
-      title: 'Stiletto Heels',
-      label: 'GH-7312',
+      image: category.imageUrl || 'running-shoes.svg',
+      title: category.name,
+      label: category.slug,
     },
-    productsQty: '140',
-    totalEarnings: '$1,659.00',
+    productsQty: '0',
     status: {
-      label: 'Inactive',
-      variant: 'destructive',
+      label: category.isActive ? 'Active' : 'Inactive',
+      variant: category.isActive ? 'success' : 'destructive',
     },
-    featured: false,
-  },
-  {
-    id: '7',
-    productInfo: {
-      image: 'football-boot.svg',
-      title: 'Football Boots',
-      label: 'GH-7312',
-    },
-    productsQty: '150',
-    totalEarnings: '$7,072.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: true,
-  },
-  {
-    id: '8',
-    productInfo: {
-      image: 'block-heel.svg',
-      title: 'Block Heels',
-      label: 'MS-8702',
-    },
-    productsQty: '65',
-    totalEarnings: '$37,119.50',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: false,
-  },
-  {
-    id: '9',
-    productInfo: {
-      image: 'hiking-boot.svg',
-      title: 'Hiking Boots',
-      label: 'BS-6112',
-    },
-    productsQty: '55',
-    totalEarnings: '$498.75',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: true,
-  },
-  {
-    id: '10',
-    productInfo: {
-      image: 'ice-skate.svg',
-      title: 'Ice Skates',
-      label: 'HC-9031',
-    },
-    productsQty: '820',
-    totalEarnings: '$230,445.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: true,
-  },
-  {
-    id: '11',
-    productInfo: {
-      image: 'ankle-boot.svg',
-      title: 'Casual Loafers',
-      label: 'CL-1234',
-    },
-    productsQty: '95',
-    totalEarnings: '$8,450.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: false,
-  },
-  {
-    id: '12',
-    productInfo: {
-      image: 'casual-sneaker.svg',
-      title: 'Formal Oxfords',
-      label: 'FO-5678',
-    },
-    productsQty: '67',
-    totalEarnings: '$12,890.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: true,
-  },
-  {
-    id: '13',
-    productInfo: {
-      image: 'sandals.svg',
-      title: 'Sandals',
-      label: 'SD-9012',
-    },
-    productsQty: '234',
-    totalEarnings: '$15,670.00',
-    status: {
-      label: 'Inactive',
-      variant: 'destructive',
-    },
-    featured: false,
-  },
-  {
-    id: '14',
-    productInfo: {
-      image: 'snow-boot.svg',
-      title: 'Winter Boots',
-      label: 'WB-3456',
-    },
-    productsQty: '78',
-    totalEarnings: '$22,340.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: true,
-  },
-  {
-    id: '15',
-    productInfo: {
-      image: 'wedge-heel.svg',
-      title: 'Dance Shoes',
-      label: 'DS-7890',
-    },
-    productsQty: '45',
-    totalEarnings: '$6,780.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: false,
-  },
-  {
-    id: '16',
-    productInfo: {
-      image: 'wellies.svg',
-      title: 'Climbing Shoes',
-      label: 'CS-2345',
-    },
-    productsQty: '32',
-    totalEarnings: '$4,560.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: true,
-  },
-  {
-    id: '17',
-    productInfo: {
-      image: 'block-heel.svg',
-      title: 'Work Boots',
-      label: 'WB-6789',
-    },
-    productsQty: '156',
-    totalEarnings: '$28,900.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: false,
-  },
-  {
-    id: '18',
-    productInfo: {
-      image: 'slip-on-shoe.svg',
-      title: 'Platform Heels',
-      label: 'PH-0123',
-    },
-    productsQty: '89',
-    totalEarnings: '$11,230.00',
-    status: {
-      label: 'Inactive',
-      variant: 'destructive',
-    },
-    featured: false,
-  },
-  {
-    id: '19',
-    productInfo: {
-      image: 'ice-skate.svg',
-      title: 'Athletic Cleats',
-      label: 'AC-4567',
-    },
-    productsQty: '112',
-    totalEarnings: '$18,750.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: true,
-  },
-  {
-    id: '20',
-    productInfo: {
-      image: 'wellies.svg',
-      title: 'Moccasins',
-      label: 'MC-8901',
-    },
-    productsQty: '73',
-    totalEarnings: '$9,420.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: false,
-  },
-  {
-    id: '21',
-    productInfo: {
-      image: 'heeled-boot.svg',
-      title: 'Espadrilles',
-      label: 'ES-2345',
-    },
-    productsQty: '54',
-    totalEarnings: '$7,890.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: true,
-  },
-  {
-    id: '22',
-    productInfo: {
-      image: 'casual-sneaker.svg',
-      title: 'Ballet Flats',
-      label: 'BF-6789',
-    },
-    productsQty: '91',
-    totalEarnings: '$13,450.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: false,
-  },
-  {
-    id: '23',
-    productInfo: {
-      image: 'ankle-boot.svg',
-      title: 'Wedge Heels',
-      label: 'WH-0123',
-    },
-    productsQty: '68',
-    totalEarnings: '$10,670.00',
-    status: {
-      label: 'Inactive',
-      variant: 'destructive',
-    },
-    featured: false,
-  },
-  {
-    id: '24',
-    productInfo: {
-      image: 'ski-boots.svg',
-      title: 'Slides',
-      label: 'SL-4567',
-    },
-    productsQty: '187',
-    totalEarnings: '$16,890.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: true,
-  },
-  {
-    id: '25',
-    productInfo: {
-      image: 'stiletto-heel.svg',
-      title: 'Mary Janes',
-      label: 'MJ-8901',
-    },
-    productsQty: '42',
-    totalEarnings: '$5,340.00',
-    status: {
-      label: 'Active',
-      variant: 'success',
-    },
-    featured: false,
-  },
-];
+    created: category.createdAt,
+    updated: category.updatedAt,
+  };
+};
 
 export function CategoryListTable({
-  mockData: propsMockData,
   displaySheet,
+  categories,
+  isLoading = false,
+  error = null,
 }: CategoryListProps) {
-  const data = propsMockData || mockData;
+  const data = useMemo(() => {
+    if (!categories || categories.length === 0) return [];
+    return categories.map(convertCategoryToIData);
+  }, [categories]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -426,8 +107,11 @@ export function CategoryListTable({
     { id: 'id', desc: false },
   ]);
   const [featuredState, setFeaturedState] = useState<Record<string, boolean>>(
-    () => Object.fromEntries(data.map((item) => [item.id, item.featured])),
+    {},
   );
+
+  // React Query hook for delete mutation
+  const deleteMutation = useDeleteProductCategory();
 
   // Modal state
   const [isCategoryDetailsEditOpen, setIsCategoryDetailsEditOpen] =
@@ -436,44 +120,33 @@ export function CategoryListTable({
     undefined,
   );
 
-  // Sheet state for displaySheet prop
   const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<
+    string | undefined
+  >(undefined);
 
-  // Auto-open sheet based on displaySheet prop
   useEffect(() => {
-    if (displaySheet) {
-      switch (displaySheet) {
-        case 'categoryDetails':
-          setIsCategoryDetailsEditOpen(true);
-          break;
-        case 'createCategory':
-          setIsCreateCategoryOpen(true);
-          break;
-        case 'editCategory':
-          setIsEditCategoryOpen(true);
-          break;
-      }
+    if (!displaySheet) {
+      return;
+    }
+
+    switch (displaySheet) {
+      case 'categoryDetails':
+        setIsCategoryDetailsEditOpen(true);
+        break;
+      case 'createCategory':
+        setIsCreateCategoryOpen(true);
+        break;
+      case 'editCategory':
+        setIsEditCategoryOpen(true);
+        break;
     }
   }, [displaySheet]);
 
-  const ColumnInputFilter = <TData, TValue>({
-    column,
-  }: IColumnFilterProps<TData, TValue>) => {
-    return (
-      <Input
-        placeholder="Filter..."
-        value={(column.getFilterValue() as string) ?? ''}
-        onChange={(event) => column.setFilterValue(event.target.value)}
-        className="w-40"
-      />
-    );
-  };
 
-  const handleFeaturedChange = (id: string, checked: boolean) => {
+  const handleFeaturedChange = useCallback((id: string, checked: boolean) => {
     setFeaturedState((prev) => ({ ...prev, [id]: checked }));
-
-    // Show toaster notification with custom Alert style
     if (checked) {
       toast.custom(
         (t) => (
@@ -513,12 +186,11 @@ export function CategoryListTable({
         },
       );
     }
-  };
-
-  const handleCategoryClick = (category: IData) => {
+  }, []);
+  const handleCategoryClick = useCallback((category: IData) => {
     setSelectedCategory(category);
     setIsCategoryDetailsEditOpen(true);
-  };
+  }, []);
 
   const columns = useMemo<ColumnDef<IData>[]>(
     () => [
@@ -539,32 +211,45 @@ export function CategoryListTable({
         id: 'productInfo',
         accessorFn: (row) => row.productInfo,
         header: ({ column }) => (
-          <DataGridColumnHeader
-            title="Category"
-            column={column}
-          />
+          <DataGridColumnHeader title="Category" column={column} />
         ),
         cell: (info) => {
           const productInfo = info.row.getValue(
             'productInfo',
           ) as IData['productInfo'];
+
+          // Check if image is an icon file (contains /icons/ or is just a filename)
+          const isIconFile = productInfo.image.includes('/icons/') ||
+                            (!productInfo.image.startsWith('http') && !productInfo.image.startsWith('/'));
+          const iconFileName = isIconFile ? productInfo.image.split('/').pop() : null;
+
           return (
             <div className="flex items-center gap-2.5">
               <Card className="flex items-center justify-center rounded-md bg-accent/50 h-[40px] w-[50px] shadow-none shrink-0">
-                <img
-                  src={toAbsoluteUrl(
-                    `/media/store/client/icons/light/${productInfo.image}`,
-                  )}
-                  className="cursor-pointer h-[30px] dark:hidden"
-                  alt="image"
-                />
-                <img
-                  src={toAbsoluteUrl(
-                    `/media/store/client/icons/dark/${productInfo.image}`,
-                  )}
-                  className="cursor-pointer h-[30px] light:hidden"
-                  alt="image"
-                />
+                {isIconFile && iconFileName ? (
+                  <>
+                    <img
+                      src={toAbsoluteUrl(
+                        `/media/store/client/icons/light/${iconFileName}`,
+                      )}
+                      className="cursor-pointer h-[30px] object-contain dark:hidden"
+                      alt="category"
+                    />
+                    <img
+                      src={toAbsoluteUrl(
+                        `/media/store/client/icons/dark/${iconFileName}`,
+                      )}
+                      className="cursor-pointer h-[30px] object-contain light:hidden"
+                      alt="category"
+                    />
+                  </>
+                ) : (
+                  <img
+                    src={productInfo.image}
+                    className="cursor-pointer h-[30px] w-full object-contain"
+                    alt="category"
+                  />
+                )}
               </Card>
               <div className="flex flex-col gap-1">
                 <Link
@@ -597,16 +282,7 @@ export function CategoryListTable({
         enableSorting: true,
         size: 65,
       },
-      {
-        id: 'totalEarnings',
-        accessorFn: (row) => row.totalEarnings,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Total Earnings" column={column} />
-        ),
-        cell: (info) => info.getValue() as string,
-        enableSorting: true,
-        size: 80,
-      },
+
       {
         id: 'status',
         accessorFn: (row) => row.status,
@@ -625,29 +301,7 @@ export function CategoryListTable({
         enableSorting: true,
         size: 80,
       },
-      {
-        id: 'featured',
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Featured" column={column} />
-        ),
-        enableSorting: true,
-        cell: (info) => {
-          const id = info.row.getValue('id') as string;
-          return (
-            <div className="flex justify-center">
-              <Checkbox
-                size="sm"
-                id={`featured-${id}`}
-                checked={!!featuredState[id]}
-                onCheckedChange={(checked: unknown) =>
-                  handleFeaturedChange(id, Boolean(checked))
-                }
-              />
-            </div>
-          );
-        },
-        size: 45,
-      },
+
       {
         id: 'actions',
         header: () => '',
@@ -657,17 +311,25 @@ export function CategoryListTable({
           const categoryTitle = row.original.productInfo.title;
 
           const handleView = () => {
-            console.log('View category:', categoryId);
+            setSelectedCategory(row.original);
+            setIsCategoryDetailsEditOpen(true);
           };
 
           const handleEdit = () => {
+            setSelectedCategory(row.original);
+            setSelectedCategoryId(categoryId);
             setIsEditCategoryOpen(true);
-            console.log('Edit category:', categoryId);
           };
 
-          const handleDelete = () => {
-            toast.error(`Deleting category: ${categoryTitle}`);
-            console.log('Delete category:', categoryId);
+          const handleDelete = async () => {
+            if (!categoryId) return;
+
+            try {
+              await deleteMutation.mutateAsync(categoryId);
+            } catch (error) {
+              // Error handling is done in the mutation hook
+              console.error('Delete error:', error);
+            }
           };
 
           return (
@@ -705,18 +367,21 @@ export function CategoryListTable({
         size: 60,
       },
     ],
-    [featuredState],
+    // FIXED: Include only stable callbacks and mutation to prevent stale closures
+    // handleFeaturedChange and handleCategoryClick are memoized with useCallback
+    // deleteMutation.mutateAsync is stable from React Query
+    [handleFeaturedChange, handleCategoryClick, deleteMutation.mutateAsync],
   );
 
+  // OPTIMIZED: Return data directly when no search query to avoid unnecessary array copying
   const filteredData = useMemo(() => {
-    let result = [...data];
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter((item) =>
-        item.productInfo.title.toLowerCase().includes(query),
-      );
+    if (!searchQuery) {
+      return data;
     }
-    return result;
+    const query = searchQuery.toLowerCase();
+    return data.filter((item) =>
+      item.productInfo.title.toLowerCase().includes(query),
+    );
   }, [data, searchQuery]);
 
   const table = useReactTable({
@@ -748,38 +413,61 @@ export function CategoryListTable({
           cellBorder: true,
         }}
       >
-      <Card>
-        <CardHeader className="py-3.5">
-          <CardToolbar className="flex items-center gap-2">
-            <InputWrapper className="w-full lg:w-[200px]">
-              <Search/>
-              <Input
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <Button
-                  variant="dim"
-                  size="sm"
-                  className="-me-3.5"
-                  onClick={() => setSearchQuery('')}
-                >
-                  {searchQuery && <X/>}
-                </Button>
-              )}
-            </InputWrapper>
-          </CardToolbar>
-        </CardHeader>
-        <CardTable>
-          <ScrollArea>
-            <DataGridTable />
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </CardTable>
-        <CardFooter>
-          <DataGridPagination />
-        </CardFooter>
+        <Card>
+          <CardHeader className="py-3.5">
+            <CardToolbar className="flex items-center gap-2">
+              <InputWrapper className="w-full lg:w-[200px]">
+                <Search />
+                <Input
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <Button
+                    variant="dim"
+                    size="sm"
+                    className="-me-3.5"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    {searchQuery && <X />}
+                  </Button>
+                )}
+              </InputWrapper>
+            </CardToolbar>
+          </CardHeader>
+          <CardTable>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <span className="text-muted-foreground">
+                  Loading categories...
+                </span>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2">
+                <span className="text-destructive">
+                  Error loading categories
+                </span>
+                <span className="text-sm text-muted-foreground">{error}</span>
+              </div>
+            ) : filteredData.length === 0 ? (
+              <div className="flex items-center justify-center py-10">
+                <span className="text-muted-foreground">
+                  {searchQuery
+                    ? 'No categories found matching your search'
+                    : 'No categories yet'}
+                </span>
+              </div>
+            ) : (
+              <ScrollArea>
+                <DataGridTable />
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            )}
+          </CardTable>
+          <CardFooter>
+            <DataGridPagination />
+          </CardFooter>
         </Card>
       </DataGrid>
 
@@ -794,11 +482,12 @@ export function CategoryListTable({
         mode="edit"
         open={isEditCategoryOpen}
         onOpenChange={setIsEditCategoryOpen}
+        categoryId={selectedCategoryId}
       />
 
       {/* Create Category Sheet */}
       <CategoryFormSheet
-        mode="new"  
+        mode="new"
         open={isCreateCategoryOpen}
         onOpenChange={setIsCreateCategoryOpen}
       />

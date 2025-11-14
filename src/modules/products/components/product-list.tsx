@@ -22,9 +22,10 @@ import {
   Trash,
   X,
   Layers,
+  Package,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { toAbsoluteUrl } from '@/shared/lib/helpers';
+import { formatDate, toAbsoluteUrl } from '@/shared/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
 import { Badge, BadgeProps } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -63,6 +64,8 @@ import { ProductFormSheet } from './product-form-sheet';
 import { ProductDetailsAnalyticsSheet } from './product-details-analytics-sheet';
 import { ManageVariantsSheet } from '../../../pages/components/manage-variants';
 import { cn } from '@/shared/lib/utils';
+import { Product } from '@/modules/products/types/product.type';
+import { useDeleteProduct } from '@/modules/products/hooks/use-products';
 
 interface IColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>;
@@ -87,445 +90,66 @@ export interface IData {
 }
 
 interface ProductListProps {
-  mockData?: IData[];
+  products?: Product[];
+  isLoading?: boolean;
+  error?: string | null;
   onRowClick?: (productId: string) => void;
   displaySheet?: "productDetails" | "createProduct" | "editProduct" | "manageVariants";
 }
 
-const mockData: IData[] = [
-  {
-    id: '1',
+// Helper function to convert Product to IData format
+const convertProductToIData = (product: Product): IData => {
+  // Calculate price from variants if available
+  let priceDisplay = 'N/A';
+  if (product.variants && product.variants.length > 0) {
+    const prices = product.variants.map(v => v.price).filter(p => p !== undefined);
+    if (prices.length > 0) {
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      if (minPrice === maxPrice) {
+        priceDisplay = `$${minPrice.toFixed(2)}`;
+      } else {
+        priceDisplay = `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`;
+      }
+    }
+  } else if (product.minPrice) {
+    priceDisplay = `$${product.minPrice.toFixed(2)}`;
+  }
+
+  return {
+    id: product.id || '',
     productInfo: {
-      image: '11.png',
-      title: 'Nike Air Max 270 React Engineered',
-      label: 'WM-8421',
-      tooltip: 'Air Max 270 React Engineered',
+      image: product.imageUrl || '', // Empty string instead of hardcoded fallback
+      title: product.name,
+      label: product.slug,
+      tooltip: product.model || product.name,
     },
-    category: 'Sneakers',
-    price: '$83.00',
+    category: product.category?.name || 'Uncategorized',
+    price: priceDisplay,
     status: {
-      label: 'Live',
-      variant: 'success',
+      label: product.isActive ? 'Live' : 'Draft',
+      variant: product.isActive ? 'success' : 'warning',
     },
-    created: '18 Aug, 2025',
-    updated: '18 Aug, 2025',
-  },
-  {
-    id: '2',
-    productInfo: {
-      image: '1.png',
-      title: 'Trail Runner Z2',
-      label: 'UC-3990',
-      tooltip: '',
-    },
-    category: 'Outdoor',
-    price: '$110.00',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '17 Aug, 2025',
-    updated: '17 Aug, 2025',
-  },
-  {
-    id: '3',
-    productInfo: {
-      image: '2.png',
-      title: 'Nike Urban Flex Knit Low-Top Sneaker',
-      label: 'KB-8820',
-      tooltip: 'Urban Flex Knit Low Sneakers',
-    },
-    category: 'Runners',
-    price: '$76.50',
-    status: {
-      label: 'Draft',
-      variant: 'warning',
-    },
-    created: '15 Aug, 2025',
-    updated: '15 Aug, 2025',
-  },
-  {
-    id: '4',
-    productInfo: {
-      image: '15.png',
-      title: 'Blaze Street Classic',
-      label: 'LS-1033',
-      tooltip: '',
-    },
-    category: 'Sneakers',
-    price: '$69.99',
-    status: {
-      label: 'Must Act',
-      variant: 'destructive',
-    },
-    created: '14 Aug, 2025',
-    updated: '14 Aug, 2025',
-  },
-  {
-    id: '5',
-    productInfo: {
-      image: '13.png',
-      title: 'Adidas Terra Trekking Max Pro Hiking Boot',
-      label: 'WC-5510',
-      tooltip: 'Terra Trekking Max Pro Boots',
-    },
-    category: 'Outdoor',
-    price: '$129.00',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '13 Aug, 2025',
-    updated: '13 Aug, 2025',
-  },
-  {
-    id: '6',
-    productInfo: {
-      image: '7.png',
-      title: 'Lite Runner Evo',
-      label: 'GH-7312',
-      tooltip: '',
-    },
-    category: 'Sneakers',
-    price: '$59.00',
-    status: {
-      label: 'Archived',
-      variant: 'info',
-    },
-    created: '12 Aug, 2025',
-    updated: '12 Aug, 2025',
-  },
-  {
-    id: '7',
-    productInfo: {
-      image: '10.png',
-      title: 'Puma Classic Street Wear 2.0 Running Shoe',
-      label: 'UH-2300',
-      tooltip: 'Classic Street Wear 2.0 Collection',
-    },
-    category: 'Runners',
-    price: '$72.00',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '11 Aug, 2025',
-    updated: '11 Aug, 2025',
-  },
-  {
-    id: '8',
-    productInfo: {
-      image: '3.png',
-      title: 'Salomon Enduro All-Terrain High-Performance Trail Shoe',
-      label: 'MS-8702',
-      tooltip: 'Enduro All-Terrain High Sneakers',
-    },
-    category: 'Sneakers',
-    price: '$119.50',
-    status: {
-      label: 'Archived',
-      variant: 'info',
-    },
-    created: '10 Aug, 2025',
-    updated: '10 Aug, 2025',
-  },
-  {
-    id: '9',
-    productInfo: {
-      image: '8.png',
-      title: 'FlexRun Urban Core',
-      label: 'BS-6112',
-      tooltip: '',
-    },
-    category: 'Outdoor',
-    price: '$98.75',
-    status: {
-      label: 'Draft',
-      variant: 'warning',
-    },
-    created: '9 Aug, 2025',
-    updated: '9 Aug, 2025',
-  },
-  {
-    id: '10',
-    productInfo: {
-      image: '5.png',
-      title: 'Aero Walk Lite',
-      label: 'HC-9031',
-      tooltip: '',
-    },
-    category: 'Runners',
-    price: '$45.00',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '8 Aug, 2025',
-    updated: '8 Aug, 2025',
-  },
-  {
-    id: '11',
-    productInfo: {
-      image: '12.png',
-      title: 'Pro Runner Elite',
-      label: 'PR-2024',
-      tooltip: '',
-    },
-    category: 'Runners',
-    price: '$95.00',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '7 Aug, 2025',
-    updated: '7 Aug, 2025',
-  },
-  {
-    id: '12',
-    productInfo: {
-      image: '14.png',
-      title: 'Comfort Plus Max',
-      label: 'CP-4567',
-      tooltip: '',
-    },
-    category: 'Sneakers',
-    price: '$67.50',
-    status: {
-      label: 'Draft',
-      variant: 'warning',
-    },
-    created: '6 Aug, 2025',
-    updated: '6 Aug, 2025',
-  },
-  {
-    id: '13',
-    productInfo: {
-      image: '16.png',
-      title: 'Speed Demon X',
-      label: 'SD-7890',
-      tooltip: '',
-    },
-    category: 'Runners',
-    price: '$88.00',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '5 Aug, 2025',
-    updated: '5 Aug, 2025',
-  },
-  {
-    id: '14',
-    productInfo: {
-      image: '17.png',
-      title: 'Casual Street Pro',
-      label: 'CS-3456',
-      tooltip: '',
-    },
-    category: 'Sneakers',
-    price: '$54.99',
-    status: {
-      label: 'Archived',
-      variant: 'info',
-    },
-    created: '4 Aug, 2025',
-    updated: '4 Aug, 2025',
-  },
-  {
-    id: '15',
-    productInfo: {
-      image: '11.png',
-      title: 'Mountain Trek Elite',
-      label: 'MT-9012',
-      tooltip: '',
-    },
-    category: 'Outdoor',
-    price: '$135.00',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '3 Aug, 2025',
-    updated: '3 Aug, 2025',
-  },
-  {
-    id: '16',
-    productInfo: {
-      image: '1.png',
-      title: 'Urban Flex Pro',
-      label: 'UF-6789',
-      tooltip: '',
-    },
-    category: 'Runners',
-    price: '$72.50',
-    status: {
-      label: 'Draft',
-      variant: 'warning',
-    },
-    created: '2 Aug, 2025',
-    updated: '2 Aug, 2025',
-  },
-  {
-    id: '17',
-    productInfo: {
-      image: '2.png',
-      title: 'Lightweight Runner',
-      label: 'LR-2345',
-      tooltip: '',
-    },
-    category: 'Runners',
-    price: '$49.99',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '1 Aug, 2025',
-    updated: '1 Aug, 2025',
-  },
-  {
-    id: '18',
-    productInfo: {
-      image: '3.png',
-      title: 'Premium Comfort Max',
-      label: 'PC-5678',
-      tooltip: '',
-    },
-    category: 'Sneakers',
-    price: '$89.00',
-    status: {
-      label: 'Must Act',
-      variant: 'destructive',
-    },
-    created: '31 Jul, 2025',
-    updated: '31 Jul, 2025',
-  },
-  {
-    id: '19',
-    productInfo: {
-      image: '5.png',
-      title: 'Sport Performance Pro',
-      label: 'SP-8901',
-      tooltip: '',
-    },
-    category: 'Outdoor',
-    price: '$112.50',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '30 Jul, 2025',
-    updated: '30 Jul, 2025',
-  },
-  {
-    id: '20',
-    productInfo: {
-      image: '7.png',
-      title: 'Classic Retro Style',
-      label: 'CR-1234',
-      tooltip: '',
-    },
-    category: 'Sneakers',
-    price: '$63.75',
-    status: {
-      label: 'Archived',
-      variant: 'info',
-    },
-    created: '29 Jul, 2025',
-    updated: '29 Jul, 2025',
-  },
-  {
-    id: '21',
-    productInfo: {
-      image: '8.png',
-      title: 'Adventure Explorer',
-      label: 'AE-4567',
-      tooltip: '',
-    },
-    category: 'Outdoor',
-    price: '$98.00',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '28 Jul, 2025',
-    updated: '28 Jul, 2025',
-  },
-  {
-    id: '22',
-    productInfo: {
-      image: '10.png',
-      title: 'Modern Street Elite',
-      label: 'MS-7890',
-      tooltip: '',
-    },
-    category: 'Sneakers',
-    price: '$76.25',
-    status: {
-      label: 'Draft',
-      variant: 'warning',
-    },
-    created: '27 Jul, 2025',
-    updated: '27 Jul, 2025',
-  },
-  {
-    id: '23',
-    productInfo: {
-      image: '11.png',
-      title: 'Eco Friendly Runner',
-      label: 'EF-2345',
-      tooltip: '',
-    },
-    category: 'Runners',
-    price: '$82.50',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '26 Jul, 2025',
-    updated: '26 Jul, 2025',
-  },
-  {
-    id: '24',
-    productInfo: {
-      image: '13.png',
-      title: 'Luxury Comfort Pro',
-      label: 'LC-5678',
-      tooltip: '',
-    },
-    category: 'Sneakers',
-    price: '$145.00',
-    status: {
-      label: 'Live',
-      variant: 'success',
-    },
-    created: '25 Jul, 2025',
-    updated: '25 Jul, 2025',
-  },
-  {
-    id: '25',
-    productInfo: {
-      image: '15.png',
-      title: 'Tech Smart Runner',
-      label: 'TS-8901',
-      tooltip: '',
-    },
-    category: 'Runners',
-    price: '$91.99',
-    status: {
-      label: 'Must Act',
-      variant: 'destructive',
-    },
-    created: '24 Jul, 2025',
-    updated: '24 Jul, 2025',
-  },
-];
+    created: product.createdAt || '',
+    updated: product.updatedAt || '',
+  };
+};
+
 
 export function ProductListTable({
-  mockData: propsMockData,
+  products,
+  isLoading = false,
+  error = null,
   onRowClick,
   displaySheet,
 }: ProductListProps) {
-  const data = propsMockData || mockData;
+  const data = useMemo(() => {
+    if (!products || products.length === 0) return [];
+    return products.map(convertProductToIData);
+  }, [products]);
+
+  // React Query hook for delete mutation
+  const deleteMutation = useDeleteProduct();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
 
@@ -546,7 +170,7 @@ export function ProductListTable({
   const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
   const [isEditProductOpen, setIsEditProductOpen] = useState(false);
   const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
-  const [isManageVariantsOpen, setIsManageVariantsOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
 
   // Auto-open sheet based on displaySheet prop
   useEffect(() => {
@@ -561,29 +185,27 @@ export function ProductListTable({
         case 'editProduct':
           setIsEditProductOpen(true);
           break;
-        case 'manageVariants':
-          setIsManageVariantsOpen(true);
-          break;
       }
     }
   }, [displaySheet]);
 
   const handleEditProduct = (product: IData) => {
-    // You can add logic here to handle the selected product data
     console.log('Editing product:', product);
+    setSelectedProductId(product.id);
     setIsEditProductOpen(true);
   };
 
-  const handleManageVariants = (product: IData) => {
-    // You can add logic here to handle the selected product data
-    console.log('Managing variants for product:', product);
-    setIsManageVariantsOpen(true);
-  };
+
 
   const handleViewDetails = (product: IData) => {
-    // You can add logic here to handle the selected product data
     console.log('Viewing details for product:', product);
+    setSelectedProductId(product.id);
     setIsProductDetailsOpen(true);
+  };
+
+  const handleDeleteProduct = (product: IData) => {
+    console.log('Deleting product:', product);
+    deleteMutation.mutate(product.id);
   };
 
   const ColumnInputFilter = <TData, TValue>({
@@ -636,13 +258,23 @@ export function ProductListTable({
           return (
             <div className="flex items-center gap-2.5">
               <Card className="flex items-center justify-center rounded-md bg-accent/50 h-[40px] w-[50px] shadow-none shrink-0">
-                <img
-                  src={toAbsoluteUrl(
-                    `/media/store/client/1200x1200/${productInfo.image}`,
-                  )}
-                  className="cursor-pointer h-[40px]"
-                  alt="image"
-                />
+                {productInfo.image ? (
+                  <img
+                    src={productInfo.image.startsWith('http')
+                      ? productInfo.image
+                      : toAbsoluteUrl(`/media/store/client/1200x1200/${productInfo.image}`)
+                    }
+                    className="cursor-pointer h-[40px] object-cover"
+                    alt={productInfo.title}
+                    onError={(e) => {
+                      // Fallback to placeholder on error
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement!.innerHTML = '<Package class="size-5 text-muted-foreground" />';
+                    }}
+                  />
+                ) : (
+                  <Package className="size-5 text-muted-foreground" />
+                )}
               </Card>
               <div className="flex flex-col gap-1">
                 {productInfo.title.length > 20 ? (
@@ -651,7 +283,7 @@ export function ProductListTable({
                       <TooltipTrigger asChild>
                         <span
                           className="text-sm font-medium text-foreground leading-3.5 truncate max-w-[180px] cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => setIsProductDetailsOpen(true)}
+                          onClick={() => handleViewDetails(info.row.original)}
                         >
                           {productInfo.title}
                         </span>
@@ -664,7 +296,7 @@ export function ProductListTable({
                 ) : (
                   <span
                     className="text-sm font-medium text-foreground leading-3.5 cursor-pointer hover:text-primary transition-colors"
-                    onClick={() => setIsProductDetailsOpen(true)}
+                    onClick={() => handleViewDetails(info.row.original)}
                   >
                     {productInfo.title}
                   </span>
@@ -774,7 +406,7 @@ export function ProductListTable({
           <DataGridColumnHeader title="Created" column={column} />
         ),
         cell: (info) => {
-          return info.row.original.created;
+          return formatDate(new Date(info.row.original.created));
         },
         enableSorting: true,
         size: 120,
@@ -789,7 +421,7 @@ export function ProductListTable({
           <DataGridColumnHeader title="Updated" column={column} />
         ),
         cell: (info) => {
-          return info.row.original.updated;
+          return formatDate(new Date(info.row.original.updated));
         },
         enableSorting: true,
         size: 120,
@@ -815,15 +447,12 @@ export function ProductListTable({
                     <Settings className="size-4" />
                     Edit Product
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleManageVariants(row.original)}>
-                    <Layers className="size-4" />
-                    Manage Variants
-                  </DropdownMenuItem>
+                  
                     <DropdownMenuItem onClick={() => handleViewDetails(row.original)}>
                       <Info className="size-4" />
                       View Details
                     </DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive">
+                  <DropdownMenuItem variant="destructive" onClick={() => handleDeleteProduct(row.original)}>
                     <Trash className="size-4" />
                     Delete
                   </DropdownMenuItem>
@@ -937,13 +566,7 @@ export function ProductListTable({
     debugColumns: true,
   });
 
-  const tabs = [
-    { id: 'all', label: 'All', badge: 1424 },
-    { id: 'live', label: 'Live', badge: 1267 },
-    { id: 'draft', label: 'Draft', badge: 63 },
-    { id: 'archived', label: 'Archived', badge: 185 },
-    { id: 'actionNeeded', label: 'Action Needed', badge: 49 },
-  ];
+ // const tabs = [];
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -965,7 +588,7 @@ export function ProductListTable({
     <div>
       <Card>
         <CardHeader className="py-3 flex-nowrap">
-          <Tabs
+          {/* <Tabs
             value={activeTab}
             onValueChange={handleTabChange}
             className="m-0 p-0 w-full"
@@ -999,7 +622,7 @@ export function ProductListTable({
                 ))}
               </div>
             </TabsList>
-          </Tabs>
+          </Tabs> */}
           <CardToolbar className="flex items-center gap-2">
             {/* Search */}
             <div className="w-full max-w-[200px]">
@@ -1041,13 +664,8 @@ export function ProductListTable({
         </CardHeader>
 
         {/* Tab Contents */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          {tabs.map((tab) => (
-            <TabsContent
-              key={`content-${tab.id}`}
-              value={tab.id}
-              className="mt-0"
-            >
+
+      
               <DataGrid
                 table={table}
                 recordCount={filteredData?.length || 0}
@@ -1071,15 +689,15 @@ export function ProductListTable({
                   <DataGridPagination />
                 </CardFooter>
               </DataGrid>
-            </TabsContent>
-          ))}
-        </Tabs>
+
+  
       </Card>
 
       {/* Product Details Modal */}
       <ProductDetailsAnalyticsSheet
         open={isProductDetailsOpen}
         onOpenChange={setIsProductDetailsOpen}
+        productId={selectedProductId}
       />
 
       {/* Edit Product Modal */}
@@ -1087,6 +705,7 @@ export function ProductListTable({
         mode="edit"
         open={isEditProductOpen}
         onOpenChange={setIsEditProductOpen}
+        productId={selectedProductId}
       />
 
       {/* Create Product Modal */}
@@ -1096,11 +715,7 @@ export function ProductListTable({
         onOpenChange={setIsCreateProductOpen}
       />
 
-      {/* Manage Variants Modal */}
-      <ManageVariantsSheet
-        open={isManageVariantsOpen}
-        onOpenChange={setIsManageVariantsOpen}
-      />
+ 
     </div>
   );
 }

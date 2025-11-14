@@ -37,15 +37,17 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Progress } from '@/shared/components/ui/progress';
-import { toAbsoluteUrl } from '@/shared/lib/helpers';
+import { useFileUpload } from '@/shared/hooks/use-file-upload';
+import type { UploadResponse } from '@/shared/services/file-upload.service';
 
-interface ImageFile {
+export interface ImageFile {
   id: string;
   file: File;
   preview: string;
   progress: number;
   status: 'uploading' | 'completed' | 'error';
   error?: string;
+  uploadResponse?: UploadResponse; 
 }
 
 interface DefaultImage {
@@ -136,60 +138,90 @@ function SortableImageItem({
   );
 }
 
-export function ProductFormImageUpload({ 
+interface ProductFormImageUploadProps extends ImageUploadProps {
+  mode: 'new' | 'edit';
+  initialImages?: string[]; // Array of image URLs from the product
+  onAllImagesChange?: (imageUrls: string[]) => void; // Callback for all image URLs in order
+}
+
+export function ProductFormImageUpload({
   mode,
-  maxFiles = 5, 
-  maxSize = 5 * 1024 * 1024, // 5MB 
-  accept = 'image/*', 
-  className, 
-  onImagesChange, 
-  onUploadComplete 
-}: ImageUploadProps & { mode: 'new' | 'edit' }) {
+  initialImages = [],
+  maxFiles = 5,
+  maxSize = 5 * 1024 * 1024, // 5MB
+  accept = 'image/*',
+  className,
+  onImagesChange,
+  onUploadComplete,
+  onAllImagesChange
+}: ProductFormImageUploadProps) {
   const isEditMode = mode === 'edit';
-  
-  const [allImages, setAllImages] = useState<SortableImage[]>(
-    isEditMode ? [
-      {
-        id: 'default-1',
-        src: toAbsoluteUrl('/media/store/client/1200x1200/3.png'),
-        alt: 'Product view 1',
-      },
-      {
-        id: 'default-2',
-        src: toAbsoluteUrl('/media/store/client/1200x1200/20.png'),
-        alt: 'Product view 2',
-      },
-      {
-        id: 'default-3',
-        src: toAbsoluteUrl('/media/store/client/1200x1200/21.png'),
-        alt: 'Product view 3',
-      },
-      {
-        id: 'default-4',
-        src: toAbsoluteUrl('/media/store/client/1200x1200/19.png'),
-        alt: 'Product view 4',
-      },
-    ] : []
-  );
+
+  const [allImages, setAllImages] = useState<SortableImage[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  // DnD sensors
+  const fileUpload = useFileUpload({
+    entityType: 'products',
+    onSuccess: (response) => {
+      console.log('Upload successful:', response);
+    },
+    onError: (error) => {
+      setErrors((prev) => [...prev, error.message]);
+    },
+    onProgress: (uploads) => {
+      setAllImages((prev) =>
+        prev.map((img) => {
+          const upload = uploads.find((u) => u.file === (img as ImageFile).file);
+          if (upload && !img.id.startsWith('default-')) {
+            return {
+              ...img,
+              progress: upload.progress,
+              status: upload.status === 'error' ? 'error' : upload.status === 'completed' ? 'completed' : 'uploading',
+              error: upload.error,
+            };
+          }
+          return img;
+        }),
+      );
+    },
+  });
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 3, // Reduced from 8 to make dragging more responsive
+        distance: 3, 
       },
     }),
   );
 
-  // Ensure array never contains undefined items
+  useEffect(() => {
+    if (isEditMode && initialImages.length > 0) {
+      const defaultImages: DefaultImage[] = initialImages.map((url, index) => ({
+        id: `default-${index}`,
+        src: url,
+        alt: `Product image ${index + 1}`,
+      }));
+      setAllImages(defaultImages);
+    }
+  }, [isEditMode, initialImages]);
+
   useEffect(() => {
     setAllImages((prev) => prev.filter((item) => item && item.id));
   }, []);
 
-  // Manage cursor during drag operations
+  // Helper function to extract all image URLs in order
+  const getAllImageUrls = useCallback((images: SortableImage[]): string[] => {
+    return images.map((img) => {
+      if (img.id.startsWith('default-')) {
+        return (img as DefaultImage).src;
+      } else {
+        return (img as ImageFile).uploadResponse?.url || '';
+      }
+    }).filter(Boolean);
+  }, []);
+
   useEffect(() => {
     if (activeId) {
       document.body.style.cursor = 'grabbing';
@@ -216,103 +248,119 @@ export function ProductFormImageUpload({
   }, [maxSize, maxFiles]);
 
   const addImages = useCallback(
-    (files: FileList | File[]) => {
-      setAllImages((prevImages) => {
-        const newImages: ImageFile[] = [];
-        const newErrors: string[] = [];
+    async (files: FileList | File[]) => {
+      console.log('addImages called with files:', files);
+      const filesArray = Array.from(files);
+      const newImages: ImageFile[] = [];
+      const newErrors: string[] = [];
 
-        Array.from(files).forEach((file) => {
-          const error = validateFile(file, prevImages.length);
-          if (error) {
-            newErrors.push(`${file.name}: ${error}`);
-            return;
+      filesArray.forEach((file) => {
+        const error = validateFile(file, allImages.length + newImages.length);
+        if (error) {
+          newErrors.push(`${file.name}: ${error}`);
+          return;
+        }
+
+        const imageFile: ImageFile = {
+          id: `${Date.now()}-${Math.random()}`,
+          file,
+          preview: URL.createObjectURL(file),
+          progress: 0,
+          status: 'uploading',
+        };
+
+        newImages.push(imageFile);
+      });
+
+      if (newErrors.length > 0) {
+        setErrors((prev) => [...prev, ...newErrors]);
+      }
+
+      if (newImages.length === 0) return;
+
+      setAllImages((prevImages) => [...prevImages, ...newImages]);
+
+      for (const imageFile of newImages) {
+        console.log('Starting upload for:', imageFile.file.name);
+        try {
+          const response = await fileUpload.uploadSingle(imageFile.file);
+          console.log('Upload response:', response);
+
+          if (response) {
+            setAllImages((prev) =>
+              prev.map((img) =>
+                img.id === imageFile.id
+                  ? {
+                      ...img,
+                      progress: 100,
+                      status: 'completed' as const,
+                      uploadResponse: response,
+                    }
+                  : img,
+              ),
+            );
           }
-
-          const imageFile: ImageFile = {
-            id: `${Date.now()}-${Math.random()}`,
-            file,
-            preview: URL.createObjectURL(file),
-            progress: 0,
-            status: 'uploading',
-          };
-
-          newImages.push(imageFile);
-        });
-
-        if (newErrors.length > 0) {
-          setErrors((prev) => [...prev, ...newErrors]);
-        }
-
-        if (newImages.length > 0) {
-          const updatedImages = [...prevImages, ...newImages];
-          
-          // Notify parent component with only the uploaded images
-          const uploadedImages = updatedImages.filter((item): item is ImageFile => 
-            !item.id.startsWith('default-')
+        } catch (error) {
+          setAllImages((prev) =>
+            prev.map((img) =>
+              img.id === imageFile.id
+                ? {
+                    ...img,
+                    status: 'error' as const,
+                    error: (error as Error).message,
+                  }
+                : img,
+            ),
           );
-          onImagesChange?.(uploadedImages);
+        }
+      }
 
-          // Simulate upload progress
-          newImages.forEach((imageFile) => {
-            simulateUpload(imageFile);
-          });
+      setAllImages((current) => {
+        const uploadedImages = current.filter(
+          (item): item is ImageFile => !item.id.startsWith('default-'),
+        );
+        onImagesChange?.(uploadedImages);
 
-          return updatedImages;
+        if (uploadedImages.every((img) => img.status === 'completed')) {
+          onUploadComplete?.(uploadedImages);
+          // Notify parent with all image URLs
+          const allUrls = getAllImageUrls(current);
+          onAllImagesChange?.(allUrls);
         }
 
-        return prevImages;
+        return current;
       });
     },
-    [validateFile, onImagesChange],
+    [validateFile, allImages.length, fileUpload, onImagesChange, onUploadComplete, getAllImageUrls, onAllImagesChange],
   );
 
-  const simulateUpload = (imageFile: ImageFile) => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 20;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
+  const removeImage = useCallback(async (id: string) => {
+    const image = allImages.find((img) => img.id === id);
 
-        setAllImages((prev) => {
-          const updatedImages = prev.map((img) =>
-            img.id === imageFile.id
-              ? { ...img, progress: 100, status: 'completed' as const }
-              : img,
-          );
+    if (image && !id.startsWith('default-')) {
+      const imageFile = image as ImageFile;
 
-          // Check if all uploads are complete
-          const uploadedImages = updatedImages.filter((item): item is ImageFile => 
-            !item.id.startsWith('default-')
-          );
-          if (uploadedImages.every((img) => img.status === 'completed')) {
-            onUploadComplete?.(uploadedImages);
-          }
-
-          return updatedImages;
-        });
-      } else {
-        setAllImages((prev) =>
-          prev.map((img) =>
-            img.id === imageFile.id ? { ...img, progress } : img,
-          ),
-        );
+      if (imageFile.uploadResponse?.url) {
+        await fileUpload.deleteImage(imageFile.uploadResponse.url);
       }
-    }, 100);
-  };
 
-  const removeImage = useCallback((id: string) => {
+      URL.revokeObjectURL(imageFile.preview);
+    }
+
     setAllImages((prev) => {
-      const image = prev.find((img) => img.id === id);
-      if (image && !id.startsWith('default-')) {
-        // Clean up object URL for uploaded images
-        URL.revokeObjectURL((image as ImageFile).preview);
-      }
-      return prev.filter((img) => img.id !== id);
-    });
-  }, []);
+      const updated = prev.filter((img) => img.id !== id);
 
-  // DnD handlers
+      // Notify parent with updated images
+      onUploadComplete?.(updated.filter((item): item is ImageFile => !item.id.startsWith('default-')));
+
+      // Notify parent with all image URLs
+      const allUrls = getAllImageUrls(updated);
+      onAllImagesChange?.(allUrls);
+
+      return updated;
+    });
+  }, [allImages, fileUpload, onUploadComplete, getAllImageUrls, onAllImagesChange]);
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
   };
@@ -331,7 +379,19 @@ export function ProductFormImageUpload({
 
         if (oldIndex !== -1 && newIndex !== -1) {
           // Reorder the array
-          return arrayMove(prev, oldIndex, newIndex);
+          const reordered = arrayMove(prev, oldIndex, newIndex);
+
+          // Notify parent with updated order
+          const uploadedImages = reordered.filter(
+            (item): item is ImageFile => !item.id.startsWith('default-'),
+          );
+          onUploadComplete?.(uploadedImages);
+
+          // Notify parent with all image URLs in new order
+          const allUrls = getAllImageUrls(reordered);
+          onAllImagesChange?.(allUrls);
+
+          return reordered;
         }
         return prev;
       });
@@ -370,12 +430,15 @@ export function ProductFormImageUpload({
   );
 
   const openFileDialog = useCallback(() => {
+    console.log('openFileDialog called');
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
     input.accept = accept;
     input.onchange = (e) => {
+      console.log('File input changed');
       const target = e.target as HTMLInputElement;
+      console.log('Selected files:', target.files);
       if (target.files) {
         addImages(target.files);
       }
