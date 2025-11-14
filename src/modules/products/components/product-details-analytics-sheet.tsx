@@ -83,9 +83,24 @@ export function ProductDetailsAnalyticsSheet({
   const variants = product?.variants || [];
 
   // Use product images or show placeholder
-  const productImages =
-    product?.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : [];
+  // Combine imageUrl and imageUrls, prioritizing imageUrl as the main image
+  const productImages = product
+    ? [
+        ...(product.imageUrl ? [product.imageUrl] : []),
+        ...(product.imageUrls || [])
+      ].filter(Boolean) // Remove any null/undefined values
+    : [];
+
   const [selectedImage, setSelectedImage] = useState(productImages[0] || '');
+
+  // Update selected image when product changes
+  useEffect(() => {
+    if (productImages.length > 0) {
+      setSelectedImage(productImages[0]);
+    } else {
+      setSelectedImage('');
+    }
+  }, [product?.id]);
 
   // Prevent auto-focus when sheet opens
   useEffect(() => {

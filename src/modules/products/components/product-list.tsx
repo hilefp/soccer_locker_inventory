@@ -170,7 +170,6 @@ export function ProductListTable({
   const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
   const [isEditProductOpen, setIsEditProductOpen] = useState(false);
   const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
-  const [isManageVariantsOpen, setIsManageVariantsOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
 
   // Auto-open sheet based on displaySheet prop
@@ -186,9 +185,6 @@ export function ProductListTable({
         case 'editProduct':
           setIsEditProductOpen(true);
           break;
-        case 'manageVariants':
-          setIsManageVariantsOpen(true);
-          break;
       }
     }
   }, [displaySheet]);
@@ -199,11 +195,7 @@ export function ProductListTable({
     setIsEditProductOpen(true);
   };
 
-  const handleManageVariants = (product: IData) => {
-    console.log('Managing variants for product:', product);
-    setSelectedProductId(product.id);
-    setIsManageVariantsOpen(true);
-  };
+
 
   const handleViewDetails = (product: IData) => {
     console.log('Viewing details for product:', product);
@@ -291,7 +283,7 @@ export function ProductListTable({
                       <TooltipTrigger asChild>
                         <span
                           className="text-sm font-medium text-foreground leading-3.5 truncate max-w-[180px] cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => setIsProductDetailsOpen(true)}
+                          onClick={() => handleViewDetails(info.row.original)}
                         >
                           {productInfo.title}
                         </span>
@@ -304,7 +296,7 @@ export function ProductListTable({
                 ) : (
                   <span
                     className="text-sm font-medium text-foreground leading-3.5 cursor-pointer hover:text-primary transition-colors"
-                    onClick={() => setIsProductDetailsOpen(true)}
+                    onClick={() => handleViewDetails(info.row.original)}
                   >
                     {productInfo.title}
                   </span>
@@ -455,10 +447,7 @@ export function ProductListTable({
                     <Settings className="size-4" />
                     Edit Product
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleManageVariants(row.original)}>
-                    <Layers className="size-4" />
-                    Manage Variants
-                  </DropdownMenuItem>
+                  
                     <DropdownMenuItem onClick={() => handleViewDetails(row.original)}>
                       <Info className="size-4" />
                       View Details
@@ -726,11 +715,7 @@ export function ProductListTable({
         onOpenChange={setIsCreateProductOpen}
       />
 
-      {/* Manage Variants Modal */}
-      <ManageVariantsSheet
-        open={isManageVariantsOpen}
-        onOpenChange={setIsManageVariantsOpen}
-      />
+ 
     </div>
   );
 }

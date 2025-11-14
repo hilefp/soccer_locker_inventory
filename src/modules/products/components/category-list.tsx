@@ -217,23 +217,39 @@ export function CategoryListTable({
           const productInfo = info.row.getValue(
             'productInfo',
           ) as IData['productInfo'];
+
+          // Check if image is an icon file (contains /icons/ or is just a filename)
+          const isIconFile = productInfo.image.includes('/icons/') ||
+                            (!productInfo.image.startsWith('http') && !productInfo.image.startsWith('/'));
+          const iconFileName = isIconFile ? productInfo.image.split('/').pop() : null;
+
           return (
             <div className="flex items-center gap-2.5">
               <Card className="flex items-center justify-center rounded-md bg-accent/50 h-[40px] w-[50px] shadow-none shrink-0">
-                <img
-                  src={toAbsoluteUrl(
-                    `/media/store/client/icons/light/${productInfo.image}`,
-                  )}
-                  className="cursor-pointer h-[30px] dark:hidden"
-                  alt="image"
-                />
-                <img
-                  src={toAbsoluteUrl(
-                    `/media/store/client/icons/dark/${productInfo.image}`,
-                  )}
-                  className="cursor-pointer h-[30px] light:hidden"
-                  alt="image"
-                />
+                {isIconFile && iconFileName ? (
+                  <>
+                    <img
+                      src={toAbsoluteUrl(
+                        `/media/store/client/icons/light/${iconFileName}`,
+                      )}
+                      className="cursor-pointer h-[30px] object-contain dark:hidden"
+                      alt="category"
+                    />
+                    <img
+                      src={toAbsoluteUrl(
+                        `/media/store/client/icons/dark/${iconFileName}`,
+                      )}
+                      className="cursor-pointer h-[30px] object-contain light:hidden"
+                      alt="category"
+                    />
+                  </>
+                ) : (
+                  <img
+                    src={productInfo.image}
+                    className="cursor-pointer h-[30px] w-full object-contain"
+                    alt="category"
+                  />
+                )}
               </Card>
               <div className="flex flex-col gap-1">
                 <Link

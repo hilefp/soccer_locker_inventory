@@ -29,41 +29,66 @@ import {
 import { Textarea } from '@/shared/components/ui/textarea';
 import { useFileUpload } from '@/shared/hooks/use-file-upload';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
-import { fileUploadService } from '@/shared/services/file-upload.service';
 import { Image as ImageIcon, X } from 'lucide-react';
 import { toast } from 'sonner';
 
-function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
+function CategoryImageUpload({
+  mode,
+  imageUrl,
+  onImageChange,
+}: {
+  mode: 'new' | 'edit';
+  imageUrl: string | null;
+  onImageChange: (url: string | null) => void;
+}) {
   const isNewMode = mode === 'new';
   const isEditMode = mode === 'edit';
 
-  const [selectedImage, setSelectedImage] = useState<string | null>(
-    isEditMode
-      ? toAbsoluteUrl('/media/store/client/icons/light/running-shoes.svg')
-      : null,
-  );
+  const [selectedImage, setSelectedImage] = useState<string | null>(imageUrl);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Update local state when prop changes
+  useEffect(() => {
+    setSelectedImage(imageUrl);
+  }, [imageUrl]);
+
+  // Initialize file upload hook
+  const fileUpload = useFileUpload({
+    entityType: 'categories',
+    onSuccess: (response) => {
+      if ('url' in response) {
+        setSelectedImage(response.url);
+        onImageChange(response.url);
+        toast.success('Image uploaded successfully');
+      }
+    },
+    onError: (error) => {
+      toast.error(`Upload failed: ${error.message}`);
+    },
+  });
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      setIsUploading(true);
+
+      // Show preview immediately
       const reader = new FileReader();
       reader.onload = (e) => {
         setSelectedImage(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+
+      // Upload to server
+      try {
+        await fileUpload.uploadSingle(file);
+      } catch (error) {
+        console.error('Error uploading file:', error);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
-
-  const uploadFile = useCallback(async (file: File) => {
-    try {
-      const response = await fileUploadService.uploadImage(file, 'categories');
-      if (response) {
-        setSelectedImage(response.url);
-      }
-    } catch (error) {
-      console.error('Error uploading file:', error);
-    }
-  }, []);
 
   const iconFileName: string | null =
     selectedImage && selectedImage.includes('/icons/')
@@ -110,7 +135,11 @@ function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
                   variant="outline"
                   size="icon"
                   className="absolute top-2 right-2 size-6"
-                  onClick={() => setSelectedImage(null)}
+                  onClick={() => {
+                    setSelectedImage(null);
+                    onImageChange(null);
+                  }}
+                  disabled={isUploading}
                 >
                   <X className="size-3" />
                 </Button>
@@ -122,13 +151,14 @@ function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
                 onChange={handleImageUpload}
                 className="hidden"
                 id="category-image-upload"
+                disabled={isUploading}
               />
               <label
                 htmlFor="category-image-upload"
                 className="absolute bottom-3 right-3"
               >
-                <Button size="sm" variant="outline" asChild>
-                  <span>{isEditMode ? 'Change' : 'Upload'}</span>
+                <Button size="sm" variant="outline" asChild disabled={isUploading}>
+                  <span>{isUploading ? 'Uploading...' : isEditMode ? 'Change' : 'Upload'}</span>
                 </Button>
               </label>
             </div>
@@ -140,14 +170,15 @@ function CategoryImageUpload({ mode }: { mode: 'new' | 'edit' }) {
                 accept="image/*"
                 onChange={handleImageUpload}
                 className="hidden"
-                id="category-image-upload"
+                id="category-image-upload-empty"
+                disabled={isUploading}
               />
               <label
-                htmlFor="category-image-upload"
+                htmlFor="category-image-upload-empty"
                 className="absolute bottom-3 right-3"
               >
-                <Button size="sm" variant="outline" asChild>
-                  <span>Upload</span>
+                <Button size="sm" variant="outline" asChild disabled={isUploading}>
+                  <span>{isUploading ? 'Uploading...' : 'Upload'}</span>
                 </Button>
               </label>
             </div>
@@ -294,7 +325,11 @@ export function CategoryFormSheet({
           >
             <div className="space-y-6">
               {/* Image Upload */}
-              <CategoryImageUpload mode={mode} />
+              <CategoryImageUpload
+                mode={mode}
+                imageUrl={imageUrl}
+                onImageChange={setImageUrl}
+              />
 
               {/* Category Name */}
               <div className="space-y-2">
