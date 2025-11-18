@@ -29,6 +29,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { ScreenLoader } from '@/shared/components/screen-loader';
 import { authRoutes } from '@/modules/auth/routes';
 import { productsRoutes } from '@/modules/products/routes';
+import { inventoryRoutes } from '@/modules/inventory/routes';
 import { RenderRouteTree } from '@/shared/lib/router-helper';
 import { ProtectedRoute } from '@/modules/auth/components/protected-route';
 import { AuthRedirect } from './AuthRedirect';
@@ -49,6 +50,7 @@ export function ModulesProvider() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<DefaultLayout />}>
                   <Route path="products/*" element={<RenderRouteTree route={productsRoutes} />} />
+                  <Route path="inventory/*" element={<RenderRouteTree route={inventoryRoutes} />} />
                   <Route path="dashboard" element={<Dashboard />} />
                 <Route path="dark-sidebar" element={<Dashboard />} />
                 <Route path="all-stock" element={<AllStock />} />

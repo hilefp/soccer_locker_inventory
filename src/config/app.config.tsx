@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { type MenuConfig } from './types';
 
-export const MENU_SIDEBAR: MenuConfig  = [
+export const MENU_SIDEBAR: MenuConfig = [
   {
     title: 'Dashboards',
     icon: LayoutGrid,
@@ -24,7 +24,6 @@ export const MENU_SIDEBAR: MenuConfig  = [
     title: 'Products',
     icon: Package,
     children: [
-      
       {
         title: 'Product',
         path: '/products',
@@ -36,13 +35,22 @@ export const MENU_SIDEBAR: MenuConfig  = [
       {
         title: 'Brands',
         path: '/products/brands',
-      }
- 
-      
+      },
     ],
   },
   {
     title: 'Inventory',
+    icon: Boxes,
+    children: [
+      { title: 'Inventory', path: '/inventory' },
+      {
+        title: 'Warehouse Management',
+        path: '/inventory/warehouses',
+      },
+    ],
+  },
+  {
+    title: 'Inventory Template',
     icon: Boxes,
     children: [
       {
@@ -99,7 +107,7 @@ export const MENU_SIDEBAR: MenuConfig  = [
       {
         title: 'Edit Category',
         path: '/edit-category',
-      }
+      },
     ],
   },
   {
@@ -116,7 +124,7 @@ export const MENU_SIDEBAR: MenuConfig  = [
       },
       {
         title: 'Order Details',
-        path: '/order-details', 
+        path: '/order-details',
       },
       {
         title: 'Order Tracking',
@@ -145,7 +153,7 @@ export const MENU_SIDEBAR: MenuConfig  = [
       {
         title: 'Settings(Modal View)',
         path: '/settings-modal',
-      } 
-    ]
-  }
+      },
+    ],
+  },
 ];
