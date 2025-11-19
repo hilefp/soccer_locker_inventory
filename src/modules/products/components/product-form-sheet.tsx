@@ -419,7 +419,12 @@ export function ProductFormSheet({
                   </CardContent>
                 </Card>
 
-                <ProductFormVariants productId={productId || null} mode={mode} variants={variants} onVariantsChange={setVariants} />
+                {
+                  mode === 'edit' && (
+                    <ProductFormVariants productId={productId} mode={mode} variants={variants} onVariantsChange={setVariants} />
+                  )
+                }
+
               </div>
 
               <div className="w-full lg:w-[420px] shrink-0 lg:mt-5 space-y-5 lg:ps-5">

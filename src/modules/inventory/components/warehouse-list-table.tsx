@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Warehouse, WarehouseType } from '../types/warehouse.types';
 import {
   useActivateWarehouse,
   useDeactivateWarehouse,
   useDeleteWarehouse,
 } from '../hooks/use-warehouses';
-import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
 import { Badge, BadgeProps } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -27,7 +26,6 @@ import {
 import { Input, InputWrapper } from '@/shared/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 import {
-  Column,
   ColumnDef,
   getCoreRowModel,
   getPaginationRowModel,
@@ -37,7 +35,7 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { Eye, Search, SquarePen, Trash, X, BarChart3, Power, PowerOff, Info } from 'lucide-react';
+import { Eye, Search, SquarePen, Trash, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 

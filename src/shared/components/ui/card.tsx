@@ -99,7 +99,7 @@ function Card({
     <CardContext.Provider value={{ variant: variant || 'default' }}>
       <div
         data-slot="card"
-        className={cn(cardVariants({ variant }), className)}
+        className={cn(cardVariants({ variant }), className, 'border-none shadow-none')}
         {...props}
       />
     </CardContext.Provider>
