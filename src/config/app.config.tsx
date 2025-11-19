@@ -87,29 +87,6 @@ export const MENU_SIDEBAR: MenuConfig = [
       },
     ],
   },
-
-  {
-    title: 'Categories',
-    icon: LayoutList,
-    children: [
-      {
-        title: 'Category List',
-        path: '/category-list',
-      },
-      {
-        title: 'Category Details',
-        path: '/category-details',
-      },
-      {
-        title: 'Create Category',
-        path: '/create-category',
-      },
-      {
-        title: 'Edit Category',
-        path: '/edit-category',
-      },
-    ],
-  },
   {
     title: 'Orders',
     icon: ClipboardList,
