@@ -406,6 +406,7 @@ function Button({
           className,
         }),
         asChild && props.disabled && 'pointer-events-none opacity-50',
+        'py-4 h-12 rounded-xl',
       )}
       {...(selected && { 'data-state': 'open' })}
       {...props}

@@ -1,34 +1,19 @@
-import axios from 'axios';
+import { apiClient } from '@/shared/lib/api-client';
 import {
   CreateStockEntryDto,
   StockEntryResponse,
 } from '../types/stock-entry.types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-const STOCK_ENTRY_ENDPOINT = `${API_BASE_URL}/inventory/stock-entries`;
-
-// Helper to get auth token from localStorage
-const getAuthToken = () => {
-  const token = localStorage.getItem('authToken');
-  return token;
-};
+const STOCK_ENTRY_ENDPOINT = '/inventory/stock-entries';
 
 export const stockEntryService = {
   /**
    * Create a new stock entry
    */
   async create(data: CreateStockEntryDto): Promise<StockEntryResponse> {
-    const token = getAuthToken();
-
-    const response = await axios.post<StockEntryResponse>(
+    const response = await apiClient.post<StockEntryResponse>(
       STOCK_ENTRY_ENDPOINT,
-      data,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
+      data
     );
 
     return response.data;

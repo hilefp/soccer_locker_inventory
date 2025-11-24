@@ -82,7 +82,7 @@ function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
-      className={cn(selectTriggerVariants({ size }), className)}
+      className={cn(selectTriggerVariants({ size }), className, 'py-4 h-12 rounded-xl')}
       {...props}
     >
       {children}
@@ -121,6 +121,7 @@ function SelectScrollDownButton({
       className={cn(
         'flex cursor-default items-center justify-center py-1',
         className,
+        'rounded-xl'
       )}
       {...props}
     >
@@ -144,6 +145,7 @@ function SelectContent({
           position === 'popper' &&
             'data-[side=bottom]:translate-y-1.5 data-[side=left]:-translate-x-1.5 data-[side=right]:translate-x-1.5 data-[side=top]:-translate-y-1.5',
           className,
+          'rounded-xl'
         )}
         position={position}
         {...props}
@@ -174,6 +176,7 @@ function SelectLabel({
       className={cn(
         'py-1.5 ps-8 pe-2 text-xs text-muted-foreground font-medium',
         className,
+        'rounded-xl'
       )}
       {...props}
     />
@@ -195,6 +198,7 @@ function SelectItem({
         'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 text-sm outline-hidden text-foreground hover:bg-accent focus:bg-accent data-disabled:pointer-events-none data-disabled:opacity-50',
         indicatorPosition === 'left' ? 'ps-8 pe-2' : 'pe-8 ps-2',
         className,
+        'rounded-xl'
       )}
       {...props}
     >

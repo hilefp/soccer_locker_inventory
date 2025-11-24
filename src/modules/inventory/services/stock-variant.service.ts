@@ -1,19 +1,12 @@
-import axios from 'axios';
+import { apiClient } from '@/shared/lib/api-client';
 import {
   StockVariantsResponse,
   StockVariantQueryParams,
 } from '../types/stock-variant.types';
 import { StockVariantDetail } from '../types/stock-variant-detail.types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-const STOCK_VARIANTS_ENDPOINT = `${API_BASE_URL}/inventory/stocks/variants`;
-const STOCK_VARIANT_DETAIL_ENDPOINT = `${API_BASE_URL}/inventory/stocks/variant`;
-
-// Helper to get auth token from localStorage
-const getAuthToken = () => {
-  const token = localStorage.getItem('authToken');
-  return token;
-};
+const STOCK_VARIANTS_ENDPOINT = '/inventory/stocks/variants';
+const STOCK_VARIANT_DETAIL_ENDPOINT = '/inventory/stocks/variant';
 
 // Helper to build query params
 const buildQueryParams = (params: StockVariantQueryParams): string => {
@@ -38,16 +31,10 @@ export const stockVariantService = {
    * Get paginated stock variants with filters
    */
   async getAll(params: StockVariantQueryParams = {}): Promise<StockVariantsResponse> {
-    const token = getAuthToken();
     const queryParams = buildQueryParams(params);
 
-    const response = await axios.get<StockVariantsResponse>(
-      `${STOCK_VARIANTS_ENDPOINT}${queryParams}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    const response = await apiClient.get<StockVariantsResponse>(
+      `${STOCK_VARIANTS_ENDPOINT}${queryParams}`
     );
 
     return response.data;
@@ -57,15 +44,8 @@ export const stockVariantService = {
    * Get detailed information for a specific variant
    */
   async getDetail(variantId: string): Promise<StockVariantDetail> {
-    const token = getAuthToken();
-
-    const response = await axios.get<StockVariantDetail>(
-      `${STOCK_VARIANT_DETAIL_ENDPOINT}/${variantId}/detail`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    const response = await apiClient.get<StockVariantDetail>(
+      `${STOCK_VARIANT_DETAIL_ENDPOINT}/${variantId}/detail`
     );
 
     return response.data;

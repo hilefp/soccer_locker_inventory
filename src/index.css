@@ -117,4 +117,8 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  .bg-soccer_locker_bg {
+    background-color: #F9F8F6!important;
+  }
 }

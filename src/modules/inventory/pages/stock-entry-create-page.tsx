@@ -1,25 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { getStockEntrySchema, StockEntrySchemaType } from '../schemas/stock-entry-schema';
-import { useCreateStockEntry } from '../hooks/use-stock-entry';
-import { useWarehouses } from '../hooks/use-warehouses';
-import { useStockVariants } from '../hooks/use-stock-variants';
-import { stockEntryService } from '../services/stock-entry.service';
-import { EntryType, CreateStockEntryDto } from '../types/stock-entry.types';
-
+import { useFieldArray, useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 // Import components
 import { StockEntryHeader } from '../components/stock-entry-header';
 import { StockEntryInformationCard } from '../components/stock-entry-information-card';
-import { StockEntryProductsCard } from '../components/stock-entry-products-card';
 import { StockEntrySummaryCard } from '../components/stock-entry-summary-card';
+import { StockEntryTable } from '../components/stock-entry-table';
+import { useCreateStockEntry } from '../hooks/use-stock-entry';
+import { useStockVariants } from '../hooks/use-stock-variants';
+import { useWarehouses } from '../hooks/use-warehouses';
+import {
+  getStockEntrySchema,
+  StockEntrySchemaType,
+} from '../schemas/stock-entry-schema';
+import { stockEntryService } from '../services/stock-entry.service';
+import { CreateStockEntryDto, EntryType } from '../types/stock-entry.types';
 
 export function StockEntryCreatePage() {
   const navigate = useNavigate();
   const createMutation = useCreateStockEntry();
   const { data: warehouses, isLoading: loadingWarehouses } = useWarehouses();
-  const { data: variantsResponse, isLoading: loadingVariants } = useStockVariants({ limit: 100 });
+  const { data: variantsResponse, isLoading: loadingVariants } =
+    useStockVariants({ limit: 100 });
 
   const [entryNumber, setEntryNumber] = useState('');
 
@@ -59,22 +62,38 @@ export function StockEntryCreatePage() {
   const details = watch('details');
 
   // Calculate totals
-  const totalItems = details.reduce((sum, item) => sum + (item.quantity || 0), 0);
-  const totalCost = details.reduce((sum, item) => sum + (item.totalCost || 0), 0);
+  const totalItems = details.reduce(
+    (sum, item) => sum + (item.quantity || 0),
+    0,
+  );
+  const totalCost = details.reduce(
+    (sum, item) => sum + (item.totalCost || 0),
+    0,
+  );
 
-  const handleAddProduct = () => {
+  const handleAddProduct = (variantId: string) => {
+    const variant = variantsResponse?.data.find(
+      (v) => v.productVariantId === variantId,
+    );
     const newId = `temp-${Date.now()}`;
-    append({
-      id: newId,
-      productVariantId: '',
-      quantity: 1,
-      costPerUnit: 0,
-      totalCost: 0,
-    });
+
+    if (variant) {
+      append({
+        id: newId,
+        productVariantId: variantId,
+        productName: variant.productName,
+        sku: variant.sku,
+        quantity: 1,
+        costPerUnit: 0,
+        totalCost: 0,
+      });
+    }
   };
 
   const handleProductChange = (index: number, variantId: string) => {
-    const variant = variantsResponse?.data.find(v => v.productVariantId === variantId);
+    const variant = variantsResponse?.data.find(
+      (v) => v.productVariantId === variantId,
+    );
     if (variant) {
       setValue(`details.${index}.productVariantId`, variantId);
       setValue(`details.${index}.productName`, variant.productName);
@@ -111,7 +130,7 @@ export function StockEntryCreatePage() {
         entryDate: data.entryDate.toISOString(),
         notes: data.notes || undefined,
         createdBy: 'current-user-id', // TODO: Get from auth context
-        details: data.details.map(detail => ({
+        details: data.details.map((detail) => ({
           productVariantId: detail.productVariantId,
           quantity: detail.quantity,
           expectedQuantity: detail.expectedQuantity || undefined,
@@ -123,7 +142,7 @@ export function StockEntryCreatePage() {
       };
 
       await createMutation.mutateAsync(payload);
-      navigate('/inventory/stock-entries');
+      navigate('/inventory');
     } catch (error) {
       // Error handling is done in the mutation hook
       console.error('Submit error:', error);
@@ -154,22 +173,7 @@ export function StockEntryCreatePage() {
               loadingWarehouses={loadingWarehouses}
             />
 
-            {/* Products Card */}
-            <StockEntryProductsCard
-              fields={fields}
-              register={register}
-              control={control}
-              watch={watch}
-              setValue={setValue}
-              errors={errors}
-              variants={variantsResponse?.data}
-              loadingVariants={loadingVariants}
-              onAddProduct={handleAddProduct}
-              onRemove={remove}
-              onProductChange={handleProductChange}
-              onQuantityChange={handleQuantityChange}
-              onCostChange={handleCostChange}
-            />
+            {/* Products Table */}
           </div>
 
           {/* Right Column - Summary */}
@@ -181,6 +185,24 @@ export function StockEntryCreatePage() {
               totalCost={totalCost}
             />
           </div>
+        </div>
+
+        <div>
+          <StockEntryTable
+            fields={fields}
+            register={register}
+            control={control}
+            watch={watch}
+            setValue={setValue}
+            errors={errors}
+            variants={variantsResponse?.data}
+            loadingVariants={loadingVariants}
+            onAddProduct={handleAddProduct}
+            onRemove={remove}
+            onProductChange={handleProductChange}
+            onQuantityChange={handleQuantityChange}
+            onCostChange={handleCostChange}
+          />
         </div>
       </div>
     </form>

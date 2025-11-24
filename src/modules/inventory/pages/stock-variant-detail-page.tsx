@@ -108,7 +108,7 @@ export function StockVariantDetailPage() {
             variant="outline"
             size="icon"
             onClick={() => navigate(-1)}
-            className="h-10 w-10"
+            
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>

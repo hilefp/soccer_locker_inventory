@@ -43,6 +43,7 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: Boxes,
     children: [
       { title: 'Inventory', path: '/inventory' },
+      { title: 'Stock Entries', path: '/inventory/stock-entries/new' },
       {
         title: 'Warehouse Management',
         path: '/inventory/warehouses',

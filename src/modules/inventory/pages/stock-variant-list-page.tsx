@@ -29,13 +29,13 @@ export function StockVariantListPage() {
         <CardHeader className="py-4">
           <CardToolbar className="flex items-center justify-between gap-4">
             {/* Search */}
-            <InputWrapper className="w-full lg:w-[400px]">
+            <InputWrapper className="w-full lg:w-[400px] py-4 h-12 rounded-xl">
               <Search className="h-5 w-5" />
               <Input
                 placeholder="Search by SKU or product name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="text-base"
+                className="text-base py-4 h-12 rounded-xl"
               />
               {searchQuery && (
                 <Button

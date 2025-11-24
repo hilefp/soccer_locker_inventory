@@ -47,7 +47,7 @@ export function StockEntrySummaryCard({
         <Separator />
 
         <div className="space-y-2">
-          <Badge variant="outline" className="w-full justify-center py-2">
+          <Badge variant="outline" className="w-full justify-center py-6 rounded-xl">
             Status: DRAFT
           </Badge>
           <p className="text-xs text-muted-foreground text-center">

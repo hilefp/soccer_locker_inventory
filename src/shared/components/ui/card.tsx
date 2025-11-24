@@ -99,7 +99,7 @@ function Card({
     <CardContext.Provider value={{ variant: variant || 'default' }}>
       <div
         data-slot="card"
-        className={cn(cardVariants({ variant }), className, 'border-none shadow-none')}
+        className={cn(cardVariants({ variant }), 'pb-4',className, 'border-none shadow-none')}
         {...props}
       />
     </CardContext.Provider>
@@ -115,7 +115,7 @@ function CardHeader({
   return (
     <div
       data-slot="card-header"
-      className={cn(cardHeaderVariants({ variant }), className)}
+      className={cn(cardHeaderVariants({ variant }), 'py-4', className)}
       {...props}
     />
   );
