@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import { PlusIcon, Upload } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/button';
-import { ProductFormSheet } from '../components/product-form-sheet';
 import { ProductListTable } from '../components/product-list';
 import { ProductNavigationTabs } from '@/modules/products/components/product-navigation-tabs';
 import { useProducts } from '@/modules/products/hooks/use-products';
 
 export function ProductList() {
-  const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Use React Query hook for data fetching
   const { data: products = [], isLoading, error } = useProducts();
@@ -43,7 +42,7 @@ export function ProductList() {
           <Button
             variant="mono"
             className="gap-2"
-            onClick={() => setIsCreateProductOpen(true)}
+            onClick={() => navigate('/products/new')}
           >
             <PlusIcon className="h-4 w-4" />
             Add Product
@@ -56,13 +55,6 @@ export function ProductList() {
         products={products}
         isLoading={isLoading}
         error={error?.message || null}
-      />
-
-      {/* Create Product Modal */}
-      <ProductFormSheet
-        mode="new"
-        open={isCreateProductOpen}
-        onOpenChange={setIsCreateProductOpen}
       />
     </div>
   );

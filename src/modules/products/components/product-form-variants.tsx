@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle,
+  ExternalLink,
   Pencil,
   Loader2,
   Settings,
@@ -49,6 +51,7 @@ export function ProductFormVariants({
   variants: externalVariants = [],
   onVariantsChange
 }: ProductFormVariantsProps) {
+  const navigate = useNavigate();
   // Use external variants directly - no local state for variants data
   const variants = externalVariants;
   const [activeTab, setActiveTab] = useState('list');
@@ -365,8 +368,17 @@ export function ProductFormVariants({
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => navigate(`/products/${productId}/variants/${variant.id}`)}
+                              title="View variant details"
+                              disabled={isDeleting === variant.id}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleEditVariant(variant)}
-                              title="Edit variant"
+                              title="Quick edit variant"
                               disabled={isDeleting === variant.id}
                             >
                               <Pencil className="h-4 w-4" />

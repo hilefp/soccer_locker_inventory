@@ -8,7 +8,7 @@ export const productVariantService = {
   },
 
   async getVariant(variantId: string): Promise<ProductVariant> {
-    const response = await apiClient.get<ProductVariant>(`/inventory/variant/${variantId}`);
+    const response = await apiClient.get<ProductVariant>(`/inventory/product-variant/${variantId}`);
     return response.data;
   },
 
@@ -18,11 +18,11 @@ export const productVariantService = {
   },
 
   async updateVariant(variantId: string, variant: ProductVariantRequest): Promise<ProductVariant> {
-    const response = await apiClient.put<ProductVariant>(`/inventory/variant/${variantId}`, variant);
+    const response = await apiClient.put<ProductVariant>(`/inventory/product-variant/${variantId}`, variant);
     return response.data;
   },
 
   async deleteVariant(variantId: string): Promise<void> {
-    await apiClient.delete(`/inventory/variant/${variantId}`);
+    await apiClient.delete(`/inventory/product-variant/${variantId}`);
   }
 };

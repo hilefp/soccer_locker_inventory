@@ -20,8 +20,11 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  _hasHydrated: boolean;
+  setHasHydrated: (hasHydrated: boolean) => void;
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
+  validateSession: () => Promise<boolean>;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
   clearError: () => void;

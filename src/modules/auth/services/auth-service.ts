@@ -14,4 +14,9 @@ export const authService = {
     // If you have a logout endpoint on the backend, call it here
     // await apiClient.post('/inventory/auth/logout');
   },
+
+  async getProfile(): Promise<LoginResponse['user']> {
+    const response = await apiClient.get<LoginResponse['user']>('/profile');
+    return response.data;
+  },
 };
