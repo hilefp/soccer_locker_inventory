@@ -29,6 +29,7 @@ import { ScreenLoader } from '@/shared/components/screen-loader';
 import { authRoutes } from '@/modules/auth/routes';
 import { productsRoutes } from '@/modules/products/routes';
 import { inventoryRoutes } from '@/modules/inventory/routes';
+import { settingsRoutes } from '@/modules/settings/routes';
 import { RenderRouteTree } from '@/shared/lib/router-helper';
 import { ProtectedRoute } from '@/modules/auth/components/protected-route';
 import { AuthRedirect } from './AuthRedirect';
@@ -50,6 +51,7 @@ export function ModulesProvider() {
                 <Route element={<DefaultLayout />}>
                   <Route path="products/*" element={<RenderRouteTree route={productsRoutes} />} />
                   <Route path="inventory/*" element={<RenderRouteTree route={inventoryRoutes} />} />
+                  <Route path="settings/*" element={<RenderRouteTree route={settingsRoutes} />} />
                   <Route path="dashboard" element={<Dashboard />} />
                 <Route path="dark-sidebar" element={<Dashboard />} />
                 <Route path="all-stock" element={<AllStock />} />

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -10,32 +11,36 @@ import {
   ArrowRightLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { IncrementStockDrawer } from './increment-stock-drawer';
+import { AdjustStockDrawer } from './adjust-stock-drawer';
+import { PhysicalCountDrawer } from './physical-count-drawer';
+import { RegisterExitDrawer } from './register-exit-drawer';
 
 interface QuickActionsCardProps {
   variantId: string;
   sku: string;
+  currentStock?: number;
 }
 
-export function QuickActionsCard({ variantId, sku }: QuickActionsCardProps) {
+export function QuickActionsCard({ variantId, sku, currentStock }: QuickActionsCardProps) {
+  const [isIncrementDrawerOpen, setIsIncrementDrawerOpen] = useState(false);
+  const [isAdjustDrawerOpen, setIsAdjustDrawerOpen] = useState(false);
+  const [isPhysicalCountDrawerOpen, setIsPhysicalCountDrawerOpen] = useState(false);
+  const [isRegisterExitDrawerOpen, setIsRegisterExitDrawerOpen] = useState(false);
+
   const handleAdjustStock = () => {
-    toast.info('Adjust stock feature coming soon');
-    // TODO: Open adjust stock modal
+    setIsAdjustDrawerOpen(true);
   };
 
   const handleRegisterEntry = () => {
-    toast.info('Register entry feature coming soon');
-    // TODO: Open register entry modal
+    setIsIncrementDrawerOpen(true);
   };
 
   const handleRegisterExit = () => {
-    toast.info('Register exit feature coming soon');
-    // TODO: Open register exit modal
+    setIsRegisterExitDrawerOpen(true);
   };
 
-  const handleTransfer = () => {
-    toast.info('Transfer stock feature coming soon');
-    // TODO: Open transfer stock modal
-  };
+ 
 
   const handleViewMovements = () => {
     toast.info('Full movement history coming soon');
@@ -48,8 +53,7 @@ export function QuickActionsCard({ variantId, sku }: QuickActionsCardProps) {
   };
 
   const handleStockCount = () => {
-    toast.info('Physical count feature coming soon');
-    // TODO: Open stock count modal
+    setIsPhysicalCountDrawerOpen(true);
   };
 
   return (
@@ -92,15 +96,6 @@ export function QuickActionsCard({ variantId, sku }: QuickActionsCardProps) {
             <span>Register Exit</span>
           </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleTransfer}
-            className="w-full justify-start text-base h-auto py-3"
-          >
-            <ArrowRightLeft className="h-5 w-5 mr-3 text-blue-600" />
-            <span>Transfer Stock</span>
-          </Button>
 
           <Button
             variant="outline"
@@ -110,16 +105,6 @@ export function QuickActionsCard({ variantId, sku }: QuickActionsCardProps) {
           >
             <RefreshCw className="h-5 w-5 mr-3" />
             <span>Physical Count</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleViewMovements}
-            className="w-full justify-start text-base h-auto py-3"
-          >
-            <History className="h-5 w-5 mr-3" />
-            <span>View All Movements</span>
           </Button>
 
           <Button
@@ -137,6 +122,38 @@ export function QuickActionsCard({ variantId, sku }: QuickActionsCardProps) {
           Quick access to common operations
         </div>
       </CardContent>
+
+      <IncrementStockDrawer
+        open={isIncrementDrawerOpen}
+        onOpenChange={setIsIncrementDrawerOpen}
+        variantId={variantId}
+        sku={sku}
+        currentStock={currentStock}
+      />
+
+      <AdjustStockDrawer
+        open={isAdjustDrawerOpen}
+        onOpenChange={setIsAdjustDrawerOpen}
+        variantId={variantId}
+        sku={sku}
+        currentStock={currentStock}
+      />
+
+      <PhysicalCountDrawer
+        open={isPhysicalCountDrawerOpen}
+        onOpenChange={setIsPhysicalCountDrawerOpen}
+        variantId={variantId}
+        sku={sku}
+        currentStock={currentStock}
+      />
+
+      <RegisterExitDrawer
+        open={isRegisterExitDrawerOpen}
+        onOpenChange={setIsRegisterExitDrawerOpen}
+        variantId={variantId}
+        sku={sku}
+        currentStock={currentStock}
+      />
     </Card>
   );
 }

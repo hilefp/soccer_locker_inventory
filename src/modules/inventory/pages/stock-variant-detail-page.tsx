@@ -233,7 +233,11 @@ export function StockVariantDetailPage() {
 
 
           {/* Quick Actions */}
-          <QuickActionsCard variantId={variant.id} sku={variant.sku} />
+          <QuickActionsCard
+            variantId={variant.id}
+            sku={variant.sku}
+            currentStock={stockSummary.totalQuantity}
+          />
 
 
           {/* Product Details */}

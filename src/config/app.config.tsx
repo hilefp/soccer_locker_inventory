@@ -129,8 +129,8 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: Settings2,
     children: [
       {
-        title: 'Settings(Modal View)',
-        path: '/settings-modal',
+        title: 'Users',
+        path: '/settings/users',
       },
     ],
   },
