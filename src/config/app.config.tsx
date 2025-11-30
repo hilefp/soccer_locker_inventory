@@ -2,7 +2,7 @@ import {
   Boxes,
   ClipboardList,
   LayoutGrid,
-  LayoutList,
+  ClubIcon,
   Package,
   Settings2,
   UsersRound,
@@ -123,6 +123,16 @@ export const MENU_SIDEBAR: MenuConfig = [
         path: '/customer-list-details',
       },
     ],
+  },
+  {
+    title: "Clubs",
+    icon: ClubIcon,
+    children: [
+      {
+        title: "All clubs",
+        path: '/clubs'
+      }
+    ]
   },
   {
     title: 'Settings',

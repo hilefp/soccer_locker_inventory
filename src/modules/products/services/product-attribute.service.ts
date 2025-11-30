@@ -24,7 +24,7 @@ export const productAttributeService = {
 
   // Update an existing product attribute
   updateProductAttribute: async (id: string, data: ProductAttributeRequest): Promise<ProductAttribute> => {
-    const response = await apiClient.patch<ProductAttribute>(`${API_BASE_URL}/${id}`, data);
+    const response = await apiClient.put<ProductAttribute>(`${API_BASE_URL}/${id}`, data);
     return response.data;
   },
 

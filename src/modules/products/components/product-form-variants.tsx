@@ -38,6 +38,8 @@ import {
 import { ProductVariant, ProductVariantRequest } from '@/modules/products/types/product.type';
 import { useProductAttributes } from '@/modules/products/hooks/use-product-attributes';
 import { productService } from '@/modules/products/services/product.service';
+import { productKeys } from '@/modules/products/hooks/use-products';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ProductFormVariantsProps {
   mode?: 'new' | 'edit';
@@ -52,6 +54,8 @@ export function ProductFormVariants({
   onVariantsChange
 }: ProductFormVariantsProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   // Use external variants directly - no local state for variants data
   const variants = externalVariants;
   const [activeTab, setActiveTab] = useState('list');
@@ -92,8 +96,13 @@ export function ProductFormVariants({
       });
 
       if (response.success && response.variants) {
+        // Invalidate the product query to refetch the data with new variants
+        queryClient.invalidateQueries({ queryKey: productKeys.detail(productId) });
+
+        // Update local state
         onVariantsChange?.(response.variants);
 
+        // Show success toast
         toast.custom(
           (t) => (
             <Alert
@@ -106,7 +115,7 @@ export function ProductFormVariants({
                 <CheckCircle />
               </AlertIcon>
               <AlertTitle>
-                {response.variants.length} variations generated successfully
+                {response.variants.length} variation{response.variants.length !== 1 ? 's' : ''} generated successfully!
               </AlertTitle>
             </Alert>
           ),
