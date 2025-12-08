@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router';
 
 export function WarehouseListPage() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<WarehouseFilters>({});
+  const [filters] = useState<WarehouseFilters>({});
 
   const { data: warehouses, isLoading, error } = useWarehouses(filters);
 
