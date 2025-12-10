@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import { cn } from '@/shared/lib/utils';
 import { useIsMobile } from '@/shared/hooks/use-mobile';
-import { useScrollPosition } from '@/shared/hooks/use-scroll-position';
 import { Button } from '@/shared/components/ui/button';
 import {
   Sheet,
@@ -28,8 +27,6 @@ export function Header() {
   const { pathname } = useLocation();
   const mobileMode = useIsMobile();
 
-  const scrollPosition = useScrollPosition();
-  const headerSticky: boolean = scrollPosition > 0;
 
   // Close sheet when route changes
   useEffect(() => {
@@ -39,14 +36,13 @@ export function Header() {
   return (
     <header
       className={cn(
-        'header fixed top-0 z-10 start-0 flex items-stretch shrink-0 border-b border-transparent bg-background end-0 pe-[var(--removed-body-scroll-bar-size,0px)]',
-        headerSticky && 'border-b border-border',
+        'flex items-stretch shrink-0 border-b border-transparent bg-soccer_locker_bg '
       )}
     >
       <div className="container-fluid flex justify-between items-stretch lg:gap-4">
         {/* HeaderLogo */}
         <div className="flex lg:hidden items-center gap-2.5">
-          <Link to="/store-inventory" className="shrink-0">
+          <Link to="/" className="shrink-0">
             <img
               src={toAbsoluteUrl('/media/app/mini-logo.svg')}
               className="h-[25px] w-full"

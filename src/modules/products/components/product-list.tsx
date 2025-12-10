@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Column,
   ColumnDef,
@@ -21,7 +22,6 @@ import {
   Star,
   Trash,
   X,
-  Layers,
   Package,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -60,10 +60,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/shared/components/ui/tooltip';
-import { ProductFormSheet } from './product-form-sheet';
-import { ProductDetailsAnalyticsSheet } from './product-details-analytics-sheet';
-import { ManageVariantsSheet } from '../../../pages/components/manage-variants';
-import { cn } from '@/shared/lib/utils';
 import { Product } from '@/modules/products/types/product.type';
 import { useDeleteProduct } from '@/modules/products/hooks/use-products';
 
@@ -93,8 +89,6 @@ interface ProductListProps {
   products?: Product[];
   isLoading?: boolean;
   error?: string | null;
-  onRowClick?: (productId: string) => void;
-  displaySheet?: "productDetails" | "createProduct" | "editProduct" | "manageVariants";
 }
 
 // Helper function to convert Product to IData format
@@ -138,11 +132,8 @@ const convertProductToIData = (product: Product): IData => {
 
 export function ProductListTable({
   products,
-  isLoading = false,
-  error = null,
-  onRowClick,
-  displaySheet,
 }: ProductListProps) {
+  const navigate = useNavigate();
   const data = useMemo(() => {
     if (!products || products.length === 0) return [];
     return products.map(convertProductToIData);
@@ -166,41 +157,12 @@ export function ProductListTable({
   ]);
   const [selectedLastMoved] = useState<string[]>([]);
 
-  // Modal state
-  const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
-  const [isEditProductOpen, setIsEditProductOpen] = useState(false);
-  const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
-
-  // Auto-open sheet based on displaySheet prop
-  useEffect(() => {
-    if (displaySheet) {
-      switch (displaySheet) {
-        case 'productDetails':
-          setIsProductDetailsOpen(true);
-          break;
-        case 'createProduct':
-          setIsCreateProductOpen(true);
-          break;
-        case 'editProduct':
-          setIsEditProductOpen(true);
-          break;
-      }
-    }
-  }, [displaySheet]);
-
   const handleEditProduct = (product: IData) => {
-    console.log('Editing product:', product);
-    setSelectedProductId(product.id);
-    setIsEditProductOpen(true);
+    navigate(`/products/${product.id}/edit`);
   };
 
-
-
   const handleViewDetails = (product: IData) => {
-    console.log('Viewing details for product:', product);
-    setSelectedProductId(product.id);
-    setIsProductDetailsOpen(true);
+    navigate(`/products/${product.id}`);
   };
 
   const handleDeleteProduct = (product: IData) => {
@@ -566,17 +528,6 @@ export function ProductListTable({
     debugColumns: true,
   });
 
- // const tabs = [];
-
-  const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId);
-    // Reset to first page when changing tabs
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: 0,
-    }));
-  };
-
   // Search input handlers
   const handleClearInput = () => {
     setInputValue('');
@@ -669,9 +620,6 @@ export function ProductListTable({
               <DataGrid
                 table={table}
                 recordCount={filteredData?.length || 0}
-                onRowClick={
-                  onRowClick ? (row: IData) => onRowClick(row.id) : undefined
-                }
                 tableLayout={{
                   columnsPinnable: true,
                   columnsMovable: true,
@@ -690,32 +638,8 @@ export function ProductListTable({
                 </CardFooter>
               </DataGrid>
 
-  
+
       </Card>
-
-      {/* Product Details Modal */}
-      <ProductDetailsAnalyticsSheet
-        open={isProductDetailsOpen}
-        onOpenChange={setIsProductDetailsOpen}
-        productId={selectedProductId}
-      />
-
-      {/* Edit Product Modal */}
-      <ProductFormSheet
-        mode="edit"
-        open={isEditProductOpen}
-        onOpenChange={setIsEditProductOpen}
-        productId={selectedProductId}
-      />
-
-      {/* Create Product Modal */}
-      <ProductFormSheet
-        mode="new"  
-        open={isCreateProductOpen}
-        onOpenChange={setIsCreateProductOpen}
-      />
-
- 
     </div>
   );
 }

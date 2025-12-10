@@ -8,7 +8,6 @@ import { CreateShippingLabelPage } from '@/pages/create-shipping-label/page';
 import { CurrentStock } from '@/pages/current-stock/page';
 import { CustomerListDetails } from '@/pages/customer-list-details/page';
 import { CustomerList } from '@/pages/customer-list/page';
-import { Dashboard } from '@/pages/dashboard/page';
 import { EditCategoryPage } from '@/pages/edit-category/page';
 import { EditProductPage } from '@/pages/edit-product/page';
 import { InboundStock } from '@/pages/inbound-stock/page';
@@ -21,17 +20,20 @@ import { OutboundStock } from '@/pages/outbound-stock/page';
 import { PerProductStockPage } from '@/pages/per-product-stock/page';
 import { ProductDetailsPage } from '@/pages/product-details/page';
 import { ProductInfoPage } from '@/pages/product-info/page';
-import { ProductList } from '@/modules/products/pages/product-list-page';
 import { SettingsModal } from '@/pages/settings-modal/page';
 import { StockPlanner } from '@/pages/stock-planner/page';
 import { TrackShippingPage } from '@/pages/track-shipping/page';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { ScreenLoader } from '@/shared/components/screen-loader';
 import { authRoutes } from '@/modules/auth/routes';
 import { productsRoutes } from '@/modules/products/routes';
+import { inventoryRoutes } from '@/modules/inventory/routes';
+import { settingsRoutes } from '@/modules/settings/routes';
+import { clubsRoutes } from '@/modules/clubs/routes';
 import { RenderRouteTree } from '@/shared/lib/router-helper';
 import { ProtectedRoute } from '@/modules/auth/components/protected-route';
 import { AuthRedirect } from './AuthRedirect';
+import { dashboardRoutes } from '@/modules/dashboard/route';
 
 export function ModulesProvider() {
   return (
@@ -49,8 +51,10 @@ export function ModulesProvider() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<DefaultLayout />}>
                   <Route path="products/*" element={<RenderRouteTree route={productsRoutes} />} />
-                  <Route path="dashboard" element={<Dashboard />} />
-                <Route path="dark-sidebar" element={<Dashboard />} />
+                  <Route path="inventory/*" element={<RenderRouteTree route={inventoryRoutes} />} />
+                  <Route path="settings/*" element={<RenderRouteTree route={settingsRoutes} />} />
+                  <Route path="clubs/*" element={<RenderRouteTree route={clubsRoutes} />} />
+                  <Route path="dashboard/*" element={<RenderRouteTree route={dashboardRoutes} />} />
                 <Route path="all-stock" element={<AllStock />} />
                 <Route path="current-stock" element={<CurrentStock />} />
                 <Route path="inbound-stock" element={<InboundStock />} />

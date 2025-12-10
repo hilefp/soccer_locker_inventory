@@ -34,7 +34,7 @@ function Textarea({
   return (
     <textarea
       data-slot="textarea"
-      className={cn(textareaVariants({ variant }), className)}
+      className={cn(textareaVariants({ variant }), className, 'py-4 rounded-xl')}
       {...props}
     />
   );

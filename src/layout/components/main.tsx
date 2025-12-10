@@ -48,10 +48,10 @@ export function Main() {
     <>
       {!isMobile && <Sidebar />}
 
-      <div className="wrapper flex grow flex-col lg:[&_.container-fluid]:px-10">
+      <div className="wrapper flex grow flex-col lg:[&_.container-fluid]:px-10 bg-soccer_locker_bg py-4">
         <Header />
 
-        <main className="grow pt-2.5 lg:pt-5" role="content">
+        <main className="grow pt-2.5 lg:pt-5 bg-soccer_locker_bg" role="content">
           {/* Mega Menu */}
           {isMobile && <Breadcrumb />}
 

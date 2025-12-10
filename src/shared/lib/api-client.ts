@@ -29,10 +29,11 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
+      // Token expired or invalid - clear auth data
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
-      window.location.href = '/auth/login';
+      // Dispatch custom event to notify auth store
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
     }
     return Promise.reject(error);
   }

@@ -5,12 +5,31 @@ import type { AuthState, LoginRequest, User } from '@/modules/auth/types';
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
-      user: null,
-      accessToken: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
+    (set) => {
+      // Listen for unauthorized events from axios interceptor
+      if (typeof window !== 'undefined') {
+        window.addEventListener('auth:unauthorized', () => {
+          set({
+            user: null,
+            accessToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: 'Session expired. Please login again.',
+          });
+        });
+      }
+
+      return {
+        user: null,
+        accessToken: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+        _hasHydrated: false,
+
+      setHasHydrated: (hasHydrated: boolean) => {
+        set({ _hasHydrated: hasHydrated });
+      },
 
       login: async (credentials: LoginRequest) => {
         set({ isLoading: true, error: null });
@@ -28,10 +47,10 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           const errorMessage =
-            error.response?.data?.message ||
-            error.message ||
+            (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+            (error as { message?: string })?.message ||
             'Login failed. Please try again.';
 
           set({
@@ -65,6 +84,46 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
+      validateSession: async () => {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+          set({
+            user: null,
+            accessToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+          return false;
+        }
+
+        try {
+          const user = await authService.getProfile();
+
+          set({
+            user,
+            accessToken: token,
+            isAuthenticated: true,
+            error: null,
+          });
+
+          return true;
+        } catch {
+          // Clear auth state if profile fetch fails
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('user');
+
+          set({
+            user: null,
+            accessToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+
+          return false;
+        }
+      },
+
       setUser: (user: User | null) => {
         set({ user, isAuthenticated: !!user });
       },
@@ -81,14 +140,18 @@ export const useAuthStore = create<AuthState>()(
       clearError: () => {
         set({ error: null });
       },
-    }),
+      };
+    },
     {
       name: 'auth-storage',
-      partialPersist: (state) => ({
+      partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );
