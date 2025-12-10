@@ -1,0 +1,48 @@
+name: Deploy React Frontend
+
+on:
+  push:
+    branches: [ "main" ] # O la rama que uses para producción
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 1. Instalar Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # O la versión que uses localmente
+
+      # 2. Instalar dependencias
+      - name: Install Dependencies
+        run: npm ci
+
+      # 3. Construir el proyecto (Crea la carpeta 'dist' o 'build')
+      - name: Build Project
+        run: npm run build
+        env:
+          # IMPORTANTE: Asegúrate de que React sepa dónde está el API
+          # Si tu API está en el mismo dominio bajo /api, esto suele ser automático
+          # o puedes poner la IP pública.
+          VITE_API_BASE_URL: "/api" 
+          VITE_APP_VERSION: 1
+          VITE_APP_NAME: "Soccer Locker Management"
+
+      # 4. Copiar archivos al servidor (SCP)
+      - name: Deploy to Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          # Copiamos TODO lo que esté DENTRO de dist
+          source: "dist/*"
+          # Lo pegamos DENTRO de client_build en el servidor
+          target: "${{ secrets.TARGET_DIR }}/client_build"
+          # Esto evita que cree una carpeta "dist" dentro de "client_build"
+          strip_components: 1
