@@ -989,7 +989,7 @@ export function OutboundStockTable({
         ),
         cell: (info) => {
           const status = info.row.original.status;
-          const variant = status.variant as keyof BadgeProps['variant'];
+          const variant = status.variant as 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info';
           return (
             <div className="text-center">
               <Badge variant={variant} appearance="light">

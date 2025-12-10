@@ -1,5 +1,5 @@
 import { LucideIcon } from 'lucide-react';
-import { Avatars } from '@/shared/components/common/avatar-group';
+import { Avatars } from '@/shared/components/avatar-group';
 
 export interface SearchDocsItem {
   image: string;

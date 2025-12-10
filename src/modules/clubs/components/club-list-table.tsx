@@ -204,7 +204,7 @@ export function ClubListTable({
         ),
         cell: ({ row }) => {
           const isActive = row.original.isActive;
-          const variant: keyof BadgeProps['variant'] = isActive
+          const variant: 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info' = isActive
             ? 'success'
             : 'secondary';
           return (

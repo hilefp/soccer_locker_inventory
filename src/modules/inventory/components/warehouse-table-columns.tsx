@@ -1,7 +1,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Warehouse } from '../types/warehouse.types';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/shared/components/ui/dropdown-menu';
 import { MoreHorizontal, Pencil, BarChart3, Power, PowerOff, Trash2 } from 'lucide-react';
 import { Link } from 'react-router';
 
@@ -93,7 +93,7 @@ export const getWarehouseTableColumns = ({
     cell: ({ row }) => {
       const isActive = row.getValue('isActive') as boolean;
       return (
-        <Badge variant={isActive ? 'default' : 'secondary'}>
+        <Badge variant={isActive ? 'success' : 'secondary'}>
           {isActive ? 'Active' : 'Inactive'}
         </Badge>
       );

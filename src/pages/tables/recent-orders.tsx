@@ -568,7 +568,7 @@ const DashboardTable = () => {
         ),
         cell: (info) => {
           const variant = info.row.original
-            .variant as keyof BadgeProps['variant'];
+            .variant as 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info';
 
           return (
             <Badge variant={variant} appearance="light">

@@ -39,7 +39,6 @@ import { DayView } from "./day-view"
 import { EventDialog } from "./event-dialog"
 import { MonthView } from "./month-view"
 import { WeekView } from "./week-view"
-import { ToolbarSidebarToggle } from "@/calendar/layout/components/toolbar"
 
 export interface EventCalendarProps {
   events?: CalendarEvent[]
@@ -269,7 +268,6 @@ export function EventCalendar({
           )}
         >
           <div className="flex items-center gap-1 sm:gap-4">
-            <ToolbarSidebarToggle />
             <Button
               variant="outline"
               className="max-[479px]:aspect-square max-[479px]:p-0!"

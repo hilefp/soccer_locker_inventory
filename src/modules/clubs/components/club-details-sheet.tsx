@@ -60,7 +60,7 @@ export function ClubDetailsSheet({
     return null;
   }
 
-  const statusVariant: keyof BadgeProps['variant'] = club?.isActive
+  const statusVariant: 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info' = club?.isActive
     ? 'success'
     : 'secondary';
 

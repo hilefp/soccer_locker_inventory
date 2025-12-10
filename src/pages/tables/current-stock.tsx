@@ -1009,7 +1009,7 @@ const CurrentStockTable = ({ mockData: propsMockData }: CurrentStockProps) => {
         ),
         cell: (info) => {
           const delta = info.row.original.delta;
-          const variant = delta.variant as keyof BadgeProps['variant'];
+          const variant = delta.variant as 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info';
           return (
             <Badge variant={variant} appearance="light">
               {delta.label}
@@ -1075,7 +1075,7 @@ const CurrentStockTable = ({ mockData: propsMockData }: CurrentStockProps) => {
         ),
         cell: (info) => {
           const trend = info.row.original.trend;
-          const variant = trend.variant as keyof BadgeProps['variant'];
+          const variant = trend.variant as 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info';
           return (
             <Badge variant={variant} appearance="light">
               {trend.label}

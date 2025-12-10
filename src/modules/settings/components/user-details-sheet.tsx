@@ -38,7 +38,7 @@ interface UserDetailsSheetProps {
   userId?: string;
 }
 
-const getStatusVariant = (status: UserStatus): keyof BadgeProps['variant'] => {
+const getStatusVariant = (status: UserStatus): 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info' => {
   switch (status) {
     case UserStatus.ACTIVE:
       return 'success';

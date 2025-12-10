@@ -28,7 +28,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
-import { Badge, BadgeProps } from '@/shared/components/ui/badge';
+import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Calendar } from '@/shared/components/ui/calendar';
 import {
@@ -1037,7 +1037,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
         ),
         cell: (info) => {
           const status = info.row.original.status;
-          const variant = status.variant as keyof BadgeProps['variant'];
+          const variant = status.variant as 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info';
           return (
             <Badge variant={variant} appearance="light">
               {status.label}
