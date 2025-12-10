@@ -16,7 +16,7 @@ export const getCreateWarehouseSchema = () => {
       (value) => value !== undefined,
       { message: 'Warehouse type is required' }
     ),
-    isActive: z.boolean().optional().default(true),
+    isActive: z.boolean().default(true),
     managerId: z.string().uuid().optional().or(z.literal('')),
     capacity: z.number().positive('Capacity must be positive').optional(),
     latitude: z.number().min(-90).max(90).optional(),

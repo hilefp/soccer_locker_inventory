@@ -303,7 +303,7 @@ const ProductInfoSheet = ({ onClose }: ProductInfoSheetProps) => {
         ),
         cell: (info) => {
           const trends = info.row.original.trends;
-          const variant = trends.variant as keyof BadgeProps['variant'];
+          const variant = trends.variant as 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info';
           return (
             <Badge variant={variant} appearance="light">
               {trends.label}

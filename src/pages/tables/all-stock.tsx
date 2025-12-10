@@ -1145,7 +1145,7 @@ const AllStockTable = ({ mockData: propsMockData }: AllStockProps) => {
         ),
         cell: (info) => {
           const delta = info.row.original.delta;
-          const variant = delta.variant as keyof BadgeProps['variant'];
+          const variant = delta.variant as 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info';
           return (
             <Badge variant={variant} appearance="light">
               {delta.label}

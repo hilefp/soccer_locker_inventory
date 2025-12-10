@@ -6,7 +6,7 @@ export function ManageVariantsPage() {
 
   return (
     <div className="container-fluid">
-      <ProductListTable displaySheet="manageVariants" />
+      <ProductListTable />
     </div>
   );
 }

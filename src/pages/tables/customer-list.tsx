@@ -1070,7 +1070,7 @@ export function CustomerListTable({
         ),
         cell: (info) => {
           const status = info.row.original.status;
-          const variant = status.variant as keyof BadgeProps['variant'];
+          const variant = status.variant as 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info';
           return (
             <Badge
               variant={variant}

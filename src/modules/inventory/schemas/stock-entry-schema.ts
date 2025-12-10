@@ -24,11 +24,11 @@ export const getStockEntrySchema = () => {
     supplierId: z.string().optional(),
     purchaseOrderId: z.string().optional(),
     entryType: z.nativeEnum(EntryType, {
-      errorMap: () => ({ message: 'Entry type is required' }),
+      message: 'Entry type is required',
     }),
     referenceDocument: z.string().optional(),
     entryDate: z.date({
-      required_error: 'Entry date is required',
+      message: 'Entry date is required',
     }),
     notes: z.string().optional(),
     details: z.array(getStockEntryDetailSchema()).min(1, 'At least one product is required'),

@@ -1009,7 +1009,7 @@ const StockPlannerTable = ({ mockData: propsMockData }: StockPlannerProps) => {
         ),
         cell: (info) => {
           const delta = info.row.original.delta;
-          const variant = delta.variant as keyof BadgeProps['variant'];
+          const variant = delta.variant as 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info';
           return (
             <div className="text-center">
               <Badge variant={variant} appearance="light">

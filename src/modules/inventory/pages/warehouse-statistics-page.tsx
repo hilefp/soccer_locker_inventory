@@ -68,7 +68,7 @@ export function WarehouseStatisticsPage() {
               Code: {warehouse.code} • Type: {warehouse.warehouseType}
             </p>
           </div>
-          <Badge variant={warehouse.isActive ? 'default' : 'secondary'}>
+          <Badge variant={warehouse.isActive ? 'success' : 'secondary'}>
             {warehouse.isActive ? 'Active' : 'Inactive'}
           </Badge>
         </div>

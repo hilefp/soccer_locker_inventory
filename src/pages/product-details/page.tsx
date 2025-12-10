@@ -4,7 +4,7 @@ export function ProductDetailsPage() {
   return (
     <div className="container-fluid">
       {/* Product List Table */}
-      <ProductListTable displaySheet={"productDetails"}/>
+      <ProductListTable />
     </div>
   );
 }

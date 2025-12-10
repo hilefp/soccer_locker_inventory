@@ -26,13 +26,13 @@ export function StockAlertsSection({ alerts }: StockAlertsSectionProps) {
     }
   };
 
-  const getAlertVariant = (type: AlertType): 'default' | 'destructive' => {
+  const getAlertVariant = (type: AlertType): 'primary' | 'mono' | 'destructive' | 'secondary' | 'success' | 'warning' | 'info' => {
     switch (type) {
       case AlertType.OUT_OF_STOCK:
       case AlertType.EXPIRED:
         return 'destructive';
       default:
-        return 'default';
+        return 'warning';
     }
   };
 

@@ -1,11 +1,9 @@
 import {
   Boxes,
-  ClipboardList,
   LayoutGrid,
   ClubIcon,
   Package,
   Settings2,
-  UsersRound,
 } from 'lucide-react';
 import { type MenuConfig } from './types';
 

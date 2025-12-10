@@ -39,7 +39,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/shared/components/ui/sheet';
-import { AvatarGroup } from '@/shared/components/layouts/layout-1/shared/common/avatar-group';
+import { AvatarGroup } from '@/layout/shared/common/avatar-group';
 
 interface Message {
   avatar: string;

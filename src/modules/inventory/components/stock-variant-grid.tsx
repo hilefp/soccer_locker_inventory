@@ -19,7 +19,7 @@ interface StockVariantGridProps {
   pageSize?: number;
 }
 
-const getStatusBadgeVariant = (status: StockStatus) => {
+const getStatusBadgeVariant = (status: StockStatus): 'primary' | 'destructive' | 'secondary' | 'outline' | 'success' | 'warning' | 'info' => {
   switch (status) {
     case StockStatus.IN_STOCK:
       return 'success';
@@ -28,7 +28,7 @@ const getStatusBadgeVariant = (status: StockStatus) => {
     case StockStatus.OUT_OF_STOCK:
       return 'destructive';
     default:
-      return 'default';
+      return 'secondary';
   }
 };
 

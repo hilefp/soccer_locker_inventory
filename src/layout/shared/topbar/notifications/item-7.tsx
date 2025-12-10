@@ -17,7 +17,7 @@ import {
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
-import { AvatarGroup } from '@/shared/components/common/avatar-group';
+import { AvatarGroup } from '@/shared/components/avatar-group';
 
 export default function Item7() {
   return (
