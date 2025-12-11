@@ -4,6 +4,7 @@ import {
   ClubIcon,
   Package,
   Settings2,
+  BarChart,
 } from 'lucide-react';
 import { type MenuConfig } from './types';
 
@@ -43,6 +44,14 @@ export const MENU_SIDEBAR: MenuConfig = [
         title: 'Warehouse Management',
         path: '/inventory/warehouses',
       },
+    ],
+  },
+    {
+    title: 'Reports',
+    icon: BarChart,
+    children: [
+      { title: 'Products Report', path: '/reports/products' },
+      { title: 'Stock Report', path: '/reports/stock' },
     ],
   },
   // {

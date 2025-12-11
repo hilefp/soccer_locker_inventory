@@ -34,6 +34,7 @@ import { RenderRouteTree } from '@/shared/lib/router-helper';
 import { ProtectedRoute } from '@/modules/auth/components/protected-route';
 import { AuthRedirect } from './AuthRedirect';
 import { dashboardRoutes } from '@/modules/dashboard/route';
+import { reportsRoutes } from '@/modules/reports/routes';
 
 export function ModulesProvider() {
   return (
@@ -55,6 +56,7 @@ export function ModulesProvider() {
                   <Route path="settings/*" element={<RenderRouteTree route={settingsRoutes} />} />
                   <Route path="clubs/*" element={<RenderRouteTree route={clubsRoutes} />} />
                   <Route path="dashboard/*" element={<RenderRouteTree route={dashboardRoutes} />} />
+                  <Route path="reports/*" element={<RenderRouteTree route={reportsRoutes} />} />
                 <Route path="all-stock" element={<AllStock />} />
                 <Route path="current-stock" element={<CurrentStock />} />
                 <Route path="inbound-stock" element={<InboundStock />} />
