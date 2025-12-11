@@ -2,6 +2,9 @@ export interface ReportFilterDto {
   startDate?: string;
   endDate?: string;
   period?: 'day' | 'week' | 'month' | 'year';
+  categoryId?: string;
+  brandId?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 // Products Reports Types
@@ -33,15 +36,15 @@ export interface Product {
 
 export interface ProductVariant {
   sku: string;
-  product: Product;
+  product?: Product; // Made optional/adjusted as per new spec response might differ slightly, but keeping consistent
 }
 
 export interface StockObject {
-  id: string;
+  id?: string;
   quantity: number;
-  availableQuantity: number;
-  warehouse: Warehouse;
-  productVariant: ProductVariant;
+  availableQuantity?: number;
+  warehouse?: Warehouse;
+  productVariant?: ProductVariant;
 }
 
 export interface InventoryValue {
@@ -49,18 +52,30 @@ export interface InventoryValue {
 }
 
 export interface StockInsertionHistory {
-  productVariantId: string;
   productName: string;
-  sku: string;
   insertionCount: number;
   totalQuantityInserted: number;
 }
 
 export interface DamagedProductReport {
   productName: string;
-  sku: string;
+  sku?: string;
   quantityLost: number;
   reason: string;
-  warehouse: string;
+  warehouse?: string;
   date: string;
+}
+
+export interface LowStockVariantDto {
+  productName: string;
+  variant: string;
+  currentStock: number;
+  minimumStock: number;
+  warehouse: string;
+}
+
+export interface StockRankingDto {
+  name: string;
+  quantity: number;
+  warehouse: string;
 }

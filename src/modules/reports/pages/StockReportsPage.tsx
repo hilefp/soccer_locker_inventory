@@ -3,26 +3,27 @@ import { stockReportsService } from '../services/stock-reports.service';
 import {
   DamagedProductReport,
   InventoryValue,
-  StockInsertionHistory,
   StockObject,
+  StockRankingDto,
   StockTotalQuantity,
 } from '../types';
 import { SummaryCard } from '../components/SummaryCard';
-import { StockInsertionHistoryChart } from '../components/StockInsertionHistoryChart';
 import { DamagedProductsTable } from '../components/DamagedProductsTable';
 import { BestWorstStockCard } from '../components/BestWorstStockCard';
+import { StockRankingChart } from '../components/StockRankingChart';
 import { Input } from '@/shared/components/ui/input';
-import { ArrowDown, ArrowUp, Boxes, DollarSign } from 'lucide-react';
+import { Boxes, DollarSign } from 'lucide-react';
 
 export default function StockReportsPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [rankingSort, setRankingSort] = useState<'asc' | 'desc'>('desc');
 
   const [totalQty, setTotalQty] = useState<StockTotalQuantity | null>(null);
   const [inventoryValue, setInventoryValue] = useState<InventoryValue | null>(null);
   const [highestStock, setHighestStock] = useState<StockObject | null>(null);
   const [lowestStock, setLowestStock] = useState<StockObject | null>(null);
-  const [historyData, setHistoryData] = useState<StockInsertionHistory[]>([]);
+  const [rankingData, setRankingData] = useState<StockRankingDto[]>([]);
   const [damagedData, setDamagedData] = useState<DamagedProductReport[]>([]);
 
   // Fetch Snapshot Data (No filters)
@@ -46,7 +47,20 @@ export default function StockReportsPage() {
     fetchSnapshot();
   }, []);
 
-  // Fetch History/Damaged Data (With filters)
+  // Fetch Ranking (Depends on sort)
+  useEffect(() => {
+    const fetchRanking = async () => {
+      try {
+        const data = await stockReportsService.getStockRanking({ sortOrder: rankingSort });
+        setRankingData(data);
+      } catch (error) {
+        console.error('Failed to fetch stock ranking', error);
+      }
+    };
+    fetchRanking();
+  }, [rankingSort]);
+
+  // Fetch History/Damaged Data (With date filters)
   useEffect(() => {
     const filters = {
        startDate: startDate || undefined,
@@ -55,11 +69,7 @@ export default function StockReportsPage() {
 
     const fetchFiltered = async () => {
       try {
-        const [history, damaged] = await Promise.all([
-          stockReportsService.getStockInsertionHistory(filters),
-          stockReportsService.getDamagedProducts(filters),
-        ]);
-        setHistoryData(history);
+        const damaged = await stockReportsService.getDamagedProducts(filters);
         setDamagedData(damaged);
       } catch (error) {
         console.error('Failed to fetch filtered stock reports', error);
@@ -95,7 +105,7 @@ export default function StockReportsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
         <SummaryCard
           title="Total Stock Quantity"
           value={totalQty?.totalQuantity ?? 0}
@@ -113,7 +123,11 @@ export default function StockReportsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-1">
-        <StockInsertionHistoryChart data={historyData} />
+        <StockRankingChart 
+          data={rankingData} 
+          sortOrder={rankingSort} 
+          onSortChange={setRankingSort}
+        />
       </div>
 
        <div className="grid gap-4 md:grid-cols-1">
