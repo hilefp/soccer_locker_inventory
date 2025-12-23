@@ -18,8 +18,10 @@ import {
   FormMessage,
 } from '@/shared/components/ui/form';
 import { Input } from '@/shared/components/ui/input';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function ResetPasswordPage() {
+  useDocumentTitle('Reset Password');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);

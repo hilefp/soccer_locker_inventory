@@ -12,11 +12,14 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRegisterStockEntry } from '../hooks/use-stock-operations';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
 
 interface IncrementStockDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   variantId: string;
+  warehouseId: string;
   sku: string;
   currentStock?: number;
 }
@@ -25,9 +28,12 @@ export function IncrementStockDrawer({
   open,
   onOpenChange,
   variantId,
+  warehouseId,
   sku,
   currentStock = 0,
 }: IncrementStockDrawerProps) {
+  const { user } = useAuth();
+  const registerEntryMutation = useRegisterStockEntry();
   const [quantity, setQuantity] = useState<number>(1);
 
   const handleIncrement = () => {
@@ -52,12 +58,34 @@ export function IncrementStockDrawer({
     }
   };
 
-  const handleConfirm = () => {
-    // TODO: Implement actual stock increment logic
-    toast.success(`Stock incremented by ${quantity} units for SKU: ${sku}`);
-    onOpenChange(false);
-    // Reset quantity after successful increment
-    setQuantity(1);
+  const handleConfirm = async () => {
+    if (quantity === 0) {
+      toast.error('Please enter a quantity to add');
+      return;
+    }
+
+    if (!user?.id) {
+      toast.error('User not authenticated');
+      return;
+    }
+
+    try {
+      await registerEntryMutation.mutateAsync({
+        productVariantId: variantId,
+        warehouseId,
+        quantity,
+        reason: 'Stock entry',
+        createdBy: user.id,
+      });
+
+      toast.success(`Stock incremented by ${quantity} units for SKU: ${sku}`);
+      onOpenChange(false);
+      setQuantity(1);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to increment stock'
+      );
+    }
   };
 
   const handleCancel = () => {
@@ -125,9 +153,9 @@ export function IncrementStockDrawer({
             onClick={handleConfirm}
             size="lg"
             className="w-full text-base h-12"
-            disabled={quantity === 0}
+            disabled={quantity === 0 || registerEntryMutation.isPending}
           >
-            Confirm Increment
+            {registerEntryMutation.isPending ? 'Adding Stock...' : 'Confirm Increment'}
           </Button>
           <DrawerClose asChild>
             <Button

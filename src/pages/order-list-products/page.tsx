@@ -11,6 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/shared/components/ui/popover';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { OrderListTable } from '../tables/order-list';
 import { OrderDetailsSheet } from '../components/order-details-sheet';
 import {
@@ -24,6 +25,7 @@ import {
 import { CategoryFormSheet } from '../../modules/products/components/category-form-sheet';
 
 export function OrderListProducts() {
+  useDocumentTitle('Order Products');
   // Date range picker state
   const today = new Date();
   const defaultDateRange: DateRange = {

@@ -10,8 +10,10 @@ import { ProductVariantsChart } from '../components/ProductVariantsChart';
 import { Input } from '@/shared/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { DollarSign, Package } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export default function ProductsReportsPage() {
+  useDocumentTitle('Products Reports');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
 

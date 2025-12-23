@@ -44,6 +44,10 @@ export const MENU_SIDEBAR: MenuConfig = [
         title: 'Warehouse Management',
         path: '/inventory/warehouses',
       },
+      {
+        title: 'Stock Movements',
+        path: '/inventory/stock-movements',
+      }
     ],
   },
     {

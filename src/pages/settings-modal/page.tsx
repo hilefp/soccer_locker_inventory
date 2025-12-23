@@ -1,5 +1,7 @@
 'use client';
 import { Upload, ChevronDown, BarChart3, User, Trash2, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { Button } from '@/shared/components/ui/button';
 import { SettingsSheet } from '../components/settings-sheet';
 import { ProductListTable } from '../../modules/products/components/product-list';
@@ -11,10 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
-import { useState } from 'react';
 
 
-export function SettingsModal() {  
+export function SettingsModal() {
+  useDocumentTitle('Settings');  
   const [settingsSheetOpen, setSettingsSheetOpen] = useState(true);
 
   // Debug log

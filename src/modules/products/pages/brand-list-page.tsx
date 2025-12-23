@@ -7,8 +7,10 @@ import { BrandFormSheet } from '@/modules/products/components/brand-form-sheet';
 import { useState } from 'react';
 import { ProductNavigationTabs } from '@/modules/products/components/product-navigation-tabs';
 import { useProductBrands } from '@/modules/products/hooks/use-product-brands';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function BrandList() {
+  useDocumentTitle('Brands');
   const [isCreateBrandOpen, setIsCreateBrandOpen] = useState(false);
 
   // Use React Query hook for data fetching

@@ -6,8 +6,10 @@ import { Button } from '@/shared/components/ui/button';
 import { UserListTable } from '../components/user-list-table';
 import { UserFormSheet } from '../components/user-form-sheet';
 import { useInventoryUsers } from '../hooks/use-inventory-users';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function UserListPage() {
+  useDocumentTitle('Users');
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
 
   // Use React Query hook for data fetching

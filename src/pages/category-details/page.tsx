@@ -1,12 +1,14 @@
 'use client';
 
 import { PlusIcon } from 'lucide-react';
+import { useState } from 'react';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { Button } from '@/shared/components/ui/button';
 import { CategoryListTable } from '../../modules/products/components/category-list';
 import { CategoryFormSheet } from '../../modules/products/components/category-form-sheet';
-import { useState } from 'react';
 
 export function CategoryDetails() {
+  useDocumentTitle('Category Details');
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
   
   return (

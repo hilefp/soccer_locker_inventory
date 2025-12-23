@@ -1,5 +1,7 @@
 'use client';
 import { Plus, Upload, ChevronDown, BarChart3, User, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { Button } from '@/shared/components/ui/button';
 import { CustomerListDisplaySheet, CustomerListTable } from '../tables/customer-list';
 
@@ -10,10 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
-import { useState } from 'react';
 
 
-export function CustomerListDetails() {  
+export function CustomerListDetails() {
+  useDocumentTitle('Customer Details');  
   const [displaySheet, setDisplaySheet] = useState<CustomerListDisplaySheet | undefined>('customerDetails');
   const [shouldOpenSheet, setShouldOpenSheet] = useState(true);
 

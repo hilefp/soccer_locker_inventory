@@ -1,7 +1,9 @@
 import { Button } from '@/shared/components/ui/button';
 import { StockPlannerTable } from '../tables/stock-planner';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function StockPlanner() {
+  useDocumentTitle('Stock Planner');
   return (
     <div className="container-fluid space-y-5 lg:space-y-9">
       <div className="flex items-center flex-wrap dap-2.5 justify-between">

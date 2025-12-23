@@ -5,8 +5,10 @@ import { Warehouse, WarehouseFilters } from '../types/warehouse.types';
 import { Button } from '@/shared/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function WarehouseListPage() {
+  useDocumentTitle('Warehouses');
   const navigate = useNavigate();
   const [filters] = useState<WarehouseFilters>({});
 

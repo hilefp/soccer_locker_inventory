@@ -11,8 +11,10 @@ import { ClubProductsTable } from '../components/club-products-table';
 import { AddProductsToClubDialog } from '../components/add-products-to-club-dialog';
 import { EditClubProductSheet } from '../components/edit-club-product-sheet';
 import { ClubProduct } from '../types/club-product';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function ClubDetailPage() {
+  useDocumentTitle('Club Details');
   const { clubId } = useParams<{ clubId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('details');

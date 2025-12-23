@@ -10,8 +10,10 @@ import {
 import { WarehouseForm } from '../components/warehouse-form';
 import { Button } from '@/shared/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function WarehouseFormPage() {
+  useDocumentTitle('Warehouse Form');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = id !== undefined && id !== 'new';

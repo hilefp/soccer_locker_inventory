@@ -13,8 +13,10 @@ import { BestWorstStockCard } from '../components/BestWorstStockCard';
 import { StockRankingChart } from '../components/StockRankingChart';
 import { Input } from '@/shared/components/ui/input';
 import { Boxes, DollarSign } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export default function StockReportsPage() {
+  useDocumentTitle('Stock Reports');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [rankingSort, setRankingSort] = useState<'asc' | 'desc'>('desc');

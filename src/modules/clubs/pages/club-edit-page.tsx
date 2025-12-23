@@ -10,8 +10,10 @@ import { Switch } from '@/shared/components/ui/switch';
 import { useClub, useUpdateClub } from '../hooks/use-clubs';
 import { ClubImageUpload } from '../components/club-image-upload';
 import { toast } from 'sonner';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function ClubEditPage() {
+  useDocumentTitle('Edit Club');
   const { clubId } = useParams<{ clubId: string }>();
   const navigate = useNavigate();
   const isEditMode = !!clubId;

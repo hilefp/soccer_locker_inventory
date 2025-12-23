@@ -6,8 +6,10 @@ import { SummaryCard } from '../components/SummaryCard';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
 import { DollarSign, Package, Boxes } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export default function GeneralReportsPage() {
+  useDocumentTitle('General Reports');
   const navigate = useNavigate();
   const [inventoryValue, setInventoryValue] = useState<InventoryValue | null>(null);
 
