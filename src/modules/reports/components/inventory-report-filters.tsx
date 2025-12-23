@@ -35,7 +35,7 @@ export function InventoryReportFilters({
     // Remove empty values
     const cleanFilters = Object.entries(filters).reduce((acc, [key, value]) => {
       if (value !== '' && value !== undefined) {
-        acc[key as keyof InventoryReportFilters] = value;
+        (acc as any)[key] = value;
       }
       return acc;
     }, {} as InventoryReportFilters);
