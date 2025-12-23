@@ -6,6 +6,7 @@ interface SummaryCardProps {
   value: string | number;
   icon?: LucideIcon;
   description?: string;
+  extraCssClass?: string;
 }
 
 export function SummaryCard({ title, value, icon: Icon, description }: SummaryCardProps) {
@@ -16,7 +17,7 @@ export function SummaryCard({ title, value, icon: Icon, description }: SummaryCa
         {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-4xl font-bold">{value}</div>
         {description && (
           <p className="text-xs text-muted-foreground">{description}</p>
         )}
