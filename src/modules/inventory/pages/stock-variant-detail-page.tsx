@@ -239,6 +239,7 @@ export function StockVariantDetailPage() {
             variantId={variant.id}
             sku={variant.sku}
             currentStock={stockSummary.totalQuantity}
+            warehouseId={warehouseStocks[0]?.warehouseId}
           />
 
 

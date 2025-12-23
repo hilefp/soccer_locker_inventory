@@ -18,11 +18,12 @@ import { RegisterExitDrawer } from './register-exit-drawer';
 
 interface QuickActionsCardProps {
   variantId: string;
+  warehouseId: string;
   sku: string;
   currentStock?: number;
 }
 
-export function QuickActionsCard({ variantId, sku, currentStock }: QuickActionsCardProps) {
+export function QuickActionsCard({ variantId, warehouseId, sku, currentStock }: QuickActionsCardProps) {
   const [isIncrementDrawerOpen, setIsIncrementDrawerOpen] = useState(false);
   const [isAdjustDrawerOpen, setIsAdjustDrawerOpen] = useState(false);
   const [isPhysicalCountDrawerOpen, setIsPhysicalCountDrawerOpen] = useState(false);
@@ -127,6 +128,7 @@ export function QuickActionsCard({ variantId, sku, currentStock }: QuickActionsC
         open={isIncrementDrawerOpen}
         onOpenChange={setIsIncrementDrawerOpen}
         variantId={variantId}
+        warehouseId={warehouseId}
         sku={sku}
         currentStock={currentStock}
       />
@@ -135,6 +137,7 @@ export function QuickActionsCard({ variantId, sku, currentStock }: QuickActionsC
         open={isAdjustDrawerOpen}
         onOpenChange={setIsAdjustDrawerOpen}
         variantId={variantId}
+        warehouseId={warehouseId}
         sku={sku}
         currentStock={currentStock}
       />
@@ -143,6 +146,7 @@ export function QuickActionsCard({ variantId, sku, currentStock }: QuickActionsC
         open={isPhysicalCountDrawerOpen}
         onOpenChange={setIsPhysicalCountDrawerOpen}
         variantId={variantId}
+        warehouseId={warehouseId}
         sku={sku}
         currentStock={currentStock}
       />
@@ -151,6 +155,7 @@ export function QuickActionsCard({ variantId, sku, currentStock }: QuickActionsC
         open={isRegisterExitDrawerOpen}
         onOpenChange={setIsRegisterExitDrawerOpen}
         variantId={variantId}
+        warehouseId={warehouseId}
         sku={sku}
         currentStock={currentStock}
       />

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useStockMovements } from '@/modules/inventory/hooks/use-stock-movements';
 import {
   StockMovementItem,
@@ -44,7 +44,7 @@ interface IData {
     type: MovementType;
     label: string;
     variant: string;
-    icon: JSX.Element;
+    icon: React.ReactElement;
   };
   quantity: {
     value: number;
