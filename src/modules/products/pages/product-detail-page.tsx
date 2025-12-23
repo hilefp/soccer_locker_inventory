@@ -14,6 +14,7 @@ import {
   TableRow,
 } from '@/shared/components/ui/table';
 import { useProduct } from '@/modules/products/hooks/use-products';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 // Helper to safely format price
 const formatPrice = (price: number | string | undefined | null): string => {
@@ -22,6 +23,7 @@ const formatPrice = (price: number | string | undefined | null): string => {
 };
 
 export function ProductDetailPage() {
+  useDocumentTitle('Product Details');
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('details');

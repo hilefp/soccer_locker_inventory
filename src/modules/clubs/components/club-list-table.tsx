@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useCallback, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ClubFormSheet } from './club-form-sheet';
 import { ClubDetailsSheet } from './club-details-sheet';
 import { useDeleteClub } from '../hooks/use-clubs';
@@ -48,6 +49,7 @@ export function ClubListTable({
   isLoading = false,
   error = null,
 }: ClubListTableProps) {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -224,8 +226,9 @@ export function ClubListTable({
           const club = row.original;
 
           const handleView = () => {
-            setSelectedClubId(club.id);
-            setIsClubDetailsOpen(true);
+            if (club.id) {
+              navigate(`/clubs/${club.id}`);
+            }
           };
 
           const handleEdit = () => {

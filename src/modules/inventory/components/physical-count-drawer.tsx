@@ -13,11 +13,14 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { toast } from 'sonner';
+import { useRegisterPhysicalCount } from '../hooks/use-stock-operations';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
 
 interface PhysicalCountDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   variantId: string;
+  warehouseId: string;
   sku: string;
   currentStock?: number;
 }
@@ -26,9 +29,12 @@ export function PhysicalCountDrawer({
   open,
   onOpenChange,
   variantId,
+  warehouseId,
   sku,
   currentStock = 0,
 }: PhysicalCountDrawerProps) {
+  const { user } = useAuth();
+  const physicalCountMutation = useRegisterPhysicalCount();
   const [countedQuantity, setCountedQuantity] = useState<number>(0);
   const [notes, setNotes] = useState<string>('');
 
@@ -46,16 +52,34 @@ export function PhysicalCountDrawer({
     }
   };
 
-  const handleConfirm = () => {
-    // TODO: Implement actual physical count logic
-    const difference = countedQuantity - currentStock;
-    const action = difference > 0 ? 'increased' : difference < 0 ? 'decreased' : 'unchanged';
+  const handleConfirm = async () => {
+    if (!user?.id) {
+      toast.error('User not authenticated');
+      return;
+    }
 
-    toast.success(
-      `Physical count recorded: ${countedQuantity} units (${action} by ${Math.abs(difference)} units)`
-    );
-    onOpenChange(false);
-    resetForm();
+    try {
+      const result = await physicalCountMutation.mutateAsync({
+        productVariantId: variantId,
+        warehouseId,
+        countedQuantity,
+        notes: notes.trim() || undefined,
+        countedBy: user.id,
+      });
+
+      const difference = result.variance;
+      const action = difference > 0 ? 'increased' : difference < 0 ? 'decreased' : 'unchanged';
+
+      toast.success(
+        `Physical count recorded: ${countedQuantity} units (${action} by ${Math.abs(difference)} units)`
+      );
+      onOpenChange(false);
+      resetForm();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to register physical count'
+      );
+    }
   };
 
   const handleCancel = () => {
@@ -71,7 +95,6 @@ export function PhysicalCountDrawer({
   const difference = countedQuantity - currentStock;
   const hasDifference = difference !== 0;
   const isIncrease = difference > 0;
-  const isDecrease = difference < 0;
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -162,8 +185,9 @@ export function PhysicalCountDrawer({
             onClick={handleConfirm}
             size="lg"
             className="w-full text-base h-12"
+            disabled={physicalCountMutation.isPending}
           >
-            Confirm Physical Count
+            {physicalCountMutation.isPending ? 'Recording Count...' : 'Confirm Physical Count'}
           </Button>
           <DrawerClose asChild>
             <Button

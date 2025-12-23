@@ -26,8 +26,10 @@ import {
   SigninSchemaType,
 } from '@/modules/auth/schemas/signin-schema';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function LoginPage() {
+  useDocumentTitle('Sign In');
   const [searchParams] = useSearchParams();
   const { login, isLoading, error: authError, clearError } = useAuth();
   const [passwordVisible, setPasswordVisible] = useState(false);

@@ -5,10 +5,12 @@ import { Button } from '@/shared/components/ui/button';
 import { Input, InputWrapper } from '@/shared/components/ui/input';
 import { LayoutGrid, LayoutList, Search, X } from 'lucide-react';
 import { Card, CardHeader, CardToolbar } from '@/shared/components/ui/card';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 type ViewMode = 'grid' | 'table';
 
 export function StockVariantListPage() {
+  useDocumentTitle('Stock Variants');
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [searchQuery, setSearchQuery] = useState('');
 

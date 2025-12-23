@@ -32,8 +32,10 @@ import { StockSummaryCards } from '../components/stock-summary-cards';
 import { WarehouseStocksTab } from '../components/warehouse-stocks-tab';
 import { useStockVariantDetail } from '../hooks/use-stock-variants';
 import { StockStatus } from '../types/stock-variant.types';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function StockVariantDetailPage() {
+  useDocumentTitle('Stock Variant Details');
   const { variantId } = useParams<{ variantId: string }>();
   const navigate = useNavigate();
 

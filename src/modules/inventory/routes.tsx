@@ -5,6 +5,7 @@ import { WarehouseStatisticsPage } from './pages/warehouse-statistics-page';
 import { StockVariantListPage } from './pages/stock-variant-list-page';
 import { StockVariantDetailPage } from './pages/stock-variant-detail-page';
 import { StockEntryCreatePage } from './pages/stock-entry-create-page';
+import { StockMovementPage } from './pages/stock-movement-page';
 
 export const inventoryRoutes: RouteObject = {
   path: '',
@@ -20,6 +21,10 @@ export const inventoryRoutes: RouteObject = {
     {
       path: 'stock-entries/new',
       element: <StockEntryCreatePage />,
+    },
+    {
+      path: 'stock-movements',
+      element: <StockMovementPage />,
     },
     {
       path: 'warehouses',

@@ -13,11 +13,14 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { toast } from 'sonner';
+import { useAdjustStock } from '../hooks/use-stock-operations';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
 
 interface AdjustStockDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   variantId: string;
+  warehouseId: string;
   sku: string;
   currentStock?: number;
 }
@@ -26,9 +29,12 @@ export function AdjustStockDrawer({
   open,
   onOpenChange,
   variantId,
+  warehouseId,
   sku,
   currentStock = 0,
 }: AdjustStockDrawerProps) {
+  const { user } = useAuth();
+  const adjustStockMutation = useAdjustStock();
   const [adjustmentQuantity, setAdjustmentQuantity] = useState<number>(0);
   const [reason, setReason] = useState<string>('');
 
@@ -47,20 +53,42 @@ export function AdjustStockDrawer({
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (adjustmentQuantity === 0) {
       toast.error('Please enter an adjustment quantity');
       return;
     }
 
-    // TODO: Implement actual stock adjustment logic
-    const action = adjustmentQuantity > 0 ? 'increased' : 'decreased';
-    toast.success(
-      `Stock ${action} by ${Math.abs(adjustmentQuantity)} units for SKU: ${sku}`
-    );
-    onOpenChange(false);
-    // Reset form after successful adjustment
-    resetForm();
+    if (!reason.trim()) {
+      toast.error('Please provide a reason for the adjustment');
+      return;
+    }
+
+    if (!user?.id) {
+      toast.error('User not authenticated');
+      return;
+    }
+
+    try {
+      await adjustStockMutation.mutateAsync({
+        productVariantId: variantId,
+        warehouseId,
+        quantity: adjustmentQuantity,
+        reason: reason.trim(),
+        createdBy: user.id,
+      });
+
+      const action = adjustmentQuantity > 0 ? 'increased' : 'decreased';
+      toast.success(
+        `Stock ${action} by ${Math.abs(adjustmentQuantity)} units for SKU: ${sku}`
+      );
+      onOpenChange(false);
+      resetForm();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to adjust stock'
+      );
+    }
   };
 
   const handleCancel = () => {
@@ -116,7 +144,7 @@ export function AdjustStockDrawer({
           {/* Reason/Notes Field */}
           <div className="space-y-2">
             <Label htmlFor="reason" className="text-base">
-              Reason for Adjustment (Optional)
+              Reason for Adjustment <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="reason"
@@ -124,7 +152,11 @@ export function AdjustStockDrawer({
               onChange={(e) => setReason(e.target.value)}
               placeholder="e.g., Physical count correction, damaged goods, etc."
               className="min-h-[100px] resize-none"
+              required
             />
+            <p className="text-xs text-muted-foreground">
+              Please provide a clear reason for this adjustment
+            </p>
           </div>
 
           {/* New Stock Preview */}
@@ -165,9 +197,9 @@ export function AdjustStockDrawer({
             onClick={handleConfirm}
             size="lg"
             className="w-full text-base h-12"
-            disabled={adjustmentQuantity === 0}
+            disabled={adjustmentQuantity === 0 || !reason.trim() || adjustStockMutation.isPending}
           >
-            Confirm Adjustment
+            {adjustStockMutation.isPending ? 'Adjusting Stock...' : 'Confirm Adjustment'}
           </Button>
           <DrawerClose asChild>
             <Button

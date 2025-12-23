@@ -7,8 +7,10 @@ import { AttributeFormSheet } from '@/modules/products/components/attribute-form
 import { useState } from 'react';
 import { ProductNavigationTabs } from '@/modules/products/components/product-navigation-tabs';
 import { useProductAttributes } from '@/modules/products/hooks/use-product-attributes';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function AttributeList() {
+  useDocumentTitle('Attributes');
   const [isCreateAttributeOpen, setIsCreateAttributeOpen] = useState(false);
 
   // Use React Query hook for data fetching

@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { TrackShippingSheet } from '../components/track-shipping-sheet';
 import { OrderListTable } from '../tables/order-list';
 import { Button } from '@/shared/components/ui/button';
-import { PlusIcon, Upload } from 'lucide-react';  
+import { PlusIcon, Upload } from 'lucide-react';
 import { ProductFormSheet } from '../../modules/products/components/product-form-sheet';
 
 export function OrderTrackingPage() {
+  useDocumentTitle('Order Tracking');
   const [isSheetOpen, setIsSheetOpen] = useState(true); 
   const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
 

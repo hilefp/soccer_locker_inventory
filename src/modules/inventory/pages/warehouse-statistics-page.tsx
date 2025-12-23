@@ -10,8 +10,10 @@ import {
 } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { ArrowLeft, Package, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function WarehouseStatisticsPage() {
+  useDocumentTitle('Warehouse Statistics');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 

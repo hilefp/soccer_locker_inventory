@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { PlusIcon } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { Button } from '@/shared/components/ui/button';
 import { CategoryFormSheet } from '../../modules/products/components/category-form-sheet';
 import { CategoryListTable } from '../../modules/products/components/category-list';
 
 export function CreateCategoryPage() {
+  useDocumentTitle('Create Category');
   const [isSheetOpen, setIsSheetOpen] = useState(true);
 
   return (

@@ -6,12 +6,14 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from '@/shared/components/ui/sonner';
 import { ModulesProvider } from './routing/modules-provider';
 import { queryClient } from '@/shared/lib/query-client';
+import { PWAUpdatePrompt } from '@/shared/components/pwa-update-prompt';
 
 const { BASE_URL } = import.meta.env;
 
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <PWAUpdatePrompt />
       <ThemeProvider
         attribute="class"
         defaultTheme="light"

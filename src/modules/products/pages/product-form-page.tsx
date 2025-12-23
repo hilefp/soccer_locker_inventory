@@ -13,8 +13,10 @@ import { useProductCategories } from '@/modules/products/hooks/use-product-categ
 import { useProductBrands } from '@/modules/products/hooks/use-product-brands';
 import { useCreateProduct, useUpdateProduct, useProduct } from '@/modules/products/hooks/use-products';
 import { ProductRequest } from '../types/product.type';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function ProductFormPage() {
+  useDocumentTitle('Product Form');
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const isEditMode = !!productId;

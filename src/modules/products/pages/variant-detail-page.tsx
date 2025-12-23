@@ -21,8 +21,10 @@ import { VariantDetailAttributesStatus } from '@/modules/products/components/var
 import { useProductVariant, useUpdateProductVariant, useDeleteProductVariant } from '@/modules/products/hooks/use-product-variants';
 import { useProduct } from '@/modules/products/hooks/use-products';
 import { ProductVariant } from '@/modules/products/types/product.type';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function VariantDetailPage() {
+  useDocumentTitle('Variant Details');
   const { productId, variantId } = useParams<{ productId: string; variantId: string }>();
   const navigate = useNavigate();
 

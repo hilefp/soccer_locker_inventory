@@ -1,6 +1,7 @@
 import { Card } from '@/shared/components/ui/card';
 import { useAuth } from '../auth/hooks/use-auth';
 import { Link } from 'react-router';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 const cards = [
   {
@@ -31,6 +32,7 @@ const cards = [
 ];
 
 export function DashboardPage() {
+  useDocumentTitle('Dashboard');
   const { user } = useAuth();
   const name = user?.email || 'Guest';
   return (

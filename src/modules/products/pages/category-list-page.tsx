@@ -7,8 +7,10 @@ import { CategoryFormSheet } from '@/modules/products/components/category-form-s
 import { useState } from 'react';
 import { ProductNavigationTabs } from '@/modules/products/components/product-navigation-tabs';
 import { useProductCategories } from '@/modules/products/hooks/use-product-categories';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function CategoryList() {
+  useDocumentTitle('Categories');
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
 
   // Use React Query hook for data fetching

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 // Import components
 import { StockEntryHeader } from '../components/stock-entry-header';
 import { StockEntryInformationCard } from '../components/stock-entry-information-card';
@@ -18,6 +19,7 @@ import { stockEntryService } from '../services/stock-entry.service';
 import { CreateStockEntryDto, EntryType } from '../types/stock-entry.types';
 
 export function StockEntryCreatePage() {
+  useDocumentTitle('Create Stock Entry');
   const navigate = useNavigate();
   const createMutation = useCreateStockEntry();
   const { data: warehouses, isLoading: loadingWarehouses } = useWarehouses();

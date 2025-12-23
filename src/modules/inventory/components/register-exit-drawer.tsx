@@ -14,11 +14,14 @@ import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRegisterStockExit } from '../hooks/use-stock-operations';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
 
 interface RegisterExitDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   variantId: string;
+  warehouseId: string;
   sku: string;
   currentStock?: number;
 }
@@ -27,9 +30,12 @@ export function RegisterExitDrawer({
   open,
   onOpenChange,
   variantId,
+  warehouseId,
   sku,
   currentStock = 0,
 }: RegisterExitDrawerProps) {
+  const { user } = useAuth();
+  const registerExitMutation = useRegisterStockExit();
   const [exitQuantity, setExitQuantity] = useState<number>(1);
   const [reason, setReason] = useState<string>('');
 
@@ -57,7 +63,7 @@ export function RegisterExitDrawer({
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (exitQuantity === 0) {
       toast.error('Please enter an exit quantity');
       return;
@@ -73,12 +79,30 @@ export function RegisterExitDrawer({
       return;
     }
 
-    // TODO: Implement actual stock exit logic
-    toast.success(
-      `Stock exit registered: ${exitQuantity} units for SKU: ${sku}`
-    );
-    onOpenChange(false);
-    resetForm();
+    if (!user?.id) {
+      toast.error('User not authenticated');
+      return;
+    }
+
+    try {
+      await registerExitMutation.mutateAsync({
+        productVariantId: variantId,
+        warehouseId,
+        quantity: exitQuantity,
+        reason: reason.trim(),
+        createdBy: user.id,
+      });
+
+      toast.success(
+        `Stock exit registered: ${exitQuantity} units for SKU: ${sku}`
+      );
+      onOpenChange(false);
+      resetForm();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to register stock exit'
+      );
+    }
   };
 
   const handleCancel = () => {
@@ -193,9 +217,9 @@ export function RegisterExitDrawer({
             onClick={handleConfirm}
             size="lg"
             className="w-full text-base h-12"
-            disabled={exitQuantity === 0 || !reason.trim()}
+            disabled={exitQuantity === 0 || !reason.trim() || registerExitMutation.isPending}
           >
-            Confirm Exit
+            {registerExitMutation.isPending ? 'Registering...' : 'Confirm Exit'}
           </Button>
           <DrawerClose asChild>
             <Button

@@ -6,8 +6,10 @@ import { Button } from '@/shared/components/ui/button';
 import { ProductListTable } from '../components/product-list';
 import { ProductNavigationTabs } from '@/modules/products/components/product-navigation-tabs';
 import { useProducts } from '@/modules/products/hooks/use-products';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function ProductList() {
+  useDocumentTitle('Products');
   const navigate = useNavigate();
 
   // Use React Query hook for data fetching

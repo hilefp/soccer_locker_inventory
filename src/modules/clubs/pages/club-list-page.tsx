@@ -6,8 +6,10 @@ import { Button } from '@/shared/components/ui/button';
 import { ClubListTable } from '../components/club-list-table';
 import { ClubFormSheet } from '../components/club-form-sheet';
 import { useClubs } from '../hooks/use-clubs';
+import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function ClubListPage() {
+  useDocumentTitle('Clubs');
   const [isCreateClubOpen, setIsCreateClubOpen] = useState(false);
 
   // Use React Query hook for data fetching

@@ -6,7 +6,7 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-export type EntityType = 'product-brands' | 'products' | 'categories' | 'users';
+export type EntityType = 'product-brands' | 'products' | 'categories' | 'users' | 'clubs';
 
 export interface ResizeOptions {
   width?: number;
