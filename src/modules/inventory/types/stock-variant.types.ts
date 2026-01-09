@@ -19,6 +19,7 @@ export interface StockVariantItem {
   lastMovement: string | null;
   status: StockStatus;
   imageUrl: string | null;
+  cost: number | null;
 }
 
 // Pagination Metadata
