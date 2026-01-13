@@ -143,13 +143,20 @@ export function ClubProductsTable({
           const basePrice = clubProduct.product?.defaultVariant?.price;
           const isCustomPrice = clubPrice !== null && clubPrice !== undefined;
 
+          // Display club price if it's a string (could be a range), otherwise format the base price
+          const displayPrice = isCustomPrice
+            ? (typeof clubPrice === 'string' ? clubPrice : `$${formatPrice(clubPrice)}`)
+            : (basePrice ? `$${formatPrice(basePrice)}` : '-');
+
+          const basePriceDisplay = basePrice ? `$${formatPrice(basePrice)}` : null;
+
           return (
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2">
                 <span
                   className={`text-sm ${isCustomPrice ? 'font-semibold' : 'font-medium'}`}
                 >
-                  ${formatPrice(clubPrice || basePrice)}
+                  {displayPrice}
                 </span>
                 {isCustomPrice && (
                   <Badge variant="outline" className="text-xs">
@@ -157,34 +164,12 @@ export function ClubProductsTable({
                   </Badge>
                 )}
               </div>
-              {isCustomPrice && basePrice && (
+              {isCustomPrice && basePriceDisplay && (
                 <span className="text-xs text-muted-foreground">
-                  Base: ${formatPrice(basePrice)}
+                  Base: {basePriceDisplay}
                 </span>
               )}
             </div>
-          );
-        },
-        enableSorting: true,
-        size: 120,
-      },
-      {
-        id: 'stock',
-        accessorFn: (row) => row.stock,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Stock" column={column} />
-        ),
-        cell: ({ row }) => {
-          const stock = row.original.stock;
-          const variant: 'success' | 'warning' | 'secondary' =
-            stock > 10 ? 'success' : stock > 0 ? 'warning' : 'secondary';
-          const label =
-            stock > 0 ? `${stock} in stock` : 'Out of stock';
-
-          return (
-            <Badge variant={variant} appearance="light">
-              {label}
-            </Badge>
           );
         },
         enableSorting: true,

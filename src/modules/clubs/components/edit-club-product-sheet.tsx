@@ -16,6 +16,7 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { Switch } from '@/shared/components/ui/switch';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { Badge } from '@/shared/components/ui/badge';
+import { ProductFormImageUpload } from '@/modules/products/components/product-form-image-upload';
 
 interface EditClubProductSheetProps {
   clubId: string;
@@ -34,8 +35,8 @@ export function EditClubProductSheet({
   const [customName, setCustomName] = useState<string>('');
   const [customPrice, setCustomPrice] = useState<string>('');
   const [customDescription, setCustomDescription] = useState<string>('');
-  const [stock, setStock] = useState<string>('0');
   const [isActive, setIsActive] = useState(true);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   const updateMutation = useUpdateClubProduct(clubId);
 
@@ -43,14 +44,10 @@ export function EditClubProductSheet({
   useEffect(() => {
     if (clubProduct) {
       setCustomName(clubProduct.name || '');
-      setCustomPrice(
-        clubProduct.price !== null && clubProduct.price !== undefined
-          ? clubProduct.price.toString()
-          : ''
-      );
+      setCustomPrice(clubProduct.price || '');
       setCustomDescription(clubProduct.description || '');
-      setStock(clubProduct.stock?.toString() || '0');
       setIsActive(clubProduct.isActive);
+      setImageUrls(clubProduct.imageUrls || []);
     }
   }, [clubProduct]);
 
@@ -62,10 +59,10 @@ export function EditClubProductSheet({
         clubProductId: clubProduct.id,
         data: {
           name: customName || undefined,
-          price: customPrice ? parseFloat(customPrice) : undefined,
+          price: customPrice || undefined,
           description: customDescription || undefined,
-          stock: parseInt(stock) || 0,
           isActive,
+          imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
         },
       });
       onOpenChange(false);
@@ -96,11 +93,13 @@ export function EditClubProductSheet({
   const baseName = baseProduct?.name || '';
   const basePrice = baseProduct?.defaultVariant?.price;
   const baseDescription = baseProduct?.description || '';
+  const baseImageUrls = baseProduct?.imageUrls || [];
 
   const hasCustomName = customName && customName !== baseName;
-  const hasCustomPrice = customPrice && parseFloat(customPrice) !== basePrice;
+  const hasCustomPrice = !!customPrice;
   const hasCustomDescription =
     customDescription && customDescription !== baseDescription;
+  const hasCustomImages = imageUrls.length > 0 && JSON.stringify(imageUrls) !== JSON.stringify(baseImageUrls);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -170,20 +169,16 @@ export function EditClubProductSheet({
                 </div>
                 <Input
                   id="customPrice"
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="text"
                   value={customPrice}
                   onChange={(e) => setCustomPrice(e.target.value)}
-                  placeholder={basePrice?.toString() || '0.00'}
+                  placeholder={basePrice !== null && basePrice !== undefined ? `$${basePrice.toFixed(2)}` : 'Auto-calculated from variants'}
                 />
-                {basePrice !== null &&
-                  basePrice !== undefined &&
-                  !hasCustomPrice && (
-                    <p className="text-xs text-muted-foreground">
-                      Default: ${basePrice.toFixed(2)}
-                    </p>
-                  )}
+                <p className="text-xs text-muted-foreground">
+                  {!hasCustomPrice && basePrice !== null && basePrice !== undefined
+                    ? `Default: $${basePrice.toFixed(2)} (from base product)`
+                    : 'Enter a custom price or price range (e.g., "$20.00" or "$20.00 - $40.00")'}
+                </p>
               </div>
 
               {/* Description */}
@@ -222,21 +217,6 @@ export function EditClubProductSheet({
                 )}
               </div>
 
-              {/* Stock */}
-              <div className="space-y-2">
-                <Label htmlFor="stock">Stock Quantity</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  min="0"
-                  value={stock}
-                  onChange={(e) => setStock(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Current stock level for this club
-                </p>
-              </div>
-
               {/* Active Status */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -250,6 +230,41 @@ export function EditClubProductSheet({
                   checked={isActive}
                   onCheckedChange={setIsActive}
                 />
+              </div>
+
+              {/* Images */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>
+                    Product Images
+                    {hasCustomImages && (
+                      <Badge variant="outline" className="ml-2">
+                        Custom
+                      </Badge>
+                    )}
+                  </Label>
+                  {hasCustomImages && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setImageUrls(baseImageUrls)}
+                      className="h-6 text-xs"
+                    >
+                      Reset to default
+                    </Button>
+                  )}
+                </div>
+                <ProductFormImageUpload
+                  mode="edit"
+                  initialImages={imageUrls.length > 0 ? imageUrls : baseImageUrls}
+                  maxFiles={5}
+                  onAllImagesChange={(urls) => setImageUrls(urls)}
+                />
+                {baseImageUrls.length > 0 && !hasCustomImages && (
+                  <p className="text-xs text-muted-foreground">
+                    Using default product images ({baseImageUrls.length} image{baseImageUrls.length !== 1 ? 's' : ''})
+                  </p>
+                )}
               </div>
 
               {/* Product Info */}

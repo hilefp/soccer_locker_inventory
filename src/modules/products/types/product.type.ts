@@ -53,6 +53,8 @@ export interface ProductVariantRequest {
   imageUrl?: string;
   imageUrls?: string[];
   isActive?: boolean;
+  minPrice?: number | string;
+  maxPrice?: number | string;
 }
 
 export interface ProductRequest {

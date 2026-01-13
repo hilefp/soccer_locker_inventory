@@ -8,6 +8,7 @@ export enum StockStatus {
 // Stock Variant Item
 export interface StockVariantItem {
   productVariantId: string;
+  productId: string;
   sku: string;
   productName: string;
   variantName: string;

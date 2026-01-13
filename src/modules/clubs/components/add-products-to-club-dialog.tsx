@@ -166,15 +166,15 @@ export function AddProductsToClubDialog({
       },
       {
         id: 'price',
-        accessorFn: (row) => row.defaultVariant?.price,
+        accessorFn: (row) => row?.minPrice + " " + row  ?.maxPrice,
         header: ({ column }) => (
           <DataGridColumnHeader title="Base Price" column={column} />
         ),
         cell: ({ row }) => {
-          const price = row.original.defaultVariant?.price;
+          const price = row.original.minPrice === row.original.maxPrice ? row.original.minPrice : row.original.minPrice + " - " + row.original.maxPrice;
           return (
             <span className="text-sm font-medium">
-              ${formatPrice(price)}
+              ${price}
             </span>
           );
         },
@@ -249,7 +249,9 @@ export function AddProductsToClubDialog({
       await addProductsMutation.mutateAsync({
         products: selectedProducts.map((p) => ({
           productId: p.id!,
-          stock: 0,
+          price: p.defaultVariant?.price !== null && p.defaultVariant?.price !== undefined
+            ? p.defaultVariant.price.toString()
+            : undefined,
           isActive: true,
         })),
       });

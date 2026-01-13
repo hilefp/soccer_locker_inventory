@@ -30,7 +30,7 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { Eye } from 'lucide-react';
+import { Eye, Package } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 interface IColumnFilterProps<TData, TValue> {
@@ -39,6 +39,7 @@ interface IColumnFilterProps<TData, TValue> {
 
 export interface IData {
   productVariantId: string;
+  productId: string;
   sku: string;
   productInfo: {
     image: string | null;
@@ -94,6 +95,7 @@ const convertStockVariantToIData = (variant: StockVariantItem): IData => {
 
   return {
     productVariantId: variant.productVariantId,
+    productId: variant.productId,
     sku: variant.sku,
     productInfo: {
       image: variant.imageUrl,
@@ -212,17 +214,12 @@ export function StockVariantListTable({
                     alt="product"
                   />
                 ) : (
-                  <img
-                    src={toAbsoluteUrl('/media/store/client/icons/light/package.svg')}
-                    className="cursor-pointer h-[30px] object-contain dark:hidden"
-                    alt="product"
-                  />
+                  <Package className="h-6 w-6 text-muted-foreground" />
                 )}
               </Card>
               <div className="flex flex-col gap-1">
                 <Link
-                  to="#"
-                  onClick={() => handleVariantClick(info.row.original)}
+                  to={`/inventory/stocks/variant/${info.row.original.productVariantId}`}
                   className="text-sm font-medium tracking-[-1%] cursor-pointer hover:text-primary"
                 >
                   {productInfo.title}

@@ -108,7 +108,7 @@ export function ClubDetailPage() {
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="products">
-            Products ({stats?.totalProducts || 0})
+            Products ({stats?.total || 0})
           </TabsTrigger>
         </TabsList>
 
@@ -274,7 +274,7 @@ export function ClubDetailPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-2xl font-bold">
-                    {stats.totalProducts}
+                    {stats.total}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Total Products
@@ -284,23 +284,11 @@ export function ClubDetailPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-2xl font-bold">
-                    {stats.activeProducts}
+                    {stats.active}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Active Products
                   </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold">{stats.inStock}</div>
-                  <p className="text-xs text-muted-foreground">In Stock</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold">{stats.outOfStock}</div>
-                  <p className="text-xs text-muted-foreground">Out of Stock</p>
                 </CardContent>
               </Card>
             </div>

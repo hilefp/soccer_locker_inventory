@@ -8,13 +8,12 @@ export interface ClubProduct {
 
   // Optional custom fields for this club
   name?: string | null; // Override product name
-  price?: number | null; // Override product price
+  price?: string | null; // Override product price (can be a range like "$20.00 - $40.00")
   description?: string | null; // Override product description
   imageUrls?: string[]; // Override product images
 
   // Club-specific fields
   isActive: boolean;
-  stock: number;
 
   // Timestamps
   createdAt: string;
@@ -28,21 +27,19 @@ export interface ClubProduct {
 export interface CreateClubProductDto {
   productId: string;
   name?: string;
-  price?: number;
+  price?: string;
   description?: string;
   imageUrls?: string[];
   isActive?: boolean;
-  stock?: number;
 }
 
 // DTO for updating club products
 export interface UpdateClubProductDto {
   name?: string;
-  price?: number;
+  price?: string;
   description?: string;
   imageUrls?: string[];
   isActive?: boolean;
-  stock?: number;
 }
 
 // DTO for bulk adding products
@@ -56,7 +53,6 @@ export interface ClubProductFilters {
   isActive?: boolean;
   minPrice?: number;
   maxPrice?: number;
-  inStock?: boolean;
 }
 
 export interface ClubProductsResponse {
@@ -70,10 +66,8 @@ export interface ClubProductsResponse {
 }
 
 // Stats response
-export interface ClubProductStats {
-  totalProducts: number;
-  activeProducts: number;
-  inactiveProducts: number;
-  inStock: number;
-  outOfStock: number;
+export interface  ClubProductStats {
+  total: number;
+  active: number;
+  inactive: number;
 }
