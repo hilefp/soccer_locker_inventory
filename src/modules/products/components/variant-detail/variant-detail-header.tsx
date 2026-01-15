@@ -1,25 +1,31 @@
-import { ArrowLeft, Save, Loader2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Trash2, Star } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 
 interface VariantDetailHeaderProps {
   isActive: boolean;
+  isDefault: boolean;
   productName?: string;
   onBack: () => void;
   onDelete: () => void;
   onSave: () => void;
+  onSetDefault: () => void;
   isDeleting: boolean;
   isSaving: boolean;
+  isSettingDefault: boolean;
 }
 
 export function VariantDetailHeader({
   isActive,
+  isDefault,
   productName,
   onBack,
   onDelete,
   onSave,
+  onSetDefault,
   isDeleting,
   isSaving,
+  isSettingDefault,
 }: VariantDetailHeaderProps) {
   return (
     <div className="flex items-center justify-between">
@@ -36,6 +42,31 @@ export function VariantDetailHeader({
         </div>
       </div>
       <div className="flex items-center gap-3">
+        {isDefault ? (
+          <Badge variant="primary">
+            <Star className="size-3 mr-1 fill-current" />
+            Default
+          </Badge>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSetDefault}
+            disabled={isSettingDefault || isSaving || isDeleting}
+          >
+            {isSettingDefault ? (
+              <>
+                <Loader2 className="size-4 mr-2 animate-spin" />
+                Setting...
+              </>
+            ) : (
+              <>
+                <Star className="size-4 mr-2" />
+                Set as Default
+              </>
+            )}
+          </Button>
+        )}
         <Badge variant={isActive ? 'success' : 'secondary'}>
           {isActive ? 'Active' : 'Inactive'}
         </Badge>

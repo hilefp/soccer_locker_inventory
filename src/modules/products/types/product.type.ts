@@ -31,6 +31,7 @@ export interface ProductVariant {
   imageUrl?: string;
   imageUrls?: string[];
   isActive?: boolean;
+  isDefault?: boolean;
 
   createdAt?: string;
   updatedAt?: string;

@@ -139,3 +139,39 @@ export function useDeleteProductVariant() {
     },
   });
 }
+
+export function useSetDefaultVariant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ productId, variantId }: { productId: string; variantId: string }) =>
+      productVariantService.setDefaultVariant(productId, variantId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: productVariantKeys.detail(variables.variantId) });
+      queryClient.invalidateQueries({ queryKey: productVariantKeys.byProduct(variables.productId) });
+
+      toast.custom(
+        (t) => (
+          <Alert
+            variant="mono"
+            icon="success"
+            close={true}
+            onClose={() => toast.dismiss(t)}
+          >
+            <AlertIcon>
+              <Info />
+            </AlertIcon>
+            <AlertTitle>Default variant set successfully.</AlertTitle>
+          </Alert>
+        ),
+        {
+          duration: 5000,
+        },
+      );
+    },
+    onError: (error) => {
+      console.error('Error setting default variant:', error);
+      toast.error('Failed to set default variant');
+    },
+  });
+}

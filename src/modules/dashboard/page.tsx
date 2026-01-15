@@ -29,6 +29,7 @@ const cards = [
     badge: '100',
     href: '/reports',
   },
+  
 ];
 
 export function DashboardPage() {

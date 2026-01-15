@@ -24,5 +24,12 @@ export const productVariantService = {
 
   async deleteVariant(variantId: string): Promise<void> {
     await apiClient.delete(`/inventory/product-variant/${variantId}`);
+  },
+
+  async setDefaultVariant(productId: string, variantId: string): Promise<ProductVariant> {
+    const response = await apiClient.put<ProductVariant>(
+      `/inventory/product-variant/${productId}/variant/${variantId}`
+    );
+    return response.data;
   }
 };
