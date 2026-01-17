@@ -1,4 +1,5 @@
 import { Product } from '@/modules/products/types/product.type';
+import { CustomFields } from './custom-fields';
 
 // Main ClubProduct entity
 export interface ClubProduct {
@@ -21,6 +22,7 @@ export interface ClubProduct {
 
   // Relations
   product: Product; // Full product data
+  customFields?: CustomFields[];
 }
 
 // DTO for creating club products
@@ -40,6 +42,7 @@ export interface UpdateClubProductDto {
   description?: string;
   imageUrls?: string[];
   isActive?: boolean;
+  customFields?: CustomFields[];
 }
 
 // DTO for bulk adding products

@@ -7,8 +7,51 @@ import type {
   ClubProductFilters,
   ClubProductStats,
 } from '../types/club-product';
+import { CustomFields } from '../types';
+
+export const defaultFields: CustomFields[] = [
+  {
+    key: "playerName",
+    type: "text",
+    required: true,
+    label: "Player name",
+    placeholder: "",
+  },
+  {
+    key: "playerNumber",
+    type: "number",
+    required: true,
+    label: "Player number",
+    placeholder: "",
+  },
+  {
+    key: "playerBirthday",
+    type: "date",
+    required: true,
+    label: "Player birthday",
+    placeholder: "",
+  },
+  {
+    key: "coachName",
+    type: "text",
+    required: true,
+    label: "Coach",
+    placeholder: "",
+  },
+];
 
 export const clubProductsService = {
+  // Get a single club product by ID
+  async getClubProduct(
+    clubId: string,
+    clubProductId: string
+  ): Promise<ClubProduct> {
+    const response = await apiClient.get<ClubProduct>(
+      `/admin/clubs/${clubId}/products/${clubProductId}`
+    );
+    return response.data;
+  },
+
   // Get all products for a club with pagination/filtering
   async getClubProducts(
     clubId: string,
@@ -72,3 +115,10 @@ export const clubProductsService = {
     return response.data;
   },
 };
+
+
+export const defaultFieldsMap = new Map<string, CustomFields>(
+  defaultFields
+    .filter((field): field is CustomFields & { key: string } => typeof field.key === 'string')
+    .map((field) => [field.key, field] as [string, CustomFields])
+);

@@ -9,7 +9,6 @@ import { useClub } from '../hooks/use-clubs';
 import { useClubProducts, useClubProductStats } from '../hooks/use-club-products';
 import { ClubProductsTable } from '../components/club-products-table';
 import { AddProductsToClubDialog } from '../components/add-products-to-club-dialog';
-import { EditClubProductSheet } from '../components/edit-club-product-sheet';
 import { ClubProduct } from '../types/club-product';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
@@ -30,15 +29,11 @@ export function ClubDetailPage() {
   // Fetch product stats
   const { data: stats } = useClubProductStats(clubId);
 
-  // Dialog/Sheet state
+  // Dialog state
   const [isAddProductsOpen, setIsAddProductsOpen] = useState(false);
-  const [selectedClubProduct, setSelectedClubProduct] =
-    useState<ClubProduct | null>(null);
-  const [isEditProductOpen, setIsEditProductOpen] = useState(false);
 
   const handleEditProduct = (clubProduct: ClubProduct) => {
-    setSelectedClubProduct(clubProduct);
-    setIsEditProductOpen(true);
+    navigate(`/clubs/${clubId}/products/${clubProduct.id}/edit`);
   };
 
   if (clubLoading) {
@@ -321,14 +316,6 @@ export function ClubDetailPage() {
         open={isAddProductsOpen}
         onOpenChange={setIsAddProductsOpen}
         existingClubProducts={clubProducts}
-      />
-
-      {/* Edit Club Product Sheet */}
-      <EditClubProductSheet
-        clubId={clubId!}
-        clubProduct={selectedClubProduct}
-        open={isEditProductOpen}
-        onOpenChange={setIsEditProductOpen}
       />
     </div>
   );

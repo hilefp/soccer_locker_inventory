@@ -8,7 +8,20 @@ import type {
 } from '../types/club-product';
 
 const QUERY_KEY = 'club-products';
+const CLUB_PRODUCT_QUERY_KEY = 'club-product';
 const CLUB_STATS_QUERY_KEY = 'club-product-stats';
+
+// Get a single club product
+export function useClubProduct(
+  clubId: string | undefined,
+  clubProductId: string | undefined
+) {
+  return useQuery({
+    queryKey: [CLUB_PRODUCT_QUERY_KEY, clubId, clubProductId],
+    queryFn: () => clubProductsService.getClubProduct(clubId!, clubProductId!),
+    enabled: !!clubId && !!clubProductId,
+  });
+}
 
 // Get club products with pagination
 export function useClubProducts(
