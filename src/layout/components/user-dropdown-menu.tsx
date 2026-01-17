@@ -98,22 +98,6 @@ export function UserDropdownMenu() {
 
         <DropdownMenuSeparator />
 
-        {/* Notification and Settings Section */}
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <VolumeX />
-            <span>Mute notifications</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="w-48">
-            <DropdownMenuItem>For 30 minutes</DropdownMenuItem>
-            <DropdownMenuItem>For 1 hour</DropdownMenuItem>
-            <DropdownMenuItem>For 4 hours</DropdownMenuItem>
-            <DropdownMenuItem>Until tomorrow</DropdownMenuItem>
-            <DropdownMenuItem>Until next week</DropdownMenuItem>
-            <DropdownMenuItem>Custom date and time</DropdownMenuItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-
         <DropdownMenuItem>
           <User />
           <span>Profile</span>
@@ -143,33 +127,6 @@ export function UserDropdownMenu() {
 
         <DropdownMenuSeparator />
 
-        {/* Business-Focused Application Section */}
-        <DropdownMenuItem>
-          <Keyboard />
-          <span>Keyboard shortcuts</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem>
-          <Gift />
-          <span>Referrals</span>
-          <Badge variant="info" appearance="light" className="ms-auto">
-            New
-          </Badge>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem>
-          <Download />
-          <span>Download apps</span>
-          <ExternalLink className="size-3 ms-auto" />
-        </DropdownMenuItem>
-
-        <DropdownMenuItem>
-          <HelpCircle />
-          <span>Help</span>
-          <ExternalLink className="size-3 ms-auto" />
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator />
 
         {/* Action Items */}
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">

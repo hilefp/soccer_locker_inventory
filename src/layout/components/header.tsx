@@ -13,9 +13,7 @@ import {
   SheetHeader,
   SheetTrigger,
 } from '@/shared/components/ui/sheet';
-import { AppsDropdownMenu } from './apps-dropdown-menu';
 import { Breadcrumb } from './breadcrumb';
-import { ChatSheet } from './chat-sheet';
 import { NotificationsSheet } from './notifications-sheet';
 import { SearchBar } from './search-bar';
 import { SidebarMenu } from './sidebar-menu';
@@ -93,30 +91,7 @@ export function Header() {
               </Button>
             }
           />
-          <ChatSheet
-            trigger={
-              <Button
-                variant="ghost"
-                mode="icon"
-                shape="circle"
-                className="size-9 hover:bg-primary/10 hover:[&_svg]:text-primary"
-              >
-                <MessageCircleMore className="size-4.5!" />
-              </Button>
-            }
-          />
-          <AppsDropdownMenu
-            trigger={
-              <Button
-                variant="ghost"
-                mode="icon"
-                shape="circle"
-                className="size-9 hover:bg-primary/10 hover:[&_svg]:text-primary"
-              >
-                <LayoutGrid className="size-4.5!" />
-              </Button>
-            }
-          />
+          
           <UserDropdownMenu />
         </div>
       </div>
