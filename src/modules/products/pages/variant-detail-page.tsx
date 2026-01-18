@@ -18,7 +18,7 @@ import { VariantDetailBasicInfo } from '@/modules/products/components/variant-de
 import { VariantDetailPricing } from '@/modules/products/components/variant-detail/variant-detail-pricing';
 import { VariantDetailPhysicalAttributes } from '@/modules/products/components/variant-detail/variant-detail-physical-attributes';
 import { VariantDetailAttributesStatus } from '@/modules/products/components/variant-detail/variant-detail-attributes-status';
-import { useProductVariant, useUpdateProductVariant, useDeleteProductVariant } from '@/modules/products/hooks/use-product-variants';
+import { useProductVariant, useUpdateProductVariant, useDeleteProductVariant, useSetDefaultVariant } from '@/modules/products/hooks/use-product-variants';
 import { useProduct } from '@/modules/products/hooks/use-products';
 import { ProductVariant } from '@/modules/products/types/product.type';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
@@ -32,6 +32,7 @@ export function VariantDetailPage() {
   const { data: product } = useProduct(productId || '');
   const updateMutation = useUpdateProductVariant();
   const deleteMutation = useDeleteProductVariant();
+  const setDefaultMutation = useSetDefaultVariant();
 
   const [editingVariant, setEditingVariant] = useState<ProductVariant | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -86,6 +87,16 @@ export function VariantDetailPage() {
     }
   };
 
+  const handleSetDefault = async () => {
+    if (!productId || !variantId) return;
+
+    try {
+      await setDefaultMutation.mutateAsync({ productId, variantId });
+    } catch (error) {
+      console.error('Error setting default variant:', error);
+    }
+  };
+
   if (isLoadingVariant) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -108,18 +119,22 @@ export function VariantDetailPage() {
 
   const isSaving = updateMutation.isPending;
   const isDeleting = deleteMutation.isPending;
+  const isSettingDefault = setDefaultMutation.isPending;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <VariantDetailHeader
         isActive={editingVariant.isActive !== false}
+        isDefault={editingVariant.isDefault === true}
         productName={product?.name}
         onBack={() => navigate(`/products/${productId}`)}
         onDelete={() => setShowDeleteDialog(true)}
         onSave={handleSave}
+        onSetDefault={handleSetDefault}
         isDeleting={isDeleting}
         isSaving={isSaving}
+        isSettingDefault={isSettingDefault}
       />
 
       {/* Content */}

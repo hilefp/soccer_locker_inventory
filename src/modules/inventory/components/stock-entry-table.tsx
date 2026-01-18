@@ -382,7 +382,7 @@ export function StockEntryTable({
                       <div className="flex flex-col w-full">
                         <span className="font-medium">{variant.productName}</span>
                         <span className="text-xs text-muted-foreground">
-                          SKU: {variant.sku} | {variant.variantName}
+                          SKU: {variant.sku} | {variant.variantName} | {variant.cost}
                         </span>
                       </div>
                       <Check className={cn('ml-auto h-4 w-4', 'opacity-0')} />

@@ -185,7 +185,7 @@ export function StockVariantDetailPage() {
         <div className="">
           {/* Pricing Information */}
           <ProductImageCard
-            imageUrl={variant.imageUrl}
+            imageUrl={variant.imageUrl ? variant.imageUrl : product.imageUrls[0]}
             productName={product.name}
             imageUrls={variant.imageUrls}
           />

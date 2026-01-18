@@ -222,7 +222,6 @@ export function ProductDetailPage() {
                       <TableHead>SKU</TableHead>
                       <TableHead>Attributes</TableHead>
                       <TableHead>Price</TableHead>
-                      <TableHead>Compare At</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -253,15 +252,7 @@ export function ProductDetailPage() {
                         <TableCell className="font-medium">
                           ${formatPrice(variant.price)}
                         </TableCell>
-                        <TableCell>
-                          {variant.compareAtPrice ? (
-                            <span className="text-muted-foreground line-through">
-                              ${formatPrice(variant.compareAtPrice)}
-                            </span>
-                          ) : (
-                            '-'
-                          )}
-                        </TableCell>
+                        
                         <TableCell>
                           <Badge variant={variant.isActive !== false ? 'success' : 'secondary'}>
                             {variant.isActive !== false ? 'Active' : 'Inactive'}

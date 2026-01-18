@@ -80,14 +80,16 @@ export function StockEntryCreatePage() {
     const newId = `temp-${Date.now()}`;
 
     if (variant) {
+      const costPerUnit = variant.cost || 0;
+      const quantity = 1;
       append({
         id: newId,
         productVariantId: variantId,
         productName: variant.productName,
         sku: variant.sku,
-        quantity: 1,
-        costPerUnit: 0,
-        totalCost: 0,
+        quantity,
+        costPerUnit,
+        totalCost: quantity * costPerUnit,
       });
     }
   };
@@ -97,9 +99,13 @@ export function StockEntryCreatePage() {
       (v) => v.productVariantId === variantId,
     );
     if (variant) {
+      const costPerUnit = variant.cost || 0;
+      const quantity = watch(`details.${index}.quantity`) || 0;
       setValue(`details.${index}.productVariantId`, variantId);
       setValue(`details.${index}.productName`, variant.productName);
       setValue(`details.${index}.sku`, variant.sku);
+      setValue(`details.${index}.costPerUnit`, costPerUnit);
+      setValue(`details.${index}.totalCost`, quantity * costPerUnit);
     }
   };
 

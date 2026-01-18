@@ -5,6 +5,7 @@ import {
   Package,
   Settings2,
   BarChart,
+  ShoppingCart,
 } from 'lucide-react';
 import { type MenuConfig } from './types';
 
@@ -140,6 +141,16 @@ export const MENU_SIDEBAR: MenuConfig = [
         title: "All clubs",
         path: '/clubs'
       }
+    ]
+  },
+  {
+    title: "Shop",
+    icon: ShoppingCart,
+    children: [
+      {
+        title: "Customers",
+        path: '/shop/customers',
+      },
     ]
   },
   {

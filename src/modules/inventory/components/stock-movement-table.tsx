@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useStockMovements } from '@/modules/inventory/hooks/use-stock-movements';
+import { useWarehouses } from '@/modules/inventory/hooks/use-warehouses';
+import { useProducts } from '@/modules/products/hooks/use-products';
 import {
   StockMovementItem,
   MovementType,
@@ -176,10 +178,57 @@ export function StockMovementTable({
     endDate,
   });
 
+  // Fetch related data for enrichment
+  const { data: warehouses } = useWarehouses();
+  const { data: products } = useProducts();
+
+  // Build lookup maps for efficient data enrichment
+  const warehouseMap = useMemo(() => {
+    if (!warehouses) return new Map<string, string>();
+    return new Map(warehouses.map((w) => [w.id, w.name]));
+  }, [warehouses]);
+
+  const variantMap = useMemo(() => {
+    if (!products) return new Map<string, { productName: string; variantName: string; sku: string }>();
+    const map = new Map<string, { productName: string; variantName: string; sku: string }>();
+
+    for (const product of products) {
+      if (product.variants) {
+        for (const variant of product.variants) {
+          if (variant.id) {
+            // Build variant name from attributes
+            const variantName = variant.attributes
+              ? Object.values(variant.attributes).join(' / ')
+              : '';
+            map.set(variant.id, {
+              productName: product.name,
+              variantName,
+              sku: variant.sku,
+            });
+          }
+        }
+      }
+    }
+    return map;
+  }, [products]);
+
   const data = useMemo(() => {
     if (!stockMovements || stockMovements.length === 0) return [];
-    return stockMovements.map(convertStockMovementToIData);
-  }, [stockMovements]);
+
+    return stockMovements.map((movement) => {
+      // Enrich movement with related data
+      const variantInfo = variantMap.get(movement.productVariantId);
+      const enrichedMovement: StockMovementItem = {
+        ...movement,
+        productName: movement.productName || variantInfo?.productName,
+        variantName: movement.variantName || variantInfo?.variantName,
+        sku: movement.sku || variantInfo?.sku,
+        warehouseName: movement.warehouseName || warehouseMap.get(movement.warehouseId),
+      };
+
+      return convertStockMovementToIData(enrichedMovement);
+    });
+  }, [stockMovements, variantMap, warehouseMap]);
 
   const columns = useMemo<ColumnDef<IData>[]>(
     () => [
@@ -229,6 +278,7 @@ export function StockMovementTable({
           return (
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium">
+                
                 {productInfo.productName}
               </span>
               {productInfo.variantName && (
@@ -413,7 +463,7 @@ export function StockMovementTable({
     >
       <Card>
         <CardTable>
-          {isLoading ? (
+          {isLoading || !warehouses || !products ? (
             <div className="flex items-center justify-center py-10">
               <span className="text-muted-foreground">
                 Loading stock movements...

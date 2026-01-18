@@ -29,6 +29,13 @@ const cards = [
     badge: '100',
     href: '/reports',
   },
+  {
+    title: 'Module Shop',
+    imageUrl: '/media/misc/reports.png',
+    badge: '100',
+    href: '/Shop',
+  },
+  
 ];
 
 export function DashboardPage() {

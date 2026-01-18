@@ -9,7 +9,6 @@ import { useClub } from '../hooks/use-clubs';
 import { useClubProducts, useClubProductStats } from '../hooks/use-club-products';
 import { ClubProductsTable } from '../components/club-products-table';
 import { AddProductsToClubDialog } from '../components/add-products-to-club-dialog';
-import { EditClubProductSheet } from '../components/edit-club-product-sheet';
 import { ClubProduct } from '../types/club-product';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
@@ -30,15 +29,11 @@ export function ClubDetailPage() {
   // Fetch product stats
   const { data: stats } = useClubProductStats(clubId);
 
-  // Dialog/Sheet state
+  // Dialog state
   const [isAddProductsOpen, setIsAddProductsOpen] = useState(false);
-  const [selectedClubProduct, setSelectedClubProduct] =
-    useState<ClubProduct | null>(null);
-  const [isEditProductOpen, setIsEditProductOpen] = useState(false);
 
   const handleEditProduct = (clubProduct: ClubProduct) => {
-    setSelectedClubProduct(clubProduct);
-    setIsEditProductOpen(true);
+    navigate(`/clubs/${clubId}/products/${clubProduct.id}/edit`);
   };
 
   if (clubLoading) {
@@ -108,7 +103,7 @@ export function ClubDetailPage() {
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="products">
-            Products ({stats?.totalProducts || 0})
+            Products ({stats?.total || 0})
           </TabsTrigger>
         </TabsList>
 
@@ -274,7 +269,7 @@ export function ClubDetailPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-2xl font-bold">
-                    {stats.totalProducts}
+                    {stats.total}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Total Products
@@ -284,23 +279,11 @@ export function ClubDetailPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-2xl font-bold">
-                    {stats.activeProducts}
+                    {stats.active}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Active Products
                   </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold">{stats.inStock}</div>
-                  <p className="text-xs text-muted-foreground">In Stock</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold">{stats.outOfStock}</div>
-                  <p className="text-xs text-muted-foreground">Out of Stock</p>
                 </CardContent>
               </Card>
             </div>
@@ -333,14 +316,6 @@ export function ClubDetailPage() {
         open={isAddProductsOpen}
         onOpenChange={setIsAddProductsOpen}
         existingClubProducts={clubProducts}
-      />
-
-      {/* Edit Club Product Sheet */}
-      <EditClubProductSheet
-        clubId={clubId!}
-        clubProduct={selectedClubProduct}
-        open={isEditProductOpen}
-        onOpenChange={setIsEditProductOpen}
       />
     </div>
   );

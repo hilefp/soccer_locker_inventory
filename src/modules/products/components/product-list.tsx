@@ -96,7 +96,9 @@ const convertProductToIData = (product: Product): IData => {
   // Calculate price from variants if available
   let priceDisplay = 'N/A';
   if (product.variants && product.variants.length > 0) {
-    const prices = product.variants.map(v => v.price).filter(p => p !== undefined);
+    const prices = product.variants
+      .map(v => typeof v.price === 'number' ? v.price : parseFloat(String(v.price)))
+      .filter(p => !isNaN(p));
     if (prices.length > 0) {
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
@@ -106,8 +108,13 @@ const convertProductToIData = (product: Product): IData => {
         priceDisplay = `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`;
       }
     }
-  } else if (product.minPrice) {
-    priceDisplay = `$${product.minPrice.toFixed(2)}`;
+  } else if (product.minPrice !== undefined && product.minPrice !== null) {
+    const minPrice = typeof product.minPrice === 'number'
+      ? product.minPrice
+      : parseFloat(String(product.minPrice));
+    if (!isNaN(minPrice)) {
+      priceDisplay = `$${minPrice.toFixed(2)}`;
+    }
   }
 
   return {

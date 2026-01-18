@@ -8,6 +8,7 @@ export enum StockStatus {
 // Stock Variant Item
 export interface StockVariantItem {
   productVariantId: string;
+  productId: string;
   sku: string;
   productName: string;
   variantName: string;
@@ -19,6 +20,7 @@ export interface StockVariantItem {
   lastMovement: string | null;
   status: StockStatus;
   imageUrl: string | null;
+  cost: number | null;
 }
 
 // Pagination Metadata
