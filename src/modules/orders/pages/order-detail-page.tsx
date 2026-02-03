@@ -186,9 +186,9 @@ export function OrderDetailPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium">${item.totalPrice.toFixed(2)}</div>
+                        <div className="font-medium">${Number(item.totalPrice).toFixed(2)}</div>
                         <div className="text-sm text-muted-foreground">
-                          ${item.unitPrice.toFixed(2)} x {item.quantity}
+                          ${Number(item.unitPrice).toFixed(2)} x {item.quantity}
                         </div>
                       </div>
                     </div>
@@ -259,21 +259,21 @@ export function OrderDetailPage() {
             <CardContent className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>${order.subtotal.toFixed(2)}</span>
+                <span>${Number(order.subtotal).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tax</span>
-                <span>${order.taxTotal.toFixed(2)}</span>
+                <span>${Number(order.taxTotal).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Shipping</span>
-                <span>${order.shippingTotal.toFixed(2)}</span>
+                <span>${Number(order.shippingTotal).toFixed(2)}</span>
               </div>
               <Separator />
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
                 <span>
-                  ${order.total.toFixed(2)} {order.currency}
+                  ${Number(order.total || 0).toFixed(2)} {order.currency || 'USD'}
                 </span>
               </div>
             </CardContent>

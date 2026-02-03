@@ -66,29 +66,9 @@ const QuantityInput = memo(
           className="h-8"
           value={localValue}
           onChange={(e) => {
-            const value = e.target.value.replace(/[^0-9]/g, '');
-            setLocalValue(value);
-            const quantity = parseInt(value) || 0;
+            setLocalValue(() => e.target.value);
+            const quantity = parseInt(e.target.value) || 0;
             onChangeValue(index, quantity);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              return;
-            }
-            if (
-              e.key === 'Backspace' ||
-              e.key === 'Delete' ||
-              e.key === 'Tab' ||
-              e.key === 'Escape' ||
-              e.key === 'ArrowLeft' ||
-              e.key === 'ArrowRight'
-            ) {
-              return;
-            }
-            if (!/^[0-9]$/.test(e.key)) {
-              e.preventDefault();
-            }
           }}
         />
         {error && <p className="text-xs text-destructive">{error}</p>}

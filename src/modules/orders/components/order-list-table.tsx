@@ -113,7 +113,7 @@ const convertOrderToIData = (order: Order): IOrderData => {
     },
     status: order.status,
     itemCount,
-    total: order.total,
+    total: Number(order.total) || 0,
     currency: order.currency,
     club: order.club?.name,
     shippingCity: order.shippingCity || undefined,
@@ -261,7 +261,7 @@ export function OrderListTable({
           const order = info.row.original;
           return (
             <span className="text-sm font-medium">
-              ${order.total.toFixed(2)} {order.currency}
+              ${order.total?.toFixed(2)} {order.currency || 'USD'}
             </span>
           );
         },
