@@ -36,6 +36,7 @@ import { AuthRedirect } from './AuthRedirect';
 import { dashboardRoutes } from '@/modules/dashboard/route';
 import { reportsRoutes } from '@/modules/reports/routes';
 import { shopRoutes } from '@/modules/shop/routes';
+import { ordersRoutes } from '@/modules/orders/routes';
 
 export function ModulesProvider() {
   return (
@@ -59,6 +60,7 @@ export function ModulesProvider() {
                   <Route path="dashboard/*" element={<RenderRouteTree route={dashboardRoutes} />} />
                   <Route path="reports/*" element={<RenderRouteTree route={reportsRoutes} />} />
                   <Route path="shop/*" element={<RenderRouteTree route={shopRoutes} />} />
+                  <Route path="orders/*" element={<RenderRouteTree route={ordersRoutes} />} />
                 <Route path="all-stock" element={<AllStock />} />
                 <Route path="current-stock" element={<CurrentStock />} />
                 <Route path="inbound-stock" element={<InboundStock />} />

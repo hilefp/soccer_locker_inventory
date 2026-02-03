@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import {
   Control,
   UseFormRegister,
@@ -42,6 +42,133 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
+// Memoized input cell to prevent focus loss
+interface QuantityInputProps {
+  index: number;
+  defaultValue: number;
+  error?: string;
+  onChangeValue: (index: number, value: number) => void;
+}
+
+const QuantityInput = memo(
+  function QuantityInput({
+    index,
+    defaultValue,
+    error,
+    onChangeValue,
+  }: QuantityInputProps) {
+    const [localValue, setLocalValue] = useState(() => defaultValue.toString());
+
+    return (
+      <div className="space-y-1 min-w-[100px]">
+        <Input
+          type="text"
+          className="h-8"
+          value={localValue}
+          onChange={(e) => {
+            const value = e.target.value.replace(/[^0-9]/g, '');
+            setLocalValue(value);
+            const quantity = parseInt(value) || 0;
+            onChangeValue(index, quantity);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              return;
+            }
+            if (
+              e.key === 'Backspace' ||
+              e.key === 'Delete' ||
+              e.key === 'Tab' ||
+              e.key === 'Escape' ||
+              e.key === 'ArrowLeft' ||
+              e.key === 'ArrowRight'
+            ) {
+              return;
+            }
+            if (!/^[0-9]$/.test(e.key)) {
+              e.preventDefault();
+            }
+          }}
+        />
+        {error && <p className="text-xs text-destructive">{error}</p>}
+      </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if index or error changes, NOT defaultValue
+    return prevProps.index === nextProps.index && prevProps.error === nextProps.error;
+  },
+);
+
+interface CostInputProps {
+  index: number;
+  defaultValue: number;
+  error?: string;
+  onChangeValue: (index: number, value: number) => void;
+}
+
+const CostInput = memo(
+  function CostInput({
+    index,
+    defaultValue,
+    error,
+    onChangeValue,
+  }: CostInputProps) {
+    const [localValue, setLocalValue] = useState(() => defaultValue.toString());
+
+    return (
+      <div className="space-y-1 min-w-[120px]">
+        <Input
+          type="text"
+          className="h-8"
+          value={localValue}
+          onChange={(e) => {
+            let value = e.target.value.replace(/[^0-9.]/g, '');
+            const parts = value.split('.');
+            if (parts.length > 2) {
+              value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            if (parts[1] && parts[1].length > 2) {
+              value = parts[0] + '.' + parts[1].substring(0, 2);
+            }
+            setLocalValue(value);
+            const cost = parseFloat(value) || 0;
+            onChangeValue(index, cost);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              return;
+            }
+            if (
+              e.key === 'Backspace' ||
+              e.key === 'Delete' ||
+              e.key === 'Tab' ||
+              e.key === 'Escape' ||
+              e.key === 'ArrowLeft' ||
+              e.key === 'ArrowRight'
+            ) {
+              return;
+            }
+            if (e.key === '.' && !e.currentTarget.value.includes('.')) {
+              return;
+            }
+            if (!/^[0-9]$/.test(e.key)) {
+              e.preventDefault();
+            }
+          }}
+        />
+        {error && <p className="text-xs text-destructive">{error}</p>}
+      </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if index or error changes, NOT defaultValue
+    return prevProps.index === nextProps.index && prevProps.error === nextProps.error;
+  },
+);
+
 interface StockEntryTableProps {
   fields: Array<{ id: string }>;
   register: UseFormRegister<StockEntrySchemaType>;
@@ -74,7 +201,6 @@ interface ITableData {
 
 export function StockEntryTable({
   fields,
-  register,
   watch,
   setValue,
   errors,
@@ -88,13 +214,15 @@ export function StockEntryTable({
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
-  const selectedVariantIds = useMemo(() => {
+  // Get selected variant IDs without causing re-renders
+  const getSelectedVariantIds = useCallback(() => {
     return fields.map((_, index) => watch(`details.${index}.productVariantId`));
   }, [fields, watch]);
 
   const availableVariants = useMemo(() => {
-    return variants.filter((v) => !selectedVariantIds.includes(v.productVariantId));
-  }, [variants, selectedVariantIds]);
+    const selectedIds = getSelectedVariantIds();
+    return variants.filter((v) => !selectedIds.includes(v.productVariantId));
+  }, [variants, getSelectedVariantIds]);
 
   const handleSelectProduct = useCallback(
     (variantId: string) => {
@@ -112,6 +240,7 @@ export function StockEntryTable({
     [variants],
   );
 
+  // Build static data for the table - only recompute when fields change
   const data = useMemo<ITableData[]>(() => {
     return fields.map((field, index) => {
       const variantId = watch(`details.${index}.productVariantId`);
@@ -134,7 +263,26 @@ export function StockEntryTable({
         totalCost,
       };
     });
-  }, [fields, watch, getProductDetails]);
+    // Only depend on fields.length to avoid re-computing on every value change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fields.length, getProductDetails]);
+
+  // Stable callbacks for inputs
+  const handleQuantityInputChange = useCallback(
+    (index: number, quantity: number) => {
+      setValue(`details.${index}.quantity`, quantity);
+      onQuantityChange(index, quantity);
+    },
+    [setValue, onQuantityChange],
+  );
+
+  const handleCostInputChange = useCallback(
+    (index: number, cost: number) => {
+      setValue(`details.${index}.costPerUnit`, cost);
+      onCostChange(index, cost);
+    },
+    [setValue, onCostChange],
+  );
 
   const columns = useMemo<ColumnDef<ITableData>[]>(
     () => [
@@ -168,51 +316,15 @@ export function StockEntryTable({
         accessorFn: (row) => row.quantity,
         header: () => <span className="font-medium">Quantity *</span>,
         cell: (info) => {
-          const index = info.row.original.index;
+          const { index, quantity } = info.row.original;
           return (
-            <div className="space-y-1 min-w-[100px]">
-              <Input
-                type="text"
-                className="h-8"
-                {...register(`details.${index}.quantity`, {
-                  onChange: (e) => {
-                    // Remove non-numeric characters
-                    const value = e.target.value.replace(/[^0-9]/g, '');
-                    e.target.value = value;
-                    const quantity = parseInt(value) || 0;
-                    setValue(`details.${index}.quantity`, quantity);
-                    onQuantityChange(index, quantity);
-                  },
-                })}
-                onKeyDown={(e) => {
-                  // Prevent Enter from submitting form
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    return;
-                  }
-                  // Allow: backspace, delete, tab, escape, arrows
-                  if (
-                    e.key === 'Backspace' ||
-                    e.key === 'Delete' ||
-                    e.key === 'Tab' ||
-                    e.key === 'Escape' ||
-                    e.key === 'ArrowLeft' ||
-                    e.key === 'ArrowRight'
-                  ) {
-                    return;
-                  }
-                  // Prevent if not a number
-                  if (!/^[0-9]$/.test(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-              />
-              {errors.details?.[index]?.quantity && (
-                <p className="text-xs text-destructive">
-                  {errors.details[index]?.quantity?.message}
-                </p>
-              )}
-            </div>
+            <QuantityInput
+              key={`qty-${info.row.original.id}`}
+              index={index}
+              defaultValue={quantity}
+              error={errors.details?.[index]?.quantity?.message}
+              onChangeValue={handleQuantityInputChange}
+            />
           );
         },
         enableSorting: false,
@@ -223,69 +335,15 @@ export function StockEntryTable({
         accessorFn: (row) => row.costPerUnit,
         header: () => <span className="font-medium">Cost Per Unit *</span>,
         cell: (info) => {
-          const index = info.row.original.index;
+          const { index, costPerUnit } = info.row.original;
           return (
-            <div className="space-y-1 min-w-[120px]">
-              <Input
-                type="text"
-                className="h-8"
-                {...register(`details.${index}.costPerUnit`, {
-                  onChange: (e) => {
-                    // Remove non-numeric characters except decimal point
-                    let value = e.target.value.replace(/[^0-9.]/g, '');
-
-                    // Only allow one decimal point
-                    const parts = value.split('.');
-                    if (parts.length > 2) {
-                      value = parts[0] + '.' + parts.slice(1).join('');
-                    }
-
-                    // Limit to 2 decimal places
-                    if (parts[1] && parts[1].length > 2) {
-                      value = parts[0] + '.' + parts[1].substring(0, 2);
-                    }
-
-                    e.target.value = value;
-                    const cost = parseFloat(value) || 0;
-                    setValue(`details.${index}.costPerUnit`, cost);
-                    onCostChange(index, cost);
-                  },
-                })}
-                onKeyDown={(e) => {
-                  // Prevent Enter from submitting form
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    return;
-                  }
-                  // Allow: backspace, delete, tab, escape, arrows
-                  if (
-                    e.key === 'Backspace' ||
-                    e.key === 'Delete' ||
-                    e.key === 'Tab' ||
-                    e.key === 'Escape' ||
-                    e.key === 'ArrowLeft' ||
-                    e.key === 'ArrowRight'
-                  ) {
-                    return;
-                  }
-
-                  // Allow decimal point if not already present
-                  if (e.key === '.' && !e.currentTarget.value.includes('.')) {
-                    return;
-                  }
-
-                  // Prevent if not a number
-                  if (!/^[0-9]$/.test(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-              />
-              {errors.details?.[index]?.costPerUnit && (
-                <p className="text-xs text-destructive">
-                  {errors.details[index]?.costPerUnit?.message}
-                </p>
-              )}
-            </div>
+            <CostInput
+              key={`cost-${info.row.original.id}`}
+              index={index}
+              defaultValue={costPerUnit}
+              error={errors.details?.[index]?.costPerUnit?.message}
+              onChangeValue={handleCostInputChange}
+            />
           );
         },
         enableSorting: false,
@@ -296,7 +354,9 @@ export function StockEntryTable({
         accessorFn: (row) => row.totalCost,
         header: () => <span className="font-medium">Total Cost</span>,
         cell: (info) => {
-          const totalCost = info.row.original.totalCost;
+          const index = info.row.original.index;
+          // Use watch directly to get reactive updates for total cost
+          const totalCost = watch(`details.${index}.totalCost`) || 0;
           return (
             <div className="font-bold text-sm bg-accent px-3 py-1.5 rounded-md inline-block min-w-[100px]">
               ${totalCost.toFixed(2)}
@@ -330,7 +390,7 @@ export function StockEntryTable({
         size: 80,
       },
     ],
-    [register, errors, onQuantityChange, onCostChange, onRemove],
+    [errors, handleQuantityInputChange, handleCostInputChange, watch, onRemove],
   );
 
   const table = useReactTable({
@@ -338,6 +398,7 @@ export function StockEntryTable({
     columns,
     getCoreRowModel: getCoreRowModel(),
     enableSorting: false,
+    getRowId: (row) => row.id,
   });
 
   return (
@@ -382,7 +443,7 @@ export function StockEntryTable({
                       <div className="flex flex-col w-full">
                         <span className="font-medium">{variant.productName}</span>
                         <span className="text-xs text-muted-foreground">
-                          SKU: {variant.sku} | {variant.variantName} | {variant.cost}
+                          SKU: {variant.sku} | {variant.variantName} | ${variant.cost}
                         </span>
                       </div>
                       <Check className={cn('ml-auto h-4 w-4', 'opacity-0')} />
