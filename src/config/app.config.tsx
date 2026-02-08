@@ -1,10 +1,11 @@
 import {
+  BarChart,
   Boxes,
-  LayoutGrid,
+  ClipboardList,
   ClubIcon,
+  LayoutGrid,
   Package,
   Settings2,
-  BarChart,
   ShoppingCart,
 } from 'lucide-react';
 import { type MenuConfig } from './types';
@@ -48,10 +49,18 @@ export const MENU_SIDEBAR: MenuConfig = [
       {
         title: 'Stock Movements',
         path: '/inventory/stock-movements',
-      }
+      },
     ],
   },
-    {
+  {
+    title: 'Orders',
+    icon: ClipboardList,
+    children: [
+      { title: 'Order List', path: '/orders' },
+      { title: 'Order Tracking', path: '/orders/tracking' },
+    ],
+  },
+  {
     title: 'Reports',
     icon: BarChart,
     children: [
@@ -134,24 +143,24 @@ export const MENU_SIDEBAR: MenuConfig = [
   //   ],
   // },
   {
-    title: "Clubs",
+    title: 'Clubs',
     icon: ClubIcon,
     children: [
       {
-        title: "All clubs",
-        path: '/clubs'
-      }
-    ]
+        title: 'All clubs',
+        path: '/clubs',
+      },
+    ],
   },
   {
-    title: "Shop",
+    title: 'Shop',
     icon: ShoppingCart,
     children: [
       {
-        title: "Customers",
+        title: 'Customers',
         path: '/shop/customers',
       },
-    ]
+    ],
   },
   {
     title: 'Settings',

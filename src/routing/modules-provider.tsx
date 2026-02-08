@@ -36,6 +36,7 @@ import { AuthRedirect } from './AuthRedirect';
 import { dashboardRoutes } from '@/modules/dashboard/route';
 import { reportsRoutes } from '@/modules/reports/routes';
 import { shopRoutes } from '@/modules/shop/routes';
+import { ordersRoutes } from '@/modules/orders/routes';
 
 export function ModulesProvider() {
   return (
@@ -59,51 +60,8 @@ export function ModulesProvider() {
                   <Route path="dashboard/*" element={<RenderRouteTree route={dashboardRoutes} />} />
                   <Route path="reports/*" element={<RenderRouteTree route={reportsRoutes} />} />
                   <Route path="shop/*" element={<RenderRouteTree route={shopRoutes} />} />
-                <Route path="all-stock" element={<AllStock />} />
-                <Route path="current-stock" element={<CurrentStock />} />
-                <Route path="inbound-stock" element={<InboundStock />} />
-                <Route path="outbound-stock" element={<OutboundStock />} />
-                <Route path="stock-planner" element={<StockPlanner />} />
-                <Route
-                  path="product-details"
-                  element={<ProductDetailsPage />}
-                />
-                <Route path="create-product" element={<CreateProductPage />} />
-                <Route path="edit-product" element={<EditProductPage />} />
-                <Route
-                  path="per-product-stock"
-                  element={<PerProductStockPage />}
-                />
-                <Route path="track-shipping" element={<TrackShippingPage />} />
-                <Route path="product-info" element={<ProductInfoPage />} />
-                <Route path="customer-list" element={<CustomerList />} />
-                <Route
-                  path="customer-list-details"
-                  element={<CustomerListDetails />}
-                />
-                <Route path="settings-modal" element={<SettingsModal />} />
-                <Route
-                  path="create-shipping-label"
-                  element={<CreateShippingLabelPage />}
-                />
-                <Route
-                  path="manage-variants"
-                  element={<ManageVariantsPage />}
-                />
-                <Route
-                  path="create-category"
-                  element={<CreateCategoryPage />}
-                />
-                <Route path="edit-category" element={<EditCategoryPage />} />
-                <Route path="category-details" element={<CategoryDetails />} />
-                <Route path="order-list" element={<OrderList />} />
-                <Route
-                  path="order-list-products"
-                  element={<OrderListProducts />}
-                />
-                <Route path="order-details" element={<OrderDetailsPage />} />
-                <Route path="order-tracking" element={<OrderTrackingPage />} />
-                <Route path="customer-list" element={<CustomerList />} />
+                  <Route path="orders/*" element={<RenderRouteTree route={ordersRoutes} />} />
+                
                 </Route>
               </Route>
             </Routes>
