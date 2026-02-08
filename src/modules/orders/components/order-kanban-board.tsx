@@ -144,7 +144,7 @@ function OrderCard({ order, isDragging, onViewDetails }: OrderCardProps) {
             {itemCount} item{itemCount !== 1 ? 's' : ''}
           </Badge>
           <span className="text-sm font-medium text-foreground">
-            ${order.total.toFixed(2)} {order.currency}
+            ${Number(order.total).toFixed(2)} {order.currency}
           </span>
         </div>
 

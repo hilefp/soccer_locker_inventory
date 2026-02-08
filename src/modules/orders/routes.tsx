@@ -6,8 +6,9 @@ import { OrderDetailPage } from './pages/order-detail-page';
 export const ordersRoutes: RouteObject = {
   path: '',
   children: [
-    { path: '', element: <OrdersListPage /> },
+    { index: true, element: <OrdersListPage /> },
     { path: 'current', element: <CurrentOrdersPage /> },
+    { path: 'tracking', element: <CurrentOrdersPage /> },
     { path: ':orderId', element: <OrderDetailPage /> },
   ],
 };
