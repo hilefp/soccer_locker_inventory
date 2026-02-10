@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { RefreshCw, LayoutGrid } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
@@ -12,6 +13,8 @@ import { Badge } from '@/shared/components/ui/badge';
 export function CurrentOrdersPage() {
   useDocumentTitle('Current Orders - Kanban');
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [filters, setFilters] = useState<OrderFilterParams>({
     statuses: KANBAN_STATUS_ORDER,
     sortBy: 'createdAt',
@@ -19,10 +22,18 @@ export function CurrentOrdersPage() {
     limit: 100, // Get more orders for kanban view
   });
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
   const { data, isLoading, error, refetch, isFetching } = useOrders(filters);
   const { data: statistics } = useOrderStatistics();
+
+  // Sync URL search params with state
+  useEffect(() => {
+    const searchFromUrl = searchParams.get('search');
+    if (searchFromUrl && searchFromUrl !== searchQuery) {
+      setSearchQuery(searchFromUrl);
+    }
+  }, [searchParams, searchQuery]);
 
   // Filter orders by search query on client side for real-time search
   const filteredOrders = useMemo(() => {
@@ -43,6 +54,11 @@ export function CurrentOrdersPage() {
 
   const handleSearchChange = (search: string) => {
     setSearchQuery(search);
+    if (search) {
+      setSearchParams({ search });
+    } else {
+      setSearchParams({});
+    }
   };
 
   const handleRefresh = () => {
