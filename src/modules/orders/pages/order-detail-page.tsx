@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -14,6 +15,8 @@ import {
   CreditCard,
   History,
   ChevronRight,
+  FileText,
+  Receipt,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/shared/components/ui/card';
@@ -30,12 +33,15 @@ import {
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { formatDate, timeAgo } from '@/shared/lib/helpers';
 import { useOrder, useOrderStatusHistory, useUpdateOrderStatus } from '@/modules/orders/hooks/use-orders';
-import { OrderStatusBadge } from '@/modules/orders/components';
+import { OrderStatusBadge, OrderQRCodeCard, OrderPackingSlip, OrderInvoice } from '@/modules/orders/components';
 import { ORDER_STATUS_FLOW, ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
 
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+
+  const [showPackingSlip, setShowPackingSlip] = useState(false);
+  const [showInvoice, setShowInvoice] = useState(false);
 
   const { data: order, isLoading, error } = useOrder(orderId || '');
   const { data: statusHistory } = useOrderStatusHistory(orderId || '');
@@ -113,28 +119,99 @@ export function OrderDetailPage() {
           </div>
         </div>
 
-        {/* Status Change */}
-        {validTransitions.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Move to:</span>
-            <Select onValueChange={handleStatusChange} disabled={updateStatusMutation.isPending}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                {validTransitions.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {ORDER_STATUS_LABELS[status]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Packing Slip & Invoice Buttons */}
+          <Button variant="outline" size="sm" onClick={() => setShowPackingSlip(true)}>
+            <FileText className="size-4 mr-2" />
+            Packing Slip
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowInvoice(true)}>
+            <Receipt className="size-4 mr-2" />
+            Invoice
+          </Button>
+
+          {/* Status Change */}
+          {validTransitions.length > 0 && (
+            <>
+              <span className="text-sm text-muted-foreground">Move to:</span>
+              <Select onValueChange={handleStatusChange} disabled={updateStatusMutation.isPending}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {validTransitions.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {ORDER_STATUS_LABELS[status]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Main Content */}
+
+        {/* Customer Info */}
+          <Card>
+            <CardHeader className="py-4">
+              <div className="flex items-center gap-2">
+                <User className="size-5 text-muted-foreground" />
+                <h2 className="text-lg font-semibold">Customer</h2>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <span className="text-sm text-muted-foreground">Name</span>
+                <p className="font-medium">{order.shippingName || 'N/A'}</p>
+              </div>
+              {order.customerUser?.email && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Email</span>
+                  <p className="font-medium">{order.customerUser.email}</p>
+                </div>
+              )}
+              {order.shippingPhone && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Phone</span>
+                  <p className="font-medium">{order.shippingPhone}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Shipping Address */}
+          <Card>
+            <CardHeader className="py-4">
+              <div className="flex items-center gap-2">
+                <MapPin className="size-5 text-muted-foreground" />
+                <h2 className="text-lg font-semibold">Shipping Address</h2>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {shippingAddress ? (
+                <p className="text-sm">{shippingAddress}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">No shipping address</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Notes */}
+          {order.notes && (
+            <Card>
+              <CardHeader className="py-4">
+                <h2 className="text-lg font-semibold">Notes</h2>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm whitespace-pre-wrap">{order.notes}</p>
+              </CardContent>
+            </Card>
+          )}
+
+
         <div className="lg:col-span-2 space-y-5">
           {/* Order Items */}
           <Card>
@@ -248,6 +325,9 @@ export function OrderDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-5">
+          {/* QR Code Card */}
+          <OrderQRCodeCard order={order} />
+
           {/* Order Summary */}
           <Card>
             <CardHeader className="py-4">
@@ -279,50 +359,6 @@ export function OrderDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Customer Info */}
-          <Card>
-            <CardHeader className="py-4">
-              <div className="flex items-center gap-2">
-                <User className="size-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Customer</h2>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <span className="text-sm text-muted-foreground">Name</span>
-                <p className="font-medium">{order.shippingName || 'N/A'}</p>
-              </div>
-              {order.customerUser?.email && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Email</span>
-                  <p className="font-medium">{order.customerUser.email}</p>
-                </div>
-              )}
-              {order.shippingPhone && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Phone</span>
-                  <p className="font-medium">{order.shippingPhone}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Shipping Address */}
-          <Card>
-            <CardHeader className="py-4">
-              <div className="flex items-center gap-2">
-                <MapPin className="size-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Shipping Address</h2>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {shippingAddress ? (
-                <p className="text-sm">{shippingAddress}</p>
-              ) : (
-                <p className="text-sm text-muted-foreground">No shipping address</p>
-              )}
-            </CardContent>
-          </Card>
 
           {/* Shipping Info */}
           {(order.carrier || order.trackingNumber) && (
@@ -390,7 +426,7 @@ export function OrderDetailPage() {
             </Card>
           )}
 
-          {/* Dates */}
+          {/* Dates
           <Card>
             <CardHeader className="py-4">
               <div className="flex items-center gap-2">
@@ -426,21 +462,16 @@ export function OrderDetailPage() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </Card> */}
 
-          {/* Notes */}
-          {order.notes && (
-            <Card>
-              <CardHeader className="py-4">
-                <h2 className="text-lg font-semibold">Notes</h2>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm whitespace-pre-wrap">{order.notes}</p>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
+
+      {/* Packing Slip Sheet */}
+      <OrderPackingSlip order={order} open={showPackingSlip} onOpenChange={setShowPackingSlip} />
+
+      {/* Invoice Sheet */}
+      <OrderInvoice order={order} open={showInvoice} onOpenChange={setShowInvoice} />
     </div>
   );
 }
