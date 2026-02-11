@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { ClipboardList, Plus } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
-import { OrderListTable } from '@/modules/orders/components';
+import { OrderListTable, ExportOrdersDialog } from '@/modules/orders/components';
 import { useOrders } from '@/modules/orders/hooks/use-orders';
+import { useExportOrders } from '@/modules/orders/hooks/use-export-orders';
 import { OrderFilterParams, OrderStatus } from '@/modules/orders/types';
 
 export function OrdersListPage() {
@@ -19,6 +20,7 @@ export function OrdersListPage() {
   });
 
   const { data, isLoading, error } = useOrders(filters);
+  const { exportOrders, isExporting } = useExportOrders();
 
   const handlePageChange = (page: number) => {
     setFilters((prev) => ({ ...prev, page }));
@@ -58,6 +60,7 @@ export function OrdersListPage() {
                 : `${totalOrders} orders found`}
           </span>
         </div>
+        <ExportOrdersDialog onExport={exportOrders} isExporting={isExporting} />
       </div>
 
       <OrderListTable
