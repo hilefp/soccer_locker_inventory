@@ -24,6 +24,10 @@ import {
   Package,
   User,
   Calendar,
+  Download,
+  FileText,
+  CalendarDays,
+  Building2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/shared/lib/helpers';
@@ -68,9 +72,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { Order, OrderStatus, OrderListMeta, ORDER_STATUS_LABELS, ORDER_STATUS_FLOW } from '@/modules/orders/types';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/components/ui/popover';
+import { Calendar as CalendarUI } from '@/shared/components/ui/calendar';
+import { Order, OrderStatus, OrderListMeta, ORDER_STATUS_LABELS, ORDER_STATUS_FLOW, DocumentType } from '@/modules/orders/types';
 import { OrderStatusBadge } from './order-status-badge';
 import { useUpdateOrderStatus } from '@/modules/orders/hooks/use-orders';
+import { ordersService } from '@/modules/orders/services/orders.service';
+import { useClubs } from '@/modules/clubs/hooks/use-clubs';
 
 export interface IOrderData {
   id: string;
@@ -98,6 +110,8 @@ interface OrderListTableProps {
   onPageChange?: (page: number) => void;
   onSearchChange?: (search: string) => void;
   onStatusFilterChange?: (status: OrderStatus | undefined) => void;
+  onClubFilterChange?: (clubId: string | undefined) => void;
+  onDateRangeChange?: (startDate: string | undefined, endDate: string | undefined) => void;
 }
 
 const convertOrderToIData = (order: Order): IOrderData => {
@@ -131,6 +145,8 @@ export function OrderListTable({
   onPageChange,
   onSearchChange,
   onStatusFilterChange,
+  onClubFilterChange,
+  onDateRangeChange,
 }: OrderListTableProps) {
   const navigate = useNavigate();
   const data = useMemo(() => {
@@ -139,9 +155,12 @@ export function OrderListTable({
   }, [orders]);
 
   const updateStatusMutation = useUpdateOrderStatus();
+  const { data: clubs } = useClubs();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
+  const [clubFilter, setClubFilter] = useState<string>('all');
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -152,6 +171,7 @@ export function OrderListTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'created', desc: true },
   ]);
+  const [isBulkPrinting, setIsBulkPrinting] = useState(false);
 
   const handleViewDetails = (order: IOrderData) => {
     navigate(`/orders/${order.id}`);
@@ -162,6 +182,48 @@ export function OrderListTable({
       id: order.id,
       status: newStatus,
     });
+  };
+
+  const handleBulkPrint = async (documentType: DocumentType) => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) {
+      toast.error('No orders selected');
+      return;
+    }
+
+    const orderIds = selectedRows.map((row) => row.original.id);
+
+    setIsBulkPrinting(true);
+    try {
+      const response = await ordersService.bulkPrint({
+        orderIds,
+        documentType,
+      });
+
+      // Download all PDFs
+      response.presignedUrls.forEach((url, index) => {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${documentType.toLowerCase()}_${orderIds[index]}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+
+      toast.success(
+        `Successfully generated ${response.count} ${
+          documentType === 'PACKING_SLIP' ? 'packing slip(s)' : 'invoice(s)'
+        }`
+      );
+
+      // Clear selection after successful print
+      setRowSelection({});
+    } catch (error) {
+      console.error('Bulk print error:', error);
+      toast.error('Failed to generate documents. Please try again.');
+    } finally {
+      setIsBulkPrinting(false);
+    }
   };
 
   const columns = useMemo<ColumnDef<IOrderData>[]>(
@@ -473,6 +535,29 @@ export function OrderListTable({
     }
   };
 
+  const handleClubChange = (value: string) => {
+    setClubFilter(value);
+    if (onClubFilterChange) {
+      onClubFilterChange(value === 'all' ? undefined : value);
+    }
+  };
+
+  const handleDateRangeSelect = (range: { from?: Date; to?: Date } | undefined) => {
+    setDateRange(range || {});
+    if (onDateRangeChange) {
+      const startDate = range?.from?.toISOString().split('T')[0];
+      const endDate = range?.to?.toISOString().split('T')[0];
+      onDateRangeChange(startDate, endDate);
+    }
+  };
+
+  const handleClearDateRange = () => {
+    setDateRange({});
+    if (onDateRangeChange) {
+      onDateRangeChange(undefined, undefined);
+    }
+  };
+
   return (
     <div>
       <Card>
@@ -520,6 +605,90 @@ export function OrderListTable({
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Club Filter */}
+            <Select value={clubFilter} onValueChange={handleClubChange}>
+              <SelectTrigger className="w-[150px]">
+                <Building2 className="size-3.5" />
+                <SelectValue placeholder="All Clubs" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Clubs</SelectItem>
+                {clubs?.map((club) => (
+                  <SelectItem key={club.id} value={club.id}>
+                    {club.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Date Range Filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="min-w-[200px] justify-start">
+                  <CalendarDays className="size-3.5" />
+                  {dateRange.from ? (
+                    dateRange.to ? (
+                      <>
+                        {formatDate(dateRange.from)} - {formatDate(dateRange.to)}
+                      </>
+                    ) : (
+                      formatDate(dateRange.from)
+                    )
+                  ) : (
+                    'Pick date range'
+                  )}
+                  {dateRange.from && (
+                    <X
+                      className="size-3.5 ml-auto"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleClearDateRange();
+                      }}
+                    />
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarUI
+                  mode="range"
+                  selected={dateRange.from && dateRange.to ? dateRange as any : undefined}
+                  onSelect={handleDateRangeSelect}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Bulk Print - Only show when rows are selected */}
+            {Object.keys(rowSelection).length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="primary"
+                    disabled={isBulkPrinting}
+                  >
+                    <Printer className="size-3.5" />
+                    Print ({Object.keys(rowSelection).length})
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => handleBulkPrint('PACKING_SLIP')}
+                    disabled={isBulkPrinting}
+                  >
+                    <FileText className="size-4" />
+                    Packing Slips
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleBulkPrint('INVOICE')}
+                    disabled={isBulkPrinting}
+                  >
+                    <Download className="size-4" />
+                    Invoices
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             {/* Column Visibility */}
             <DataGridColumnVisibility

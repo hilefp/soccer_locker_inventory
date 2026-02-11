@@ -32,6 +32,14 @@ export function OrdersListPage() {
     setFilters((prev) => ({ ...prev, status, page: 1 }));
   };
 
+  const handleClubFilterChange = (clubId: string | undefined) => {
+    setFilters((prev) => ({ ...prev, clubId, page: 1 }));
+  };
+
+  const handleDateRangeChange = (startDate: string | undefined, endDate: string | undefined) => {
+    setFilters((prev) => ({ ...prev, startDate, endDate, page: 1 }));
+  };
+
   const totalOrders = data?.meta?.total || 0;
 
   return (
@@ -60,6 +68,8 @@ export function OrdersListPage() {
         onPageChange={handlePageChange}
         onSearchChange={handleSearchChange}
         onStatusFilterChange={handleStatusFilterChange}
+        onClubFilterChange={handleClubFilterChange}
+        onDateRangeChange={handleDateRangeChange}
       />
     </div>
   );
