@@ -277,3 +277,19 @@ export interface OrderStatistics {
     createdAt: string;
   }[];
 }
+
+// Bulk Print Types
+export type DocumentType = 'PACKING_SLIP' | 'INVOICE';
+
+export interface BulkPrintRequest {
+  orderIds: string[];
+  documentType: DocumentType;
+}
+
+export interface BulkPrintResponse {
+  success: boolean;
+  documentType: DocumentType;
+  count: number;
+  presignedUrls: string[];
+  expiresIn: string;
+}

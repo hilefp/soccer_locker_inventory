@@ -11,6 +11,8 @@ import {
   UpdateStatusRequest,
   UpdateShippingRequest,
   AssignOrderRequest,
+  BulkPrintRequest,
+  BulkPrintResponse,
 } from '@/modules/orders/types';
 
 const BASE_URL = '/inventory/orders';
@@ -131,5 +133,13 @@ export const ordersService = {
    */
   async deleteOrder(id: string): Promise<void> {
     await apiClient.delete(`${BASE_URL}/${id}`);
+  },
+
+  /**
+   * Bulk print packing slips or invoices
+   */
+  async bulkPrint(data: BulkPrintRequest): Promise<BulkPrintResponse> {
+    const response = await apiClient.post<BulkPrintResponse>(`${BASE_URL}/bulk-print`, data);
+    return response.data;
   },
 };
