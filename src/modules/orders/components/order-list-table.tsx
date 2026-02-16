@@ -195,23 +195,26 @@ export function OrderListTable({
 
     setIsBulkPrinting(true);
     try {
-      const response = await ordersService.bulkPrint({
-        orderIds,
-        documentType,
-      });
+      // Fetch full order details for all selected orders in parallel (Vercel best practice: async-parallel)
+      const orderDetailsPromises = orderIds.map((id) => ordersService.getOrder(id));
+      const fullOrders = await Promise.all(orderDetailsPromises);
 
-      // Download all PDFs
-      response.presignedUrls.forEach((url, index) => {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${documentType.toLowerCase()}_${orderIds[index]}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      });
+      // Dynamically import print utilities to reduce bundle size (Vercel best practice: bundle-dynamic-imports)
+      const { generateBulkPrintDocument, openPrintWindow } = await import('@/modules/orders/lib/print-utils');
+
+      // Generate print document with all orders
+      const htmlContent = await generateBulkPrintDocument(fullOrders, documentType);
+
+      // Open print window
+      const success = openPrintWindow(htmlContent);
+
+      if (!success) {
+        toast.error('Please allow popups to print');
+        return;
+      }
 
       toast.success(
-        `Successfully generated ${response.count} ${
+        `Ready to print ${fullOrders.length} ${
           documentType === 'PACKING_SLIP' ? 'packing slip(s)' : 'invoice(s)'
         }`
       );
