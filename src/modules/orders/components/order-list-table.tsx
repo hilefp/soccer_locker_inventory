@@ -186,8 +186,18 @@ export function OrderListTable({
 
   const handleBulkPrint = async (documentType: DocumentType) => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
+
+    // Early exit guards (Vercel best practice: js-early-exit)
     if (selectedRows.length === 0) {
       toast.error('No orders selected');
+      return;
+    }
+
+    // Dynamically import print utilities to access MAX_BULK_PRINT constant (Vercel best practice: bundle-dynamic-imports)
+    const { generateBulkPrintDocument, openPrintWindow, MAX_BULK_PRINT } = await import('@/modules/orders/lib/print-utils');
+
+    if (selectedRows.length > MAX_BULK_PRINT) {
+      toast.error(`Maximum ${MAX_BULK_PRINT} orders per bulk print. You selected ${selectedRows.length}.`);
       return;
     }
 
@@ -195,15 +205,20 @@ export function OrderListTable({
 
     setIsBulkPrinting(true);
     try {
-      // Fetch full order details for all selected orders in parallel (Vercel best practice: async-parallel)
-      const orderDetailsPromises = orderIds.map((id) => ordersService.getOrder(id));
-      const fullOrders = await Promise.all(orderDetailsPromises);
+      // Fetch full order details with graceful partial failure handling (Vercel best practice: async-parallel)
+      const { orders: fullOrders, failedCount } = await ordersService.getOrdersByIds(orderIds);
 
-      // Dynamically import print utilities to reduce bundle size (Vercel best practice: bundle-dynamic-imports)
-      const { generateBulkPrintDocument, openPrintWindow } = await import('@/modules/orders/lib/print-utils');
+      if (fullOrders.length === 0) {
+        toast.error('Failed to fetch order details. Please try again.');
+        return;
+      }
 
-      // Generate print document with all orders
-      const htmlContent = await generateBulkPrintDocument(fullOrders, documentType);
+      if (failedCount > 0) {
+        toast.warning(`${failedCount} order(s) could not be loaded and will be skipped.`);
+      }
+
+      // Generate print document with all successfully fetched orders
+      const htmlContent = generateBulkPrintDocument(fullOrders, documentType);
 
       // Open print window
       const success = openPrintWindow(htmlContent);

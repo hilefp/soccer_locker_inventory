@@ -136,6 +136,29 @@ export const ordersService = {
   },
 
   /**
+   * Get multiple orders by IDs in parallel with graceful partial failure handling
+   * (Vercel best practice: async-parallel with Promise.allSettled)
+   */
+  async getOrdersByIds(ids: string[]): Promise<{ orders: Order[]; failedCount: number }> {
+    const results = await Promise.allSettled(
+      ids.map((id) => ordersService.getOrder(id))
+    );
+
+    const orders: Order[] = [];
+    let failedCount = 0;
+
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        orders.push(result.value);
+      } else {
+        failedCount++;
+      }
+    }
+
+    return { orders, failedCount };
+  },
+
+  /**
    * Bulk print packing slips or invoices
    */
   async bulkPrint(data: BulkPrintRequest): Promise<BulkPrintResponse> {

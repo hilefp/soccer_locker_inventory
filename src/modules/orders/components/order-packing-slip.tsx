@@ -31,9 +31,10 @@ export function OrderPackingSlip({ order, open, onOpenChange }: OrderPackingSlip
     .join(', ');
 
   const handlePrint = async () => {
+    // Dynamic import to reduce bundle size (Vercel best practice: bundle-dynamic-imports)
     const { generateBulkPrintDocument, openPrintWindow } = await import('@/modules/orders/lib/print-utils');
 
-    const htmlContent = await generateBulkPrintDocument([order], 'PACKING_SLIP');
+    const htmlContent = generateBulkPrintDocument([order], 'PACKING_SLIP');
     const success = openPrintWindow(htmlContent);
 
     if (!success) {

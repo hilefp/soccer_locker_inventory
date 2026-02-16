@@ -34,9 +34,10 @@ export function OrderInvoice({ order, open, onOpenChange }: OrderInvoiceProps) {
     .join(', ');
 
   const handlePrint = async () => {
+    // Dynamic import to reduce bundle size (Vercel best practice: bundle-dynamic-imports)
     const { generateBulkPrintDocument, openPrintWindow } = await import('@/modules/orders/lib/print-utils');
 
-    const htmlContent = await generateBulkPrintDocument([order], 'INVOICE');
+    const htmlContent = generateBulkPrintDocument([order], 'INVOICE');
     const success = openPrintWindow(htmlContent);
 
     if (!success) {

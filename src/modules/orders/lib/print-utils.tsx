@@ -1,6 +1,19 @@
 import { Order } from '@/modules/orders/types';
 import { formatDate } from '@/shared/lib/helpers';
 
+/**
+ * Escape HTML to prevent XSS in print documents
+ */
+const escapeHtml = (str: string | null | undefined): string => {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
 const COMPANY_INFO = {
   name: 'TEAM UNIFORM ORDER',
   address: '8810 SW 131st Street',
@@ -242,10 +255,10 @@ const getCommonStyles = () => `
  */
 export const generateInvoiceHTML = (order: Order): string => {
   const shippingAddress = [
-    order.shippingAddress1,
-    order.shippingAddress2,
+    escapeHtml(order.shippingAddress1),
+    escapeHtml(order.shippingAddress2),
     order.shippingCity && order.shippingState
-      ? `${order.shippingCity}, ${order.shippingState} ${order.shippingPostalCode || ''}`
+      ? `${escapeHtml(order.shippingCity)}, ${escapeHtml(order.shippingState)} ${escapeHtml(order.shippingPostalCode)}`
       : null,
   ]
     .filter(Boolean)
@@ -256,8 +269,8 @@ export const generateInvoiceHTML = (order: Order): string => {
       (item) => `
     <tr>
       <td>
-        <div class="product-name">${item.name || item.productVariant?.product?.name || 'Unknown Product'}</div>
-        ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${item.sku}</div>` : ''}
+        <div class="product-name">${escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
+        ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
       </td>
       <td class="right">${item.quantity}</td>
       <td class="right">$${Number(item.unitPrice).toFixed(2)}</td>
@@ -282,24 +295,24 @@ export const generateInvoiceHTML = (order: Order): string => {
 
       <div class="info-grid" style="grid-template-columns: 1fr 1fr 1fr;">
         <div class="info-section">
-          <div><strong>${order.shippingName || 'N/A'}</strong></div>
-          <div>${order.shippingAddress1 || ''}</div>
-          ${order.shippingAddress2 ? `<div>${order.shippingAddress2}</div>` : ''}
-          <div>${order.shippingCity || ''}, ${order.shippingState || ''} ${order.shippingPostalCode || ''}</div>
-          <div>${order.customerUser?.email || ''}</div>
-          ${order.shippingPhone ? `<div>${order.shippingPhone}</div>` : ''}
+          <div><strong>${escapeHtml(order.shippingName) || 'N/A'}</strong></div>
+          <div>${escapeHtml(order.shippingAddress1)}</div>
+          ${order.shippingAddress2 ? `<div>${escapeHtml(order.shippingAddress2)}</div>` : ''}
+          <div>${escapeHtml(order.shippingCity)}, ${escapeHtml(order.shippingState)} ${escapeHtml(order.shippingPostalCode)}</div>
+          <div>${escapeHtml(order.customerUser?.email)}</div>
+          ${order.shippingPhone ? `<div>${escapeHtml(order.shippingPhone)}</div>` : ''}
         </div>
 
         <div class="info-section">
           <div class="info-label">Ship To:</div>
-          <div><strong>${order.shippingName || 'N/A'}</strong></div>
+          <div><strong>${escapeHtml(order.shippingName) || 'N/A'}</strong></div>
           ${shippingAddress ? `<div>${shippingAddress}</div>` : '<div>No shipping address</div>'}
         </div>
 
         <div class="info-section">
           <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
-          <div><strong>Order Number:</strong> ${order.orderNumber}</div>
-          <div><strong>Payment Method:</strong> ${order.currency === 'USD' ? 'Credit Card' : order.currency}</div>
+          <div><strong>Order Number:</strong> ${escapeHtml(order.orderNumber)}</div>
+          <div><strong>Payment Method:</strong> ${order.currency === 'USD' ? 'Credit Card' : escapeHtml(order.currency)}</div>
         </div>
       </div>
 
@@ -323,7 +336,7 @@ export const generateInvoiceHTML = (order: Order): string => {
             <span>$${Number(order.subtotal || 0).toFixed(2)}</span>
           </div>
           <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #ddd;">
-            <span>Shipping ${order.carrier ? `via ${order.carrier}` : ''}</span>
+            <span>Shipping ${order.carrier ? `via ${escapeHtml(order.carrier)}` : ''}</span>
             <span>$${Number(order.shippingTotal || 0).toFixed(2)}</span>
           </div>
           <div style="display: flex; justify-content: space-between; padding: 5px 0;">
@@ -356,10 +369,10 @@ const getQRCodeUrl = (orderNumber: string): string => {
 
 export const generatePackingSlipHTML = (order: Order): string => {
   const shippingAddress = [
-    order.shippingAddress1,
-    order.shippingAddress2,
+    escapeHtml(order.shippingAddress1),
+    escapeHtml(order.shippingAddress2),
     order.shippingCity && order.shippingState
-      ? `${order.shippingCity}, ${order.shippingState} ${order.shippingPostalCode || ''}`
+      ? `${escapeHtml(order.shippingCity)}, ${escapeHtml(order.shippingState)} ${escapeHtml(order.shippingPostalCode)}`
       : null,
   ]
     .filter(Boolean)
@@ -376,16 +389,15 @@ export const generatePackingSlipHTML = (order: Order): string => {
             <div class="product-cell">
               ${
                 imageUrl
-                  ? `<img src="${imageUrl}" alt="${item.name || 'Product'}" class="product-image" />`
+                  ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name) || 'Product'}" class="product-image" />`
                   : '<div style="width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; margin-right: 8px;"></div>'
               }
               <div style="flex: 1;">
-                <div class="product-name">${item.name || item.productVariant?.product?.name || 'Unknown Product'}</div>
-                ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${item.sku}</div>` : ''}
-                ${attributes.size ? `<div class="product-meta"><strong>Size:</strong> ${attributes.size}</div>` : ''}
-                ${attributes.parkLocation || attributes['Park Location'] ? `<div class="product-meta"><strong>Park Location (Choose one):</strong> ${attributes.parkLocation || attributes['Park Location']}</div>` : ''}
-                ${attributes.birthYear || attributes['Birth Year'] ? `<div class="product-meta"><strong>Birth Year:</strong> ${attributes.birthYear || attributes['Birth Year']}</div>` : ''}
-
+                <div class="product-name">${escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
+                ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
+                ${attributes.size ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(attributes.size)}</div>` : ''}
+                ${attributes.parkLocation || attributes['Park Location'] ? `<div class="product-meta"><strong>Park Location (Choose one):</strong> ${escapeHtml(attributes.parkLocation || attributes['Park Location'])}</div>` : ''}
+                ${attributes.birthYear || attributes['Birth Year'] ? `<div class="product-meta"><strong>Birth Year:</strong> ${escapeHtml(attributes.birthYear || attributes['Birth Year'])}</div>` : ''}
               </div>
             </div>
           </td>
@@ -412,31 +424,31 @@ export const generatePackingSlipHTML = (order: Order): string => {
         <h3 class="title">PACKING SLIP</h3>
         <div style="display: flex; gap: 30px; margin-top: 15px;">
           <div class="info-section">
-            <div><strong>${order.shippingName || 'N/A'}</strong></div>
-            <div>${order.shippingAddress1 || ''}</div>
-            ${order.shippingAddress2 ? `<div>${order.shippingAddress2}</div>` : ''}
-            <div>${order.shippingCity || ''}, ${order.shippingState || ''} ${order.shippingPostalCode || ''}</div>
-            ${order.shippingPhone ? `<div>${order.shippingPhone}</div>` : ''}
+            <div><strong>${escapeHtml(order.shippingName) || 'N/A'}</strong></div>
+            <div>${escapeHtml(order.shippingAddress1)}</div>
+            ${order.shippingAddress2 ? `<div>${escapeHtml(order.shippingAddress2)}</div>` : ''}
+            <div>${escapeHtml(order.shippingCity)}, ${escapeHtml(order.shippingState)} ${escapeHtml(order.shippingPostalCode)}</div>
+            ${order.shippingPhone ? `<div>${escapeHtml(order.shippingPhone)}</div>` : ''}
           </div>
           <div class="info-section">
             <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
-            <div><strong>Shipping Method:</strong> ${order.carrier || 'Standard Shipping'}</div>
+            <div><strong>Shipping Method:</strong> ${escapeHtml(order.carrier) || 'Standard Shipping'}</div>
           </div>
         </div>
       </div>
       <div class="qr-code-section">
-        <img src="${getQRCodeUrl(order.orderNumber)}" alt="QR Code for order ${order.orderNumber}" />
+        <img src="${getQRCodeUrl(order.orderNumber)}" alt="QR Code for order ${escapeHtml(order.orderNumber)}" />
       </div>
     </div>
 
-    <h3 class="order-number-header">#${order.orderNumber}</h3>
+    <h3 class="order-number-header">#${escapeHtml(order.orderNumber)}</h3>
 
     <table class="product-table">
       <thead>
         <tr>
           <th>Product</th>
           <th class="center">Quantity</th>
-          <th class="center">✓</th>
+          <th class="center">&#10003;</th>
         </tr>
       </thead>
       <tbody>
@@ -447,36 +459,28 @@ export const generatePackingSlipHTML = (order: Order): string => {
     ${order.notes ? `
     <div style="margin-top: 15px;">
       <div style="font-weight: bold; font-size: 10pt; margin-bottom: 4px;">Customer Notes:</div>
-      <div style="font-size: 9pt; padding: 8px; ">${order.notes}</div>
+      <div style="font-size: 9pt; padding: 8px;">${escapeHtml(order.notes)}</div>
     </div>
     ` : ''}
-
-
   `;
-    // <div class="footer">
-    //   <div class="footer-hours">Team Warehouse Hours: ${COMPANY_INFO.warehouseHours}</div>
-    //   <div class="footer-note">Once your order has been processed/shipped you will receive a shipping confirmation email with a tracking number.</div>
-    //   <div style="margin-top: 5px;">${COMPANY_INFO.website}</div>
-    // </div>
 };
+
+/** Maximum orders allowed per bulk print (Vercel best practice: js-early-exit) */
+export const MAX_BULK_PRINT = 20;
 
 /**
  * Generate complete print document with multiple orders
- * Uses Promise.all for parallel order processing (Vercel best practice: async-parallel)
+ * Synchronous — no async needed since HTML generators are pure functions
+ * (Vercel best practice: js-combine-iterations)
  */
-export const generateBulkPrintDocument = async (
+export const generateBulkPrintDocument = (
   orders: Order[],
   documentType: 'INVOICE' | 'PACKING_SLIP'
-): Promise<string> => {
-  // Generate all documents in parallel for performance
-  const documentHTMLs = orders.map((order) =>
-    documentType === 'INVOICE'
-      ? generateInvoiceHTML(order)
-      : generatePackingSlipHTML(order)
-  );
+): string => {
+  const generateFn = documentType === 'INVOICE' ? generateInvoiceHTML : generatePackingSlipHTML;
 
-  const pagesHTML = documentHTMLs
-    .map((html) => `<div class="page">${html}</div>`)
+  const pagesHTML = orders
+    .map((order) => `<div class="page">${generateFn(order)}</div>`)
     .join('\n');
 
   return `
@@ -493,11 +497,20 @@ export const generateBulkPrintDocument = async (
       <body>
         ${pagesHTML}
         <script>
+          // Wait for all images to load before printing (avoids race condition with fixed timeout)
           window.onload = function() {
-            // Small delay to ensure images load
-            setTimeout(() => {
+            var images = Array.from(document.images);
+            var loadPromises = images.map(function(img) {
+              if (img.complete) return Promise.resolve();
+              return new Promise(function(resolve) {
+                img.onload = resolve;
+                img.onerror = resolve;
+              });
+            });
+
+            Promise.all(loadPromises).then(function() {
               window.print();
-            }, 500);
+            });
 
             window.onafterprint = function() {
               window.close();
