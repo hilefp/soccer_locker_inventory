@@ -10,7 +10,6 @@ import { Separator } from '@/shared/components/ui/separator';
 import { Printer, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order } from '@/modules/orders/types';
-import { OrderQRCode } from './order-qr-code';
 import { OrderStatusBadge } from './order-status-badge';
 import { formatDate } from '@/shared/lib/helpers';
 
@@ -69,9 +68,6 @@ export function OrderInvoice({ order, open, onOpenChange }: OrderInvoiceProps) {
                   <OrderStatusBadge status={order.status} size="sm" />
                 </div>
               </div>
-            </div>
-            <div className="qr-code-container">
-              <OrderQRCode order={order} size={100} />
             </div>
           </div>
 

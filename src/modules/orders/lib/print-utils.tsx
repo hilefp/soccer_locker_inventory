@@ -24,7 +24,8 @@ const getCommonStyles = () => `
 
   body {
     font-family: Arial, sans-serif;
-    padding: 15mm;
+    margin: 0;
+    padding: 0;
     color: #000;
     font-size: 10pt;
     line-height: 1.4;
@@ -34,11 +35,19 @@ const getCommonStyles = () => `
     width: 100%;
     max-width: 210mm;
     margin: 0 auto;
+    padding: 15mm;
     page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
   }
 
   .page:last-child {
     page-break-after: auto;
+  }
+
+  .page-content {
+    flex: 1;
   }
 
   .header {
@@ -66,9 +75,8 @@ const getCommonStyles = () => `
   }
 
   .title {
-    font-size: 24pt;
+    font-size: 16pt;
     font-weight: bold;
-    margin: 15px 0;
     text-align: left;
   }
 
@@ -100,15 +108,15 @@ const getCommonStyles = () => `
   }
 
   .product-table thead {
-    background-color: #000;
+    background-color: #D3D3D3;
     color: #fff;
   }
 
   .product-table th {
-    padding: 10px 8px;
+    padding: 8px 5px;
     text-align: left;
     font-weight: bold;
-    font-size: 11pt;
+    font-size: 10pt;
   }
 
   .product-table th.right {
@@ -174,15 +182,26 @@ const getCommonStyles = () => `
   }
 
   .checkbox-cell {
-    width: 30px;
-    height: 30px;
-    border: 2px solid #000;
+    width: 15px;
+    height: 15px;
+    border: 1px solid #000;
     display: inline-block;
     margin: 0 auto;
   }
 
+  .qr-code-section {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+  }
+
+  .qr-code-section img {
+    width: 100px;
+    height: 100px;
+  }
+
   .footer {
-    margin-top: 30px;
+    margin-top: auto;
     padding-top: 15px;
     border-top: 3px solid #EC1C24;
     font-size: 8pt;
@@ -201,17 +220,15 @@ const getCommonStyles = () => `
   }
 
   @media print {
-    body {
-      padding: 10mm;
-    }
-
     @page {
       margin: 0;
       size: letter portrait;
     }
 
     .page {
+      padding: 10mm;
       page-break-after: always;
+      min-height: 100vh;
     }
 
     .page:last-child {
@@ -250,77 +267,73 @@ export const generateInvoiceHTML = (order: Order): string => {
     .join('') || '<tr><td colspan="3">No items</td></tr>';
 
   return `
-    <div class="header">
-      <img src="${LOGO_PATH}" alt="Soccer Locker" class="logo" />
-      <div class="company-info">
-        <div class="company-name">${COMPANY_INFO.name}</div>
-        <div>${COMPANY_INFO.address}</div>
-        <div>${COMPANY_INFO.city}</div>
-        <div>${COMPANY_INFO.email}</div>
-      </div>
-    </div>
-
-    <h2 class="title">INVOICE</h2>
-
-    <div class="info-grid">
-      <div class="info-section">
-        <div><strong>${order.shippingName || 'N/A'}</strong></div>
-        <div>${order.shippingAddress1 || ''}</div>
-        ${order.shippingAddress2 ? `<div>${order.shippingAddress2}</div>` : ''}
-        <div>${order.shippingCity || ''}, ${order.shippingState || ''} ${order.shippingPostalCode || ''}</div>
-        <div>${order.customerUser?.email || ''}</div>
-        ${order.shippingPhone ? `<div>${order.shippingPhone}</div>` : ''}
-      </div>
-
-      <div class="info-section">
-        <div class="info-label">Ship To:</div>
-        <div><strong>${order.shippingName || 'N/A'}</strong></div>
-        ${shippingAddress ? `<div>${shippingAddress}</div>` : '<div>No shipping address</div>'}
-      </div>
-    </div>
-
-    <div class="info-grid" style="margin-top: 15px;">
-      <div class="info-section">
-        <div><strong>Invoice Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
-        <div><strong>Order Number:</strong> ${order.orderNumber}</div>
-      </div>
-
-      <div class="info-section">
-        <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
-        <div><strong>Payment Method:</strong> ${order.currency === 'USD' ? 'Credit Card' : order.currency}</div>
-      </div>
-    </div>
-
-    <table class="product-table">
-      <thead>
-        <tr>
-          <th>Product</th>
-          <th class="right">Quantity</th>
-          <th class="right">Price</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${itemsHTML}
-      </tbody>
-    </table>
-
-    <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
-      <div style="width: 300px;">
-        <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #ddd;">
-          <span>Subtotal</span>
-          <span>$${Number(order.subtotal || 0).toFixed(2)}</span>
+    <div class="page-content">
+      <div class="header">
+        <img src="${LOGO_PATH}" alt="Soccer Locker" class="logo" />
+        <div class="company-info">
+          <div class="company-name">${COMPANY_INFO.name}</div>
+          <div>${COMPANY_INFO.address}</div>
+          <div>${COMPANY_INFO.city}</div>
+          <div>${COMPANY_INFO.email}</div>
         </div>
-        <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #ddd;">
-          <span>Shipping ${order.carrier ? `via ${order.carrier}` : ''}</span>
-          <span>$${Number(order.shippingTotal || 0).toFixed(2)}</span>
+      </div>
+
+      <h2 class="title">INVOICE</h2>
+
+      <div class="info-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="info-section">
+          <div><strong>${order.shippingName || 'N/A'}</strong></div>
+          <div>${order.shippingAddress1 || ''}</div>
+          ${order.shippingAddress2 ? `<div>${order.shippingAddress2}</div>` : ''}
+          <div>${order.shippingCity || ''}, ${order.shippingState || ''} ${order.shippingPostalCode || ''}</div>
+          <div>${order.customerUser?.email || ''}</div>
+          ${order.shippingPhone ? `<div>${order.shippingPhone}</div>` : ''}
         </div>
-        <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #ddd;">
-          <span>FL Tax</span>
-          <span>$${Number(order.taxTotal || 0).toFixed(2)}</span>
+
+        <div class="info-section">
+          <div class="info-label">Ship To:</div>
+          <div><strong>${order.shippingName || 'N/A'}</strong></div>
+          ${shippingAddress ? `<div>${shippingAddress}</div>` : '<div>No shipping address</div>'}
         </div>
-        <div style="display: flex; justify-content: space-between; padding: 10px 0; font-weight: bold; font-size: 12pt; border-top: 2px solid #000; margin-top: 5px;">
-          <span>Total</span>
-          <span>$${Number(order.total || 0).toFixed(2)}</span>
+
+        <div class="info-section">
+          <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
+          <div><strong>Order Number:</strong> ${order.orderNumber}</div>
+          <div><strong>Payment Method:</strong> ${order.currency === 'USD' ? 'Credit Card' : order.currency}</div>
+        </div>
+      </div>
+
+      <table class="product-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th class="right">Quantity</th>
+            <th class="right">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsHTML}
+        </tbody>
+      </table>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+        <div style="width: 300px;">
+          <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #ddd;">
+            <span>Subtotal</span>
+            <span>$${Number(order.subtotal || 0).toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #ddd;">
+            <span>Shipping ${order.carrier ? `via ${order.carrier}` : ''}</span>
+            <span>$${Number(order.shippingTotal || 0).toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+            <span>FL Tax</span>
+            <span>$${Number(order.taxTotal || 0).toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; font-weight: bold; font-size: 12pt; border-top: 2px solid #000; margin-top: 5px;">
+            <span>Total</span>
+            <span>$${Number(order.total || 0).toFixed(2)}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -336,6 +349,11 @@ export const generateInvoiceHTML = (order: Order): string => {
 /**
  * Generate Packing Slip HTML for a single order
  */
+const getQRCodeUrl = (orderNumber: string): string => {
+  const targetUrl = `${window.location.origin}/orders/current?search=${encodeURIComponent(orderNumber)}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(targetUrl)}`;
+};
+
 export const generatePackingSlipHTML = (order: Order): string => {
   const shippingAddress = [
     order.shippingAddress1,
@@ -367,7 +385,7 @@ export const generatePackingSlipHTML = (order: Order): string => {
                 ${attributes.size ? `<div class="product-meta"><strong>Size:</strong> ${attributes.size}</div>` : ''}
                 ${attributes.parkLocation || attributes['Park Location'] ? `<div class="product-meta"><strong>Park Location (Choose one):</strong> ${attributes.parkLocation || attributes['Park Location']}</div>` : ''}
                 ${attributes.birthYear || attributes['Birth Year'] ? `<div class="product-meta"><strong>Birth Year:</strong> ${attributes.birthYear || attributes['Birth Year']}</div>` : ''}
-                ${attributes.notes || order.notes ? `<div class="product-meta"><strong>Notes:</strong> ${attributes.notes || order.notes || ''}</div>` : ''}
+
               </div>
             </div>
           </td>
@@ -389,25 +407,29 @@ export const generatePackingSlipHTML = (order: Order): string => {
       </div>
     </div>
 
-    <h2 class="title">PACKING SLIP</h2>
-
-    <div class="info-grid" style="margin: 15px 0;">
-      <div class="info-section">
-        <div><strong>${order.shippingName || 'N/A'}</strong></div>
-        <div>${order.shippingAddress1 || ''}</div>
-        ${order.shippingAddress2 ? `<div>${order.shippingAddress2}</div>` : ''}
-        <div>${order.shippingCity || ''}, ${order.shippingState || ''} ${order.shippingPostalCode || ''}</div>
-        <div>${order.customerUser?.email || ''}</div>
-        ${order.shippingPhone ? `<div>${order.shippingPhone}</div>` : ''}
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div style="flex: 1;">
+        <h3 class="title">PACKING SLIP</h3>
+        <div style="display: flex; gap: 30px; margin-top: 15px;">
+          <div class="info-section">
+            <div><strong>${order.shippingName || 'N/A'}</strong></div>
+            <div>${order.shippingAddress1 || ''}</div>
+            ${order.shippingAddress2 ? `<div>${order.shippingAddress2}</div>` : ''}
+            <div>${order.shippingCity || ''}, ${order.shippingState || ''} ${order.shippingPostalCode || ''}</div>
+            ${order.shippingPhone ? `<div>${order.shippingPhone}</div>` : ''}
+          </div>
+          <div class="info-section">
+            <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
+            <div><strong>Shipping Method:</strong> ${order.carrier || 'Standard Shipping'}</div>
+          </div>
+        </div>
       </div>
-
-      <div class="info-section">
-        <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
-        <div><strong>Shipping Method:</strong> ${order.carrier || 'Standard Shipping'}</div>
+      <div class="qr-code-section">
+        <img src="${getQRCodeUrl(order.orderNumber)}" alt="QR Code for order ${order.orderNumber}" />
       </div>
     </div>
 
-    <h3 class="order-number-header">Order Number: ${order.orderNumber}</h3>
+    <h3 class="order-number-header">#${order.orderNumber}</h3>
 
     <table class="product-table">
       <thead>
@@ -422,12 +444,20 @@ export const generatePackingSlipHTML = (order: Order): string => {
       </tbody>
     </table>
 
-    <div class="footer">
-      <div class="footer-hours">Team Warehouse Hours: ${COMPANY_INFO.warehouseHours}</div>
-      <div class="footer-note">Once your order has been processed/shipped you will receive a shipping confirmation email with a tracking number.</div>
-      <div style="margin-top: 5px;">${COMPANY_INFO.website}</div>
+    ${order.notes ? `
+    <div style="margin-top: 15px;">
+      <div style="font-weight: bold; font-size: 10pt; margin-bottom: 4px;">Customer Notes:</div>
+      <div style="font-size: 9pt; padding: 8px; ">${order.notes}</div>
     </div>
+    ` : ''}
+
+
   `;
+    // <div class="footer">
+    //   <div class="footer-hours">Team Warehouse Hours: ${COMPANY_INFO.warehouseHours}</div>
+    //   <div class="footer-note">Once your order has been processed/shipped you will receive a shipping confirmation email with a tracking number.</div>
+    //   <div style="margin-top: 5px;">${COMPANY_INFO.website}</div>
+    // </div>
 };
 
 /**
