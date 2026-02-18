@@ -7,3 +7,4 @@ export { OrderQRCodeCard } from './order-qr-code-card';
 export { OrderPackingSlip } from './order-packing-slip';
 export { OrderInvoice } from './order-invoice';
 export { ExportOrdersDialog } from './export-orders-dialog';
+export { OrderNotesPanel } from './order-notes-panel';

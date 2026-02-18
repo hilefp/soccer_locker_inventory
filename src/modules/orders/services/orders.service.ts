@@ -3,6 +3,8 @@ import {
   Order,
   OrderItem,
   OrderStatusHistory,
+  OrderNote,
+  CreateOrderNoteRequest,
   OrderListResponse,
   OrderStatistics,
   OrderFilterParams,
@@ -141,5 +143,28 @@ export const ordersService = {
   async bulkPrint(data: BulkPrintRequest): Promise<BulkPrintResponse> {
     const response = await apiClient.post<BulkPrintResponse>(`${BASE_URL}/bulk-print`, data);
     return response.data;
+  },
+
+  /**
+   * Get order notes
+   */
+  async getOrderNotes(id: string): Promise<OrderNote[]> {
+    const response = await apiClient.get<OrderNote[]>(`${BASE_URL}/${id}/notes`);
+    return response.data;
+  },
+
+  /**
+   * Create an order note
+   */
+  async createOrderNote(id: string, data: CreateOrderNoteRequest): Promise<OrderNote> {
+    const response = await apiClient.post<OrderNote>(`${BASE_URL}/${id}/notes`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete an order note
+   */
+  async deleteOrderNote(id: string, noteId: string): Promise<void> {
+    await apiClient.delete(`${BASE_URL}/${id}/notes/${noteId}`);
   },
 };

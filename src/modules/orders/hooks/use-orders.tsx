@@ -6,6 +6,7 @@ import {
   CreateOrderRequest,
   UpdateOrderRequest,
   UpdateShippingRequest,
+  CreateOrderNoteRequest,
 } from '@/modules/orders/types';
 import { toast } from 'sonner';
 import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
@@ -219,6 +220,48 @@ export function useUpdateShipping() {
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       console.error('Error updating shipping:', error);
       toast.error(error?.response?.data?.message || 'Failed to update shipping information');
+    },
+  });
+}
+
+// Hook to fetch order notes
+export function useOrderNotes(id: string) {
+  return useQuery({
+    queryKey: [...orderKeys.all, id, 'notes'] as const,
+    queryFn: () => ordersService.getOrderNotes(id),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+// Hook to create an order note
+export function useCreateOrderNote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId, data }: { orderId: string; data: CreateOrderNoteRequest }) =>
+      ordersService.createOrderNote(orderId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.orderId, 'notes'] });
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      console.error('Error creating order note:', error);
+    },
+  });
+}
+
+// Hook to delete an order note
+export function useDeleteOrderNote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId, noteId }: { orderId: string; noteId: string }) =>
+      ordersService.deleteOrderNote(orderId, noteId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.orderId, 'notes'] });
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      console.error('Error deleting order note:', error);
     },
   });
 }

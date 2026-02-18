@@ -278,6 +278,25 @@ export interface OrderStatistics {
   }[];
 }
 
+// Order Note Types
+export type OrderNoteType = 'MANUAL' | 'SYSTEM';
+
+export interface OrderNote {
+  id: string;
+  orderId: string;
+  content: string;
+  type: OrderNoteType;
+  isPrivate: boolean;
+  createdByUserId: string | null;
+  createdAt: string;
+}
+
+export interface CreateOrderNoteRequest {
+  content: string;
+  isPrivate?: boolean;
+  createdByUserId?: string;
+}
+
 // Bulk Print Types
 export type DocumentType = 'PACKING_SLIP' | 'INVOICE';
 

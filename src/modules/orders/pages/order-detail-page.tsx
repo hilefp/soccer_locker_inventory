@@ -9,20 +9,22 @@ import {
   MapPin,
   Truck,
   Clock,
-  Calendar,
   Building,
   Hash,
-  CreditCard,
   History,
   ChevronRight,
   FileText,
   Receipt,
+  Pencil,
+  X,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Separator } from '@/shared/components/ui/separator';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
+import { Input } from '@/shared/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -32,9 +34,20 @@ import {
 } from '@/shared/components/ui/select';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { formatDate, timeAgo } from '@/shared/lib/helpers';
-import { useOrder, useOrderStatusHistory, useUpdateOrderStatus } from '@/modules/orders/hooks/use-orders';
-import { OrderStatusBadge, OrderQRCodeCard, OrderPackingSlip, OrderInvoice } from '@/modules/orders/components';
-import { ORDER_STATUS_FLOW, ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
+import {
+  useOrder,
+  useOrderStatusHistory,
+  useUpdateOrderStatus,
+  useUpdateOrder,
+} from '@/modules/orders/hooks/use-orders';
+import {
+  OrderStatusBadge,
+  OrderQRCodeCard,
+  OrderPackingSlip,
+  OrderInvoice,
+  OrderNotesPanel,
+} from '@/modules/orders/components';
+import { ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
 
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -43,23 +56,72 @@ export function OrderDetailPage() {
   const [showPackingSlip, setShowPackingSlip] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
 
+  // Inline edit state — customer
+  const [editingCustomer, setEditingCustomer] = useState(false);
+  const [customerDraft, setCustomerDraft] = useState({ shippingName: '', shippingPhone: '' });
+
+  // Inline edit state — address
+  const [editingAddress, setEditingAddress] = useState(false);
+  const [addressDraft, setAddressDraft] = useState({
+    shippingAddress1: '',
+    shippingAddress2: '',
+    shippingCity: '',
+    shippingState: '',
+    shippingPostalCode: '',
+    shippingCountry: '',
+  });
+
   const { data: order, isLoading, error } = useOrder(orderId || '');
   const { data: statusHistory } = useOrderStatusHistory(orderId || '');
   const updateStatusMutation = useUpdateOrderStatus();
+  const updateOrderMutation = useUpdateOrder();
 
   useDocumentTitle(order ? `Order ${order.orderNumber}` : 'Order Details');
 
-  const handleBack = () => {
-    navigate('/orders');
-  };
+  const handleBack = () => navigate('/orders');
 
   const handleStatusChange = (newStatus: string) => {
     if (orderId) {
-      updateStatusMutation.mutate({
-        id: orderId,
-        status: newStatus as OrderStatus,
-      });
+      updateStatusMutation.mutate({ id: orderId, status: newStatus as OrderStatus });
     }
+  };
+
+  // Customer edit helpers
+  const startEditCustomer = () => {
+    setCustomerDraft({
+      shippingName: order?.shippingName || '',
+      shippingPhone: order?.shippingPhone || '',
+    });
+    setEditingCustomer(true);
+  };
+
+  const saveCustomer = () => {
+    if (!orderId) return;
+    updateOrderMutation.mutate(
+      { id: orderId, data: customerDraft },
+      { onSuccess: () => setEditingCustomer(false) }
+    );
+  };
+
+  // Address edit helpers
+  const startEditAddress = () => {
+    setAddressDraft({
+      shippingAddress1: order?.shippingAddress1 || '',
+      shippingAddress2: order?.shippingAddress2 || '',
+      shippingCity: order?.shippingCity || '',
+      shippingState: order?.shippingState || '',
+      shippingPostalCode: order?.shippingPostalCode || '',
+      shippingCountry: order?.shippingCountry || '',
+    });
+    setEditingAddress(true);
+  };
+
+  const saveAddress = () => {
+    if (!orderId) return;
+    updateOrderMutation.mutate(
+      { id: orderId, data: addressDraft },
+      { onSuccess: () => setEditingAddress(false) }
+    );
   };
 
   if (isLoading) {
@@ -88,7 +150,6 @@ export function OrderDetailPage() {
     );
   }
 
-  const validTransitions = ORDER_STATUS_FLOW[order.status];
   const shippingAddress = [
     order.shippingAddress1,
     order.shippingAddress2,
@@ -120,7 +181,6 @@ export function OrderDetailPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Packing Slip & Invoice Buttons */}
           <Button variant="outline" size="sm" onClick={() => setShowPackingSlip(true)}>
             <FileText className="size-4 mr-2" />
             Packing Slip
@@ -129,91 +189,175 @@ export function OrderDetailPage() {
             <Receipt className="size-4 mr-2" />
             Invoice
           </Button>
-
-          {/* Status Change */}
-          {validTransitions.length > 0 && (
-            <>
-              <span className="text-sm text-muted-foreground">Move to:</span>
-              <Select onValueChange={handleStatusChange} disabled={updateStatusMutation.isPending}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {validTransitions.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {ORDER_STATUS_LABELS[status]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </>
-          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Main Content */}
 
         {/* Customer Info */}
-          <Card>
-            <CardHeader className="py-4">
+        <Card>
+          <CardHeader className="py-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <User className="size-5 text-muted-foreground" />
                 <h2 className="text-lg font-semibold">Customer</h2>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <span className="text-sm text-muted-foreground">Name</span>
-                <p className="font-medium">{order.shippingName || 'N/A'}</p>
-              </div>
-              {order.customerUser?.email && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Email</span>
-                  <p className="font-medium">{order.customerUser.email}</p>
+              {!editingCustomer ? (
+                <Button variant="ghost" size="sm" onClick={startEditCustomer} className="h-7 px-2">
+                  <Pencil className="size-3.5" />
+                </Button>
+              ) : (
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={saveCustomer}
+                    disabled={updateOrderMutation.isPending}
+                    className="h-7 px-2 text-green-600 hover:text-green-700"
+                  >
+                    <Check className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingCustomer(false)}
+                    className="h-7 px-2"
+                  >
+                    <X className="size-3.5" />
+                  </Button>
                 </div>
               )}
-              {order.shippingPhone && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Phone</span>
-                  <p className="font-medium">{order.shippingPhone}</p>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {editingCustomer ? (
+              <>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Name</label>
+                  <Input
+                    value={customerDraft.shippingName}
+                    onChange={(e) =>
+                      setCustomerDraft((d) => ({ ...d, shippingName: e.target.value }))
+                    }
+                    className="h-8 text-sm"
+                  />
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Phone</label>
+                  <Input
+                    value={customerDraft.shippingPhone}
+                    onChange={(e) =>
+                      setCustomerDraft((d) => ({ ...d, shippingPhone: e.target.value }))
+                    }
+                    className="h-8 text-sm"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <span className="text-sm text-muted-foreground">Name</span>
+                  <p className="font-medium">{order.shippingName || 'N/A'}</p>
+                </div>
+                {order.customerUser?.email && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Email</span>
+                    <p className="font-medium">{order.customerUser.email}</p>
+                  </div>
+                )}
+                {order.shippingPhone && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Phone</span>
+                    <p className="font-medium">{order.shippingPhone}</p>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Shipping Address */}
-          <Card>
-            <CardHeader className="py-4">
+        {/* Shipping Address */}
+        <Card>
+          <CardHeader className="py-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MapPin className="size-5 text-muted-foreground" />
                 <h2 className="text-lg font-semibold">Shipping Address</h2>
               </div>
+              {!editingAddress ? (
+                <Button variant="ghost" size="sm" onClick={startEditAddress} className="h-7 px-2">
+                  <Pencil className="size-3.5" />
+                </Button>
+              ) : (
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={saveAddress}
+                    disabled={updateOrderMutation.isPending}
+                    className="h-7 px-2 text-green-600 hover:text-green-700"
+                  >
+                    <Check className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingAddress(false)}
+                    className="h-7 px-2"
+                  >
+                    <X className="size-3.5" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {editingAddress ? (
+              <div className="space-y-2">
+                {(
+                  [
+                    ['Address line 1', 'shippingAddress1'],
+                    ['Address line 2', 'shippingAddress2'],
+                    ['City', 'shippingCity'],
+                    ['State', 'shippingState'],
+                    ['Postal code', 'shippingPostalCode'],
+                    ['Country', 'shippingCountry'],
+                  ] as const
+                ).map(([label, key]) => (
+                  <div key={key} className="space-y-0.5">
+                    <label className="text-xs text-muted-foreground">{label}</label>
+                    <Input
+                      value={addressDraft[key]}
+                      onChange={(e) =>
+                        setAddressDraft((d) => ({ ...d, [key]: e.target.value }))
+                      }
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : shippingAddress ? (
+              <p className="text-sm">{shippingAddress}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">No shipping address</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Notes (static customer note) */}
+        {order.notes && (
+          <Card>
+            <CardHeader className="py-4">
+              <h2 className="text-lg font-semibold">Notes</h2>
             </CardHeader>
             <CardContent>
-              {shippingAddress ? (
-                <p className="text-sm">{shippingAddress}</p>
-              ) : (
-                <p className="text-sm text-muted-foreground">No shipping address</p>
-              )}
+              <p className="text-sm whitespace-pre-wrap">{order.notes}</p>
             </CardContent>
           </Card>
+        )}
 
-          {/* Notes */}
-          {order.notes && (
-            <Card>
-              <CardHeader className="py-4">
-                <h2 className="text-lg font-semibold">Notes</h2>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm whitespace-pre-wrap">{order.notes}</p>
-              </CardContent>
-            </Card>
-          )}
-
-
+        {/* Order Items */}
         <div className="lg:col-span-2 space-y-5">
-          {/* Order Items */}
           <Card>
             <CardHeader className="py-4">
               <div className="flex items-center gap-2">
@@ -272,15 +416,53 @@ export function OrderDetailPage() {
                   ))}
                 </div>
               </ScrollArea>
+              <Separator />
+              <div className="px-4 py-3 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>${Number(order.subtotal).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Tax</span>
+                  <span>${Number(order.taxTotal).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Shipping</span>
+                  <span>${Number(order.shippingTotal).toFixed(2)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span>${Number(order.total || 0).toFixed(2)} {order.currency || 'USD'}</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
           {/* Status History */}
           <Card>
             <CardHeader className="py-4">
-              <div className="flex items-center gap-2">
-                <History className="size-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Status History</h2>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <History className="size-5 text-muted-foreground" />
+                  <h2 className="text-lg font-semibold">Status History</h2>
+                </div>
+                <Select
+                  value={order.status}
+                  onValueChange={handleStatusChange}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  <SelectTrigger className="w-40 h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(ORDER_STATUS_LABELS) as OrderStatus[]).map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {ORDER_STATUS_LABELS[status]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </CardHeader>
             <CardContent>
@@ -328,38 +510,6 @@ export function OrderDetailPage() {
           {/* QR Code Card */}
           <OrderQRCodeCard order={order} />
 
-          {/* Order Summary */}
-          <Card>
-            <CardHeader className="py-4">
-              <div className="flex items-center gap-2">
-                <CreditCard className="size-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Order Summary</h2>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>${Number(order.subtotal).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Tax</span>
-                <span>${Number(order.taxTotal).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Shipping</span>
-                <span>${Number(order.shippingTotal).toFixed(2)}</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>
-                  ${Number(order.total || 0).toFixed(2)} {order.currency || 'USD'}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-
           {/* Shipping Info */}
           {(order.carrier || order.trackingNumber) && (
             <Card>
@@ -398,8 +548,12 @@ export function OrderDetailPage() {
             </Card>
           )}
 
+          {/* Order Notes Panel */}
+          <OrderNotesPanel orderId={order.id} />
+
+
           {/* Club Info */}
-          {order.club && (
+          {/* {order.club && (
             <Card>
               <CardHeader className="py-4">
                 <div className="flex items-center gap-2">
@@ -424,46 +578,7 @@ export function OrderDetailPage() {
                 </div>
               </CardContent>
             </Card>
-          )}
-
-          {/* Dates
-          <Card>
-            <CardHeader className="py-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="size-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Dates</h2>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <span className="text-sm text-muted-foreground">Created</span>
-                <p className="font-medium">{formatDate(new Date(order.createdAt))}</p>
-              </div>
-              <div>
-                <span className="text-sm text-muted-foreground">Last Updated</span>
-                <p className="font-medium">{formatDate(new Date(order.updatedAt))}</p>
-              </div>
-              {order.printedAt && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Printed</span>
-                  <p className="font-medium">{formatDate(new Date(order.printedAt))}</p>
-                </div>
-              )}
-              {order.pickedAt && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Picked</span>
-                  <p className="font-medium">{formatDate(new Date(order.pickedAt))}</p>
-                </div>
-              )}
-              {order.processedAt && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Processed</span>
-                  <p className="font-medium">{formatDate(new Date(order.processedAt))}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card> */}
-
+          )} */}
         </div>
       </div>
 
