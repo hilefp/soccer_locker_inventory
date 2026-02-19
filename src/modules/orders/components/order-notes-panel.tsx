@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Textarea } from '@/shared/components/ui/textarea';
@@ -13,20 +12,34 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select';
 import { formatDate } from '@/shared/lib/helpers';
+import { useAuthStore } from '@/shared/stores/auth-store';
 import {
   useOrderNotes,
   useCreateOrderNote,
   useDeleteOrderNote,
 } from '@/modules/orders/hooks/use-orders';
+import { OrderNoteType } from '@/modules/orders/types';
 
 interface OrderNotesPanelProps {
   orderId: string;
+}
+
+function authorLabel(
+  createdByUserId: string | null,
+  currentUserId: string | undefined,
+  type: OrderNoteType
+) {
+  if (type === 'SYSTEM') return 'System';
+  if (!createdByUserId) return 'Staff';
+  if (createdByUserId === currentUserId) return 'You';
+  return `User …${createdByUserId.slice(-8)}`;
 }
 
 export function OrderNotesPanel({ orderId }: OrderNotesPanelProps) {
   const [noteContent, setNoteContent] = useState('');
   const [isPrivate, setIsPrivate] = useState(true);
 
+  const { user } = useAuthStore();
   const { data: notes, isLoading } = useOrderNotes(orderId);
   const createNote = useCreateOrderNote();
   const deleteNote = useDeleteOrderNote();
@@ -34,7 +47,10 @@ export function OrderNotesPanel({ orderId }: OrderNotesPanelProps) {
   const handleAddNote = () => {
     if (!noteContent.trim() || createNote.isPending) return;
     createNote.mutate(
-      { orderId, data: { content: noteContent.trim(), isPrivate } },
+      {
+        orderId,
+        data: { content: noteContent.trim(), isPrivate, createdByUserId: user?.id },
+      },
       { onSuccess: () => setNoteContent('') }
     );
   };
@@ -50,7 +66,7 @@ export function OrderNotesPanel({ orderId }: OrderNotesPanelProps) {
       </CardHeader>
       <Separator />
       <CardContent className="p-0">
-        <ScrollArea className="max-h-[420px]">
+        <ScrollArea className="h-[420px]">
           {isLoading ? (
             <div className="p-4 text-sm text-muted-foreground">Loading notes…</div>
           ) : notes && notes.length > 0 ? (
@@ -63,7 +79,13 @@ export function OrderNotesPanel({ orderId }: OrderNotesPanelProps) {
                     <span className="absolute -bottom-1.5 left-4 h-3 w-3 rotate-45 bg-muted/60" />
                   </div>
                   <div className="flex items-center justify-between pl-1 pt-1 text-xs text-muted-foreground">
-                    <span>{formatDate(new Date(note.createdAt))}</span>
+                    <span>
+                      {formatDate(new Date(note.createdAt))}
+                      {' · '}
+                      <span className="font-medium text-foreground/70">
+                        {authorLabel(note.createdByUserId, user?.id, note.type)}
+                      </span>
+                    </span>
                     <button
                       onClick={() => handleDeleteNote(note.id)}
                       disabled={deleteNote.isPending}

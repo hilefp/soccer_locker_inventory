@@ -48,6 +48,7 @@ import {
   OrderNotesPanel,
 } from '@/modules/orders/components';
 import { ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
+import { useAuthStore } from '@/shared/stores/auth-store';
 
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -71,6 +72,8 @@ export function OrderDetailPage() {
     shippingCountry: '',
   });
 
+  const { user } = useAuthStore();
+
   const { data: order, isLoading, error } = useOrder(orderId || '');
   const { data: statusHistory } = useOrderStatusHistory(orderId || '');
   const updateStatusMutation = useUpdateOrderStatus();
@@ -81,9 +84,13 @@ export function OrderDetailPage() {
   const handleBack = () => navigate('/orders');
 
   const handleStatusChange = (newStatus: string) => {
-    if (orderId) {
-      updateStatusMutation.mutate({ id: orderId, status: newStatus as OrderStatus });
-    }
+    if (!orderId || !order) return;
+    updateStatusMutation.mutate({
+      id: orderId,
+      status: newStatus as OrderStatus,
+      note: `Status changed from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[newStatus as OrderStatus]}`,
+      changedByUserId: user?.id,
+    });
   };
 
   // Customer edit helpers
