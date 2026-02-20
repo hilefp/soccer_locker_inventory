@@ -23,6 +23,8 @@ const getStatusBadgeVariant = (status: OrderStatus): BadgeVariant => {
       return 'destructive';
     case 'REFUND':
       return 'destructive';
+    case 'FAILED':
+      return 'destructive';
     default:
       return 'secondary';
   }

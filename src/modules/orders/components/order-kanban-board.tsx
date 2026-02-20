@@ -61,6 +61,7 @@ const STATUS_ICONS: Record<OrderStatus, React.ElementType> = {
   DELIVERED: CheckCircle,
   MISSING: Package,
   REFUND: Package,
+  FAILED: Package,
 };
 
 // Status colors for columns
@@ -73,6 +74,7 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   DELIVERED: 'border-green-500',
   MISSING: 'border-red-500',
   REFUND: 'border-red-500',
+  FAILED: 'border-red-500',
 };
 
 interface OrderCardProps {

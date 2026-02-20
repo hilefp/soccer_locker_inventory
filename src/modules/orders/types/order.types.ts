@@ -7,7 +7,8 @@ export type OrderStatus =
   | 'SHIPPING'
   | 'DELIVERED'
   | 'MISSING'
-  | 'REFUND';
+  | 'REFUND'
+  | 'FAILED';
 
 // Order Status Flow Configuration
 export const ORDER_STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
@@ -19,6 +20,7 @@ export const ORDER_STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
   DELIVERED: ['REFUND'],
   MISSING: ['NEW', 'REFUND'],
   REFUND: [],
+  FAILED: ['NEW', 'REFUND'],
 };
 
 // Order Status Labels
@@ -31,6 +33,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   DELIVERED: 'Delivered',
   MISSING: 'Missing',
   REFUND: 'Refund',
+  FAILED: 'Failed',
 };
 
 // Kanban Column Order (for current orders view)
