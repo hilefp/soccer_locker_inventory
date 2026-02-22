@@ -15,6 +15,8 @@ import {
   AssignOrderRequest,
   BulkPrintRequest,
   BulkPrintResponse,
+  RefundOrderRequest,
+  RefundOrderResponse,
 } from '@/modules/orders/types';
 
 const BASE_URL = '/inventory/orders';
@@ -166,5 +168,13 @@ export const ordersService = {
    */
   async deleteOrderNote(id: string, noteId: string): Promise<void> {
     await apiClient.delete(`${BASE_URL}/${id}/notes/${noteId}`);
+  },
+
+  /**
+   * Refund an order (full or partial)
+   */
+  async refundOrder(id: string, data: RefundOrderRequest): Promise<RefundOrderResponse> {
+    const response = await apiClient.post<RefundOrderResponse>(`${BASE_URL}/${id}/refund`, data);
+    return response.data;
   },
 };

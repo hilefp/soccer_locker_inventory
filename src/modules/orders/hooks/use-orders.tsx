@@ -7,6 +7,7 @@ import {
   UpdateOrderRequest,
   UpdateShippingRequest,
   CreateOrderNoteRequest,
+  RefundOrderRequest,
 } from '@/modules/orders/types';
 import { toast } from 'sonner';
 import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
@@ -262,6 +263,37 @@ export function useDeleteOrderNote() {
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       console.error('Error deleting order note:', error);
+    },
+  });
+}
+
+// Hook to refund an order
+export function useRefundOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: RefundOrderRequest }) =>
+      ordersService.refundOrder(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: orderKeys.statusHistory(variables.id) });
+      queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      queryClient.invalidateQueries({ queryKey: orderKeys.statistics() });
+      toast.custom(
+        (t) => (
+          <Alert variant="mono" icon="success" close={true} onClose={() => toast.dismiss(t)}>
+            <AlertIcon>
+              <Info />
+            </AlertIcon>
+            <AlertTitle>Refund processed successfully.</AlertTitle>
+          </Alert>
+        ),
+        { duration: 5000 }
+      );
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      console.error('Error processing refund:', error);
+      toast.error(error?.response?.data?.message || 'Failed to process refund');
     },
   });
 }

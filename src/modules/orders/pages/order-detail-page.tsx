@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -18,6 +18,8 @@ import {
   Pencil,
   X,
   Check,
+  RotateCcw,
+  HelpCircle,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/shared/components/ui/card';
@@ -25,6 +27,13 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Separator } from '@/shared/components/ui/separator';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { Input } from '@/shared/components/ui/input';
+import { Checkbox } from '@/shared/components/ui/checkbox';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/shared/components/ui/tooltip';
 import {
   Select,
   SelectContent,
@@ -39,6 +48,7 @@ import {
   useOrderStatusHistory,
   useUpdateOrderStatus,
   useUpdateOrder,
+  useRefundOrder,
 } from '@/modules/orders/hooks/use-orders';
 import {
   OrderStatusBadge,
@@ -48,7 +58,17 @@ import {
   OrderNotesPanel,
 } from '@/modules/orders/components';
 import { ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
+import type { OrderItem } from '@/modules/orders/types';
 import { useAuthStore } from '@/shared/stores/auth-store';
+
+const TAX_RATE = 0.07;
+
+interface RefundItemState {
+  selected: boolean;
+  quantity: number;
+  refundTotal: number;
+  refundTax: number;
+}
 
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -74,10 +94,18 @@ export function OrderDetailPage() {
 
   const { user } = useAuthStore();
 
+  // Refund state
+  const [isRefunding, setIsRefunding] = useState(false);
+  const [refundShipping, setRefundShipping] = useState(false);
+  const [restockItems, setRestockItems] = useState(true);
+  const [refundReason, setRefundReason] = useState('');
+  const [refundItemStates, setRefundItemStates] = useState<Record<string, RefundItemState>>({});
+
   const { data: order, isLoading, error } = useOrder(orderId || '');
   const { data: statusHistory } = useOrderStatusHistory(orderId || '');
   const updateStatusMutation = useUpdateOrderStatus();
   const updateOrderMutation = useUpdateOrder();
+  const refundMutation = useRefundOrder();
 
   useDocumentTitle(order ? `Order ${order.orderNumber}` : 'Order Details');
 
@@ -128,6 +156,91 @@ export function OrderDetailPage() {
     updateOrderMutation.mutate(
       { id: orderId, data: addressDraft },
       { onSuccess: () => setEditingAddress(false) }
+    );
+  };
+
+  // Refund helpers
+  const initRefundStates = () => {
+    const states: Record<string, RefundItemState> = {};
+    order?.items?.forEach((item) => {
+      states[item.id] = { selected: false, quantity: 0, refundTotal: 0, refundTax: 0 };
+    });
+    return states;
+  };
+
+  const calculateItemRefund = useCallback((item: OrderItem, qty: number) => {
+    const clampedQty = Math.max(0, Math.min(qty, item.quantity));
+    const refundTotal = clampedQty * Number(item.unitPrice);
+    const refundTax = parseFloat((refundTotal * TAX_RATE).toFixed(4));
+    return { quantity: clampedQty, refundTotal, refundTax };
+  }, []);
+
+  const handleStartRefund = () => {
+    setRefundItemStates(initRefundStates());
+    setRefundShipping(false);
+    setRestockItems(true);
+    setRefundReason('');
+    setIsRefunding(true);
+  };
+
+  const handleCancelRefund = () => {
+    setIsRefunding(false);
+  };
+
+  const handleToggleRefundItem = (itemId: string, checked: boolean) => {
+    const item = order?.items?.find((i) => i.id === itemId);
+    if (!item) return;
+    setRefundItemStates((prev) => {
+      if (checked) {
+        const calc = calculateItemRefund(item, item.quantity);
+        return { ...prev, [itemId]: { selected: true, ...calc } };
+      }
+      return { ...prev, [itemId]: { selected: false, quantity: 0, refundTotal: 0, refundTax: 0 } };
+    });
+  };
+
+  const handleRefundQtyChange = (itemId: string, qty: number) => {
+    const item = order?.items?.find((i) => i.id === itemId);
+    if (!item) return;
+    setRefundItemStates((prev) => {
+      const calc = calculateItemRefund(item, qty);
+      return { ...prev, [itemId]: { ...prev[itemId], ...calc } };
+    });
+  };
+
+  const refundTotals = useMemo(() => {
+    let totalItemRefund = 0;
+    let totalTaxRefund = 0;
+    Object.values(refundItemStates).forEach((s) => {
+      if (s.selected) {
+        totalItemRefund += s.refundTotal;
+        totalTaxRefund += s.refundTax;
+      }
+    });
+    const shippingRefund = refundShipping ? Number(order?.shippingTotal ?? 0) : 0;
+    const amountAlreadyRefunded = 0; // TODO: from backend
+    const totalAvailable = Number(order?.total ?? 0) - amountAlreadyRefunded;
+    const totalRefund = totalItemRefund + totalTaxRefund + shippingRefund;
+    return { totalItemRefund, totalTaxRefund, shippingRefund, totalRefund, amountAlreadyRefunded, totalAvailable };
+  }, [refundItemStates, refundShipping, order?.shippingTotal, order?.total]);
+
+  const handleSubmitRefund = () => {
+    if (!orderId || refundTotals.totalRefund <= 0) return;
+    const items = Object.entries(refundItemStates)
+      .filter(([, s]) => s.selected && s.quantity > 0)
+      .map(([orderItemId, s]) => ({ orderItemId, quantity: s.quantity }));
+
+    refundMutation.mutate(
+      {
+        id: orderId,
+        data: {
+          items: items.length > 0 ? items : undefined,
+          refundShipping: refundShipping || undefined,
+          reason: refundReason.trim() || undefined,
+          restockItems: restockItems || undefined,
+        },
+      },
+      { onSuccess: () => setIsRefunding(false) }
     );
   };
 
@@ -367,60 +480,218 @@ export function OrderDetailPage() {
         <div className="lg:col-span-2 space-y-5">
           <Card>
             <CardHeader className="py-4">
-              <div className="flex items-center gap-2">
-                <Package className="size-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Order Items</h2>
-                <Badge variant="secondary" size="sm" className="rounded-full">
-                  {order.items?.length || 0} items
-                </Badge>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Package className="size-5 text-muted-foreground" />
+                  <h2 className="text-lg font-semibold">Order Items</h2>
+                  <Badge variant="secondary" size="sm" className="rounded-full">
+                    {order.items?.length || 0} items
+                  </Badge>
+                </div>
+                {!isRefunding && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleStartRefund}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <RotateCcw className="size-4 mr-2" />
+                    Refund
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent className="p-0">
+              {/* Column headers in refund mode */}
+              {isRefunding && (
+                <div className="grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center px-4 py-2 bg-muted/50 text-xs font-medium text-muted-foreground border-b">
+                  <span className="w-5" />
+                  <span>Product</span>
+                  <span className="text-center">Qty</span>
+                  <span className="text-right">Price</span>
+                  <span className="text-right">Total</span>
+                  <span className="text-right">FL Tax</span>
+                </div>
+              )}
+
               <ScrollArea className="max-h-[400px]">
                 <div className="divide-y">
-                  {order.items?.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4 p-4">
-                      <div className="flex items-center justify-center rounded-lg bg-accent/50 h-16 w-16 shrink-0">
-                        {item.productVariant?.product?.imageUrl ? (
-                          <img
-                            src={item.productVariant.product.imageUrl}
-                            alt={item.name || 'Product'}
-                            className="h-16 w-16 rounded-lg object-cover"
-                          />
+                  {order.items?.map((item) => {
+                    const rs = refundItemStates[item.id];
+
+                    return (
+                      <div key={item.id} className="p-4">
+                        {isRefunding ? (
+                          <>
+                            {/* Refund mode row */}
+                            <div className="grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center">
+                              <Checkbox
+                                checked={rs?.selected ?? false}
+                                onCheckedChange={(checked) =>
+                                  handleToggleRefundItem(item.id, checked === true)
+                                }
+                              />
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
+                                  {item.productVariant?.product?.imageUrl ? (
+                                    <img
+                                      src={item.productVariant.product.imageUrl}
+                                      alt={item.name || 'Product'}
+                                      className="h-12 w-12 rounded-lg object-cover"
+                                    />
+                                  ) : (
+                                    <Package className="size-5 text-muted-foreground" />
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium truncate">
+                                    {item.name || item.productVariant?.product?.name || 'Unknown'}
+                                  </p>
+                                  {item.sku && (
+                                    <p className="text-xs text-muted-foreground">{item.sku}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-center text-sm text-muted-foreground">
+                                &times; {item.quantity}
+                              </div>
+                              <div className="text-right text-sm">
+                                ${Number(item.unitPrice).toFixed(2)}
+                              </div>
+                              <div className="text-right text-sm font-medium">
+                                ${Number(item.totalPrice).toFixed(2)}
+                              </div>
+                              <div className="text-right text-sm text-muted-foreground">
+                                ${(Number(item.totalPrice) * TAX_RATE).toFixed(2)}
+                              </div>
+                            </div>
+
+                            {/* Editable refund row when checked */}
+                            {rs?.selected && (
+                              <div className="grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center mt-2">
+                                <span className="w-5" />
+                                <span />
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={item.quantity}
+                                  value={rs.quantity}
+                                  onChange={(e) =>
+                                    handleRefundQtyChange(item.id, parseInt(e.target.value) || 0)
+                                  }
+                                  className="h-8 text-sm text-center"
+                                />
+                                <span />
+                                <Input
+                                  type="text"
+                                  value={rs.refundTotal.toFixed(2)}
+                                  readOnly
+                                  className="h-8 text-sm text-right bg-muted/30"
+                                  tabIndex={-1}
+                                />
+                                <Input
+                                  type="text"
+                                  value={rs.refundTax.toFixed(4)}
+                                  readOnly
+                                  className="h-8 text-sm text-right bg-muted/30"
+                                  tabIndex={-1}
+                                />
+                              </div>
+                            )}
+                          </>
                         ) : (
-                          <Package className="size-6 text-muted-foreground" />
+                          /* Normal display mode */
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center justify-center rounded-lg bg-accent/50 h-16 w-16 shrink-0">
+                              {item.productVariant?.product?.imageUrl ? (
+                                <img
+                                  src={item.productVariant.product.imageUrl}
+                                  alt={item.name || 'Product'}
+                                  className="h-16 w-16 rounded-lg object-cover"
+                                />
+                              ) : (
+                                <Package className="size-6 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-foreground truncate">
+                                  {item.name || item.productVariant?.product?.name || 'Unknown Product'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                {item.sku && (
+                                  <span className="flex items-center gap-1">
+                                    <Hash className="size-3" />
+                                    {item.sku}
+                                  </span>
+                                )}
+                                {item.attributes && Object.keys(item.attributes).length > 0 && (
+                                  <span>
+                                    {Object.entries(item.attributes)
+                                      .map(([key, value]) => `${key}: ${value}`)
+                                      .join(' | ')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-medium">${Number(item.totalPrice).toFixed(2)}</div>
+                              <div className="text-sm text-muted-foreground">
+                                ${Number(item.unitPrice).toFixed(2)} x {item.quantity}
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-foreground truncate">
-                            {item.name || item.productVariant?.product?.name || 'Unknown Product'}
-                          </span>
+                    );
+                  })}
+
+                  {/* Shipping row in refund mode */}
+                  {isRefunding && Number(order.shippingTotal) > 0 && (
+                    <div className="p-4">
+                      <div className="grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center">
+                        <Checkbox
+                          checked={refundShipping}
+                          onCheckedChange={(checked) => setRefundShipping(checked === true)}
+                        />
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
+                            <Truck className="size-5 text-muted-foreground" />
+                          </div>
+                          <p className="text-sm font-medium">Shipping</p>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          {item.sku && (
-                            <span className="flex items-center gap-1">
-                              <Hash className="size-3" />
-                              {item.sku}
-                            </span>
-                          )}
-                          {item.attributes && Object.keys(item.attributes).length > 0 && (
-                            <span>
-                              {Object.entries(item.attributes)
-                                .map(([key, value]) => `${key}: ${value}`)
-                                .join(' | ')}
-                            </span>
-                          )}
+                        <span />
+                        <span />
+                        <div className="text-right text-sm font-medium">
+                          ${Number(order.shippingTotal).toFixed(2)}
                         </div>
+                        <div className="text-right text-sm text-muted-foreground">&ndash;</div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-medium">${Number(item.totalPrice).toFixed(2)}</div>
-                        <div className="text-sm text-muted-foreground">
-                          ${Number(item.unitPrice).toFixed(2)} x {item.quantity}
+                      {refundShipping && (
+                        <div className="grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center mt-2">
+                          <span className="w-5" />
+                          <span />
+                          <span />
+                          <span />
+                          <Input
+                            type="text"
+                            value={Number(order.shippingTotal).toFixed(2)}
+                            readOnly
+                            className="h-8 text-sm text-right bg-muted/30"
+                            tabIndex={-1}
+                          />
+                          <Input
+                            type="text"
+                            value="0"
+                            readOnly
+                            className="h-8 text-sm text-right bg-muted/30"
+                            tabIndex={-1}
+                          />
                         </div>
-                      </div>
+                      )}
                     </div>
-                  ))}
+                  )}
                 </div>
               </ScrollArea>
               <Separator />
@@ -442,6 +713,89 @@ export function OrderDetailPage() {
                   <span>Total</span>
                   <span>${Number(order.total || 0).toFixed(2)} {order.currency || 'USD'}</span>
                 </div>
+
+                {/* Refund summary */}
+                {isRefunding && (
+                  <div className="space-y-3 pt-3">
+                    <Separator />
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Restock refunded items:</span>
+                      <Checkbox
+                        checked={restockItems}
+                        onCheckedChange={(checked) => setRestockItems(checked === true)}
+                      />
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Amount already refunded:</span>
+                      <span className="font-medium">-${refundTotals.amountAlreadyRefunded.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Total available to refund:</span>
+                      <span className="font-medium">${refundTotals.totalAvailable.toFixed(2)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex items-center gap-1.5 text-sm font-medium">
+                              <HelpCircle className="size-3.5 text-muted-foreground" />
+                              Refund amount:
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Items + tax + shipping (if selected)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <span className="text-lg font-bold">
+                        ${Math.min(refundTotals.totalRefund, refundTotals.totalAvailable).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm text-muted-foreground">Reason for refund (optional):</label>
+                      <Input
+                        value={refundReason}
+                        onChange={(e) => setRefundReason(e.target.value)}
+                        placeholder="Enter reason..."
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 justify-end pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCancelRefund}
+                        disabled={refundMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleSubmitRefund}
+                        disabled={
+                          refundMutation.isPending ||
+                          refundTotals.totalRefund <= 0 ||
+                          refundTotals.totalRefund > refundTotals.totalAvailable
+                        }
+                      >
+                        {refundMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white mr-2" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="size-4 mr-2" />
+                            Process Refund (${Math.min(refundTotals.totalRefund, refundTotals.totalAvailable).toFixed(2)})
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

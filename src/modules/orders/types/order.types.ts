@@ -318,3 +318,22 @@ export interface BulkPrintResponse {
   presignedUrls: string[];
   expiresIn: string;
 }
+
+// Refund Types
+export interface RefundItemRequest {
+  orderItemId: string;
+  quantity: number;
+}
+
+export interface RefundOrderRequest {
+  items?: RefundItemRequest[];
+  refundShipping?: boolean;
+  reason?: string;
+  restockItems?: boolean;
+}
+
+export interface RefundOrderResponse {
+  refundId: string;
+  amount: number;
+  status: string;
+}
