@@ -7,6 +7,8 @@ type BadgeVariant = 'success' | 'warning' | 'destructive' | 'secondary' | 'prima
 
 const getStatusBadgeVariant = (status: OrderStatus): BadgeVariant => {
   switch (status) {
+    // case 'PENDING_PAYMENT':
+    //   return 'warning';
     case 'NEW':
       return 'info';
     case 'PRINT':

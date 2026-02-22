@@ -158,7 +158,7 @@ export function OrderListTable({
   const { data: clubs } = useClubs();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('NEW');
   const [clubFilter, setClubFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [inputValue, setInputValue] = useState('');
@@ -295,24 +295,24 @@ export function OrderListTable({
         enableSorting: true,
         size: 120,
       },
-      {
-        id: 'itemCount',
-        accessorFn: (row) => row.itemCount,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Items" column={column} />
-        ),
-        cell: (info) => {
-          const count = info.row.original.itemCount;
-          return (
-            <div className="flex items-center gap-1.5">
-              <Package className="size-4 text-muted-foreground" />
-              <span className="text-sm">{count}</span>
-            </div>
-          );
-        },
-        enableSorting: true,
-        size: 80,
-      },
+      // {
+      //   id: 'itemCount',
+      //   accessorFn: (row) => row.itemCount,
+      //   header: ({ column }) => (
+      //     <DataGridColumnHeader title="Items" column={column} />
+      //   ),
+      //   cell: (info) => {
+      //     const count = info.row.original.itemCount;
+      //     return (
+      //       <div className="flex items-center gap-1.5">
+      //         <Package className="size-4 text-muted-foreground" />
+      //         <span className="text-sm">{count}</span>
+      //       </div>
+      //     );
+      //   },
+      //   enableSorting: true,
+      //   size: 80,
+      // },
       {
         id: 'total',
         accessorFn: (row) => row.total,
@@ -349,19 +349,19 @@ export function OrderListTable({
         enableSorting: true,
         size: 120,
       },
-      {
-        id: 'shippingCity',
-        accessorFn: (row) => row.shippingCity,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="City" column={column} />
-        ),
-        cell: (info) => {
-          const city = info.row.original.shippingCity;
-          return <span className="text-sm">{city || '-'}</span>;
-        },
-        enableSorting: true,
-        size: 120,
-      },
+      // {
+      //   id: 'shippingCity',
+      //   accessorFn: (row) => row.shippingCity,
+      //   header: ({ column }) => (
+      //     <DataGridColumnHeader title="City" column={column} />
+      //   ),
+      //   cell: (info) => {
+      //     const city = info.row.original.shippingCity;
+      //     return <span className="text-sm">{city || '-'}</span>;
+      //   },
+      //   enableSorting: true,
+      //   size: 120,
+      // },
       {
         id: 'tracking',
         accessorFn: (row) => row.trackingNumber,

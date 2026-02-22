@@ -1,5 +1,6 @@
 // Order Status Enum
 export type OrderStatus =
+  // | 'PENDING_PAYMENT'
   | 'NEW'
   | 'PRINT'
   | 'PICKING_UP'
@@ -12,6 +13,7 @@ export type OrderStatus =
 
 // Order Status Flow Configuration
 export const ORDER_STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
+  // PENDING_PAYMENT: [],
   NEW: ['PRINT', 'MISSING', 'REFUND'],
   PRINT: ['PICKING_UP', 'MISSING', 'REFUND'],
   PICKING_UP: ['PROCESSING', 'MISSING', 'REFUND'],
@@ -25,6 +27,7 @@ export const ORDER_STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
 
 // Order Status Labels
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  // PENDING_PAYMENT: 'Pending Payment',
   NEW: 'New',
   PRINT: 'Print',
   PICKING_UP: 'Picking Up',
