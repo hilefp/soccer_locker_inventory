@@ -831,7 +831,7 @@ export function OrderDetailPage() {
                         disabled={
                           refundMutation.isPending ||
                           refundTotals.totalRefund <= 0 ||
-                          refundTotals.totalRefund > refundTotals.totalAvailable
+                          parseFloat(refundTotals.totalRefund.toFixed(2)) > parseFloat(refundTotals.totalAvailable.toFixed(2))
                         }
                       >
                         {refundMutation.isPending ? (
