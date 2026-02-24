@@ -186,8 +186,18 @@ export function OrderListTable({
 
   const handleBulkPrint = async (documentType: DocumentType) => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
+
+    // Early exit guards (Vercel best practice: js-early-exit)
     if (selectedRows.length === 0) {
       toast.error('No orders selected');
+      return;
+    }
+
+    // Dynamically import print utilities to access MAX_BULK_PRINT constant (Vercel best practice: bundle-dynamic-imports)
+    const { generateBulkPrintDocument, openPrintWindow, MAX_BULK_PRINT } = await import('@/modules/orders/lib/print-utils');
+
+    if (selectedRows.length > MAX_BULK_PRINT) {
+      toast.error(`Maximum ${MAX_BULK_PRINT} orders per bulk print. You selected ${selectedRows.length}.`);
       return;
     }
 
@@ -195,23 +205,31 @@ export function OrderListTable({
 
     setIsBulkPrinting(true);
     try {
-      const response = await ordersService.bulkPrint({
-        orderIds,
-        documentType,
-      });
+      // Fetch full order details with graceful partial failure handling (Vercel best practice: async-parallel)
+      const { orders: fullOrders, failedCount } = await ordersService.getOrdersByIds(orderIds);
 
-      // Download all PDFs
-      response.presignedUrls.forEach((url, index) => {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${documentType.toLowerCase()}_${orderIds[index]}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      });
+      if (fullOrders.length === 0) {
+        toast.error('Failed to fetch order details. Please try again.');
+        return;
+      }
+
+      if (failedCount > 0) {
+        toast.warning(`${failedCount} order(s) could not be loaded and will be skipped.`);
+      }
+
+      // Generate print document with all successfully fetched orders
+      const htmlContent = generateBulkPrintDocument(fullOrders, documentType);
+
+      // Open print window
+      const success = openPrintWindow(htmlContent);
+
+      if (!success) {
+        toast.error('Please allow popups to print');
+        return;
+      }
 
       toast.success(
-        `Successfully generated ${response.count} ${
+        `Ready to print ${fullOrders.length} ${
           documentType === 'PACKING_SLIP' ? 'packing slip(s)' : 'invoice(s)'
         }`
       );
