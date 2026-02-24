@@ -61,8 +61,6 @@ import { ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
 import type { OrderItem } from '@/modules/orders/types';
 import { useAuthStore } from '@/shared/stores/auth-store';
 
-const TAX_RATE = 0.07;
-
 interface RefundItemState {
   selected: boolean;
   quantity: number;
@@ -169,11 +167,17 @@ export function OrderDetailPage() {
   };
 
   const calculateItemRefund = useCallback((item: OrderItem, qty: number) => {
-    const clampedQty = Math.max(0, Math.min(qty, item.quantity));
+    const remainingQty = item.quantity - (item.refundedQuantity || 0);
+    const clampedQty = Math.max(0, Math.min(qty, remainingQty));
     const refundTotal = clampedQty * Number(item.unitPrice);
-    const refundTax = parseFloat((refundTotal * TAX_RATE).toFixed(4));
+    const orderSubtotal = Number(order?.subtotal ?? 0);
+    const orderTaxTotal = Number(order?.taxTotal ?? 0);
+    // Proportionally allocate the order's actual tax to this item
+    const refundTax = orderSubtotal > 0
+      ? parseFloat(((refundTotal / orderSubtotal) * orderTaxTotal).toFixed(4))
+      : 0;
     return { quantity: clampedQty, refundTotal, refundTax };
-  }, []);
+  }, [order?.subtotal, order?.taxTotal]);
 
   const handleStartRefund = () => {
     setRefundItemStates(initRefundStates());
@@ -192,7 +196,8 @@ export function OrderDetailPage() {
     if (!item) return;
     setRefundItemStates((prev) => {
       if (checked) {
-        const calc = calculateItemRefund(item, item.quantity);
+        const remainingQty = item.quantity - (item.refundedQuantity || 0);
+        const calc = calculateItemRefund(item, remainingQty);
         return { ...prev, [itemId]: { selected: true, ...calc } };
       }
       return { ...prev, [itemId]: { selected: false, quantity: 0, refundTotal: 0, refundTax: 0 } };
@@ -218,11 +223,11 @@ export function OrderDetailPage() {
       }
     });
     const shippingRefund = refundShipping ? Number(order?.shippingTotal ?? 0) : 0;
-    const amountAlreadyRefunded = 0; // TODO: from backend
+    const amountAlreadyRefunded = Number(order?.totalRefunded ?? 0);
     const totalAvailable = Number(order?.total ?? 0) - amountAlreadyRefunded;
     const totalRefund = totalItemRefund + totalTaxRefund + shippingRefund;
     return { totalItemRefund, totalTaxRefund, shippingRefund, totalRefund, amountAlreadyRefunded, totalAvailable };
-  }, [refundItemStates, refundShipping, order?.shippingTotal, order?.total]);
+  }, [refundItemStates, refundShipping, order?.shippingTotal, order?.total, order?.totalRefunded]);
 
   const handleSubmitRefund = () => {
     if (!orderId || refundTotals.totalRefund <= 0) return;
@@ -309,6 +314,17 @@ export function OrderDetailPage() {
             <Receipt className="size-4 mr-2" />
             Invoice
           </Button>
+          {!isRefunding && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleStartRefund}
+              className="text-destructive hover:text-destructive"
+            >
+              <RotateCcw className="size-4 mr-2" />
+              Refund Order
+            </Button>
+          )}
         </div>
       </div>
 
@@ -488,17 +504,6 @@ export function OrderDetailPage() {
                     {order.items?.length || 0} items
                   </Badge>
                 </div>
-                {!isRefunding && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleStartRefund}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <RotateCcw className="size-4 mr-2" />
-                    Refund
-                  </Button>
-                )}
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -524,9 +529,10 @@ export function OrderDetailPage() {
                         {isRefunding ? (
                           <>
                             {/* Refund mode row */}
-                            <div className="grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center">
+                            <div className={`grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center ${item.refundedQuantity >= item.quantity ? 'opacity-50' : ''}`}>
                               <Checkbox
                                 checked={rs?.selected ?? false}
+                                disabled={item.refundedQuantity >= item.quantity}
                                 onCheckedChange={(checked) =>
                                   handleToggleRefundItem(item.id, checked === true)
                                 }
@@ -550,6 +556,13 @@ export function OrderDetailPage() {
                                   {item.sku && (
                                     <p className="text-xs text-muted-foreground">{item.sku}</p>
                                   )}
+                                  {item.refundedQuantity > 0 && (
+                                    <p className="text-xs text-destructive font-medium">
+                                      {item.refundedQuantity >= item.quantity
+                                        ? 'Fully refunded'
+                                        : `${item.refundedQuantity} of ${item.quantity} refunded`}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                               <div className="text-center text-sm text-muted-foreground">
@@ -562,7 +575,10 @@ export function OrderDetailPage() {
                                 ${Number(item.totalPrice).toFixed(2)}
                               </div>
                               <div className="text-right text-sm text-muted-foreground">
-                                ${(Number(item.totalPrice) * TAX_RATE).toFixed(2)}
+                                ${(Number(order.subtotal) > 0
+                                  ? (Number(item.totalPrice) / Number(order.subtotal)) * Number(order.taxTotal)
+                                  : 0
+                                ).toFixed(2)}
                               </div>
                             </div>
 
@@ -574,7 +590,7 @@ export function OrderDetailPage() {
                                 <Input
                                   type="number"
                                   min={0}
-                                  max={item.quantity}
+                                  max={item.quantity - (item.refundedQuantity || 0)}
                                   value={rs.quantity}
                                   onChange={(e) =>
                                     handleRefundQtyChange(item.id, parseInt(e.target.value) || 0)
@@ -601,7 +617,7 @@ export function OrderDetailPage() {
                           </>
                         ) : (
                           /* Normal display mode */
-                          <div className="flex items-center gap-4">
+                          <div className={`flex items-center gap-4 ${item.refundedQuantity >= item.quantity ? 'opacity-60' : ''}`}>
                             <div className="flex items-center justify-center rounded-lg bg-accent/50 h-16 w-16 shrink-0">
                               {item.productVariant?.product?.imageUrl ? (
                                 <img
@@ -634,12 +650,24 @@ export function OrderDetailPage() {
                                   </span>
                                 )}
                               </div>
+                              {item.refundedQuantity > 0 && (
+                                <p className="text-xs text-destructive font-medium mt-0.5">
+                                  {item.refundedQuantity >= item.quantity
+                                    ? 'Fully refunded'
+                                    : `${item.refundedQuantity} of ${item.quantity} refunded`}
+                                </p>
+                              )}
                             </div>
                             <div className="text-right">
                               <div className="font-medium">${Number(item.totalPrice).toFixed(2)}</div>
                               <div className="text-sm text-muted-foreground">
                                 ${Number(item.unitPrice).toFixed(2)} x {item.quantity}
                               </div>
+                              {item.refundedQuantity > 0 && (
+                                <div className="text-sm text-destructive font-medium">
+                                  -{item.refundedQuantity} (-${(item.refundedQuantity * Number(item.unitPrice)).toFixed(2)})
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
@@ -650,16 +678,22 @@ export function OrderDetailPage() {
                   {/* Shipping row in refund mode */}
                   {isRefunding && Number(order.shippingTotal) > 0 && (
                     <div className="p-4">
-                      <div className="grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center">
+                      <div className={`grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center ${order.shippingRefunded ? 'opacity-50' : ''}`}>
                         <Checkbox
                           checked={refundShipping}
+                          disabled={order.shippingRefunded}
                           onCheckedChange={(checked) => setRefundShipping(checked === true)}
                         />
                         <div className="flex items-center gap-3">
                           <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
                             <Truck className="size-5 text-muted-foreground" />
                           </div>
-                          <p className="text-sm font-medium">Shipping</p>
+                          <div>
+                            <p className="text-sm font-medium">Shipping</p>
+                            {order.shippingRefunded && (
+                              <p className="text-xs text-destructive font-medium">Already refunded</p>
+                            )}
+                          </div>
                         </div>
                         <span />
                         <span />
@@ -705,14 +739,32 @@ export function OrderDetailPage() {
                   <span>${Number(order.taxTotal).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span>${Number(order.shippingTotal).toFixed(2)}</span>
+                  <span className="text-muted-foreground">
+                    Shipping
+                    {order.shippingRefunded && (
+                      <span className="text-destructive ml-1">(Refunded)</span>
+                    )}
+                  </span>
+                  <div className="text-right">
+                    <span>${Number(order.shippingTotal).toFixed(2)}</span>
+                    {order.shippingRefunded && (
+                      <div className="text-destructive text-xs font-medium">
+                       -${Number(order.shippingTotal).toFixed(2)}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
                   <span>${Number(order.total || 0).toFixed(2)} {order.currency || 'USD'}</span>
                 </div>
+                {Number(order.totalRefunded) > 0 && (
+                  <div className="flex justify-between text-sm text-destructive font-medium">
+                    <span>Total Refunded</span>
+                    <span>-${Number(order.totalRefunded).toFixed(2)}</span>
+                  </div>
+                )}
 
                 {/* Refund summary */}
                 {isRefunding && (
@@ -772,8 +824,9 @@ export function OrderDetailPage() {
                         Cancel
                       </Button>
                       <Button
-                        variant="destructive"
+                        variant="outline"
                         size="sm"
+                        className="text-destructive hover:text-destructive"
                         onClick={handleSubmitRefund}
                         disabled={
                           refundMutation.isPending ||
@@ -783,7 +836,7 @@ export function OrderDetailPage() {
                       >
                         {refundMutation.isPending ? (
                           <>
-                            <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white mr-2" />
+                            <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white mr-2 " />
                             Processing...
                           </>
                         ) : (

@@ -60,6 +60,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  refundedQuantity: number;
   createdAt: string;
   productVariant?: {
     id: string;
@@ -135,6 +136,8 @@ export interface Order {
   pickedAt: string | null;
   processedAt: string | null;
   notes: string | null;
+  totalRefunded: number;
+  shippingRefunded: boolean;
   createdAt: string;
   updatedAt: string;
   items?: OrderItem[];
