@@ -3,6 +3,8 @@ import {
   Order,
   OrderItem,
   OrderStatusHistory,
+  OrderNote,
+  CreateOrderNoteRequest,
   OrderListResponse,
   OrderStatistics,
   OrderFilterParams,
@@ -13,6 +15,8 @@ import {
   AssignOrderRequest,
   BulkPrintRequest,
   BulkPrintResponse,
+  RefundOrderRequest,
+  RefundOrderResponse,
 } from '@/modules/orders/types';
 
 const BASE_URL = '/inventory/orders';
@@ -163,6 +167,37 @@ export const ordersService = {
    */
   async bulkPrint(data: BulkPrintRequest): Promise<BulkPrintResponse> {
     const response = await apiClient.post<BulkPrintResponse>(`${BASE_URL}/bulk-print`, data);
+    return response.data;
+  },
+
+  /**
+   * Get order notes
+   */
+  async getOrderNotes(id: string): Promise<OrderNote[]> {
+    const response = await apiClient.get<OrderNote[]>(`${BASE_URL}/${id}/notes`);
+    return response.data;
+  },
+
+  /**
+   * Create an order note
+   */
+  async createOrderNote(id: string, data: CreateOrderNoteRequest): Promise<OrderNote> {
+    const response = await apiClient.post<OrderNote>(`${BASE_URL}/${id}/notes`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete an order note
+   */
+  async deleteOrderNote(id: string, noteId: string): Promise<void> {
+    await apiClient.delete(`${BASE_URL}/${id}/notes/${noteId}`);
+  },
+
+  /**
+   * Refund an order (full or partial)
+   */
+  async refundOrder(id: string, data: RefundOrderRequest): Promise<RefundOrderResponse> {
+    const response = await apiClient.post<RefundOrderResponse>(`${BASE_URL}/${id}/refund`, data);
     return response.data;
   },
 };

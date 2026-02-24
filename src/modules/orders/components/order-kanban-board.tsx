@@ -49,6 +49,7 @@ import {
 import { useUpdateOrderStatus } from '@/modules/orders/hooks/use-orders';
 import { formatDate, timeAgo } from '@/shared/lib/helpers';
 import { cn } from '@/shared/lib/utils';
+import { useAuthStore } from '@/shared/stores/auth-store';
 
 // Status icons mapping
 const STATUS_ICONS: Record<OrderStatus, React.ElementType> = {
@@ -60,6 +61,7 @@ const STATUS_ICONS: Record<OrderStatus, React.ElementType> = {
   DELIVERED: CheckCircle,
   MISSING: Package,
   REFUND: Package,
+  FAILED: Package,
 };
 
 // Status colors for columns
@@ -72,6 +74,7 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   DELIVERED: 'border-green-500',
   MISSING: 'border-red-500',
   REFUND: 'border-red-500',
+  FAILED: 'border-red-500',
 };
 
 interface OrderCardProps {
@@ -230,6 +233,7 @@ export function OrderKanbanBoard({
   statuses = KANBAN_STATUS_ORDER,
 }: OrderKanbanBoardProps) {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const updateStatusMutation = useUpdateOrderStatus();
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
 
@@ -279,6 +283,7 @@ export function OrderKanbanBoard({
           id: orderId,
           status: targetOrder.status,
           note: `Status changed from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[targetOrder.status]} via drag and drop`,
+          changedByUserId: user?.id,
         });
       }
     }

@@ -1,5 +1,6 @@
 // Order Status Enum
 export type OrderStatus =
+  // | 'PENDING_PAYMENT'
   | 'NEW'
   | 'PRINT'
   | 'PICKING_UP'
@@ -7,10 +8,12 @@ export type OrderStatus =
   | 'SHIPPING'
   | 'DELIVERED'
   | 'MISSING'
-  | 'REFUND';
+  | 'REFUND'
+  | 'FAILED';
 
 // Order Status Flow Configuration
 export const ORDER_STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
+  // PENDING_PAYMENT: [],
   NEW: ['PRINT', 'MISSING', 'REFUND'],
   PRINT: ['PICKING_UP', 'MISSING', 'REFUND'],
   PICKING_UP: ['PROCESSING', 'MISSING', 'REFUND'],
@@ -19,10 +22,12 @@ export const ORDER_STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
   DELIVERED: ['REFUND'],
   MISSING: ['NEW', 'REFUND'],
   REFUND: [],
+  FAILED: ['NEW', 'REFUND'],
 };
 
 // Order Status Labels
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  // PENDING_PAYMENT: 'Pending Payment',
   NEW: 'New',
   PRINT: 'Print',
   PICKING_UP: 'Picking Up',
@@ -31,6 +36,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   DELIVERED: 'Delivered',
   MISSING: 'Missing',
   REFUND: 'Refund',
+  FAILED: 'Failed',
 };
 
 // Kanban Column Order (for current orders view)
@@ -54,6 +60,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  refundedQuantity: number;
   createdAt: string;
   productVariant?: {
     id: string;
@@ -129,6 +136,8 @@ export interface Order {
   pickedAt: string | null;
   processedAt: string | null;
   notes: string | null;
+  totalRefunded: number;
+  shippingRefunded: boolean;
   createdAt: string;
   updatedAt: string;
   items?: OrderItem[];
@@ -278,6 +287,25 @@ export interface OrderStatistics {
   }[];
 }
 
+// Order Note Types
+export type OrderNoteType = 'MANUAL' | 'SYSTEM';
+
+export interface OrderNote {
+  id: string;
+  orderId: string;
+  content: string;
+  type: OrderNoteType;
+  isPrivate: boolean;
+  createdByUserId: string | null;
+  createdAt: string;
+}
+
+export interface CreateOrderNoteRequest {
+  content: string;
+  isPrivate?: boolean;
+  createdByUserId?: string;
+}
+
 // Bulk Print Types
 export type DocumentType = 'PACKING_SLIP' | 'INVOICE';
 
@@ -292,4 +320,23 @@ export interface BulkPrintResponse {
   count: number;
   presignedUrls: string[];
   expiresIn: string;
+}
+
+// Refund Types
+export interface RefundItemRequest {
+  orderItemId: string;
+  quantity: number;
+}
+
+export interface RefundOrderRequest {
+  items?: RefundItemRequest[];
+  refundShipping?: boolean;
+  reason?: string;
+  restockItems?: boolean;
+}
+
+export interface RefundOrderResponse {
+  refundId: string;
+  amount: number;
+  status: string;
 }
