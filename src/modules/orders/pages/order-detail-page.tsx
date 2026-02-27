@@ -20,6 +20,7 @@ import {
   Check,
   RotateCcw,
   HelpCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/shared/components/ui/card';
@@ -50,6 +51,8 @@ import {
   useUpdateOrder,
   useUpdateShipping,
   useRefundOrder,
+  useMarkMissing,
+  useResolveMissing,
 } from '@/modules/orders/hooks/use-orders';
 import {
   OrderStatusBadge,
@@ -106,6 +109,13 @@ export function OrderDetailPage() {
   const updateOrderMutation = useUpdateOrder();
   const updateShippingMutation = useUpdateShipping();
   const refundMutation = useRefundOrder();
+  const markMissingMutation = useMarkMissing();
+  const resolveMissingMutation = useResolveMissing();
+
+  // Missing products state
+  const [isMissingMode, setIsMissingMode] = useState(false);
+  const [missingItemStates, setMissingItemStates] = useState<Record<string, { selected: boolean; quantity: number }>>({});
+  const [missingReason, setMissingReason] = useState('');
 
   useDocumentTitle(order ? `Order ${order.orderNumber}` : 'Order Details');
 
@@ -251,6 +261,82 @@ export function OrderDetailPage() {
     );
   };
 
+  // Missing products helpers
+  const isResolvingMode = isMissingMode && order?.status === 'MISSING';
+
+  const handleStartMissing = () => {
+    const states: Record<string, { selected: boolean; quantity: number }> = {};
+    if (order?.status === 'MISSING') {
+      // Resolve mode: pre-populate with currently missing items
+      order?.items?.forEach((item) => {
+        const mq = item.missingQuantity || 0;
+        states[item.id] = { selected: mq > 0, quantity: mq };
+      });
+    } else {
+      // Mark missing mode: all unchecked
+      order?.items?.forEach((item) => {
+        states[item.id] = { selected: false, quantity: 0 };
+      });
+    }
+    setMissingItemStates(states);
+    setMissingReason('');
+    setIsMissingMode(true);
+  };
+
+  const handleCancelMissing = () => {
+    setIsMissingMode(false);
+  };
+
+  const handleToggleMissingItem = (itemId: string, checked: boolean) => {
+    const item = order?.items?.find((i) => i.id === itemId);
+    if (!item) return;
+    setMissingItemStates((prev) => {
+      if (checked) {
+        const qty = isResolvingMode
+          ? (item.missingQuantity || 0)
+          : item.quantity - (item.missingQuantity || 0);
+        return { ...prev, [itemId]: { selected: true, quantity: Math.max(1, qty) } };
+      }
+      return { ...prev, [itemId]: { selected: false, quantity: 0 } };
+    });
+  };
+
+  const handleMissingQtyChange = (itemId: string, qty: number) => {
+    const item = order?.items?.find((i) => i.id === itemId);
+    if (!item) return;
+    const maxQty = isResolvingMode
+      ? (item.missingQuantity || 0)
+      : item.quantity - (item.missingQuantity || 0);
+    const clamped = Math.max(0, Math.min(qty, maxQty));
+    setMissingItemStates((prev) => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], quantity: clamped },
+    }));
+  };
+
+  const missingSelectedCount = Object.values(missingItemStates).filter(
+    (s) => s.selected && s.quantity > 0
+  ).length;
+
+  const handleSubmitMissing = () => {
+    if (!orderId || missingSelectedCount === 0) return;
+    const items = Object.entries(missingItemStates)
+      .filter(([, s]) => s.selected && s.quantity > 0)
+      .map(([orderItemId, s]) => ({ orderItemId, quantity: s.quantity }));
+
+    if (isResolvingMode) {
+      resolveMissingMutation.mutate(
+        { id: orderId, data: { items, reason: missingReason.trim() || undefined } },
+        { onSuccess: () => setIsMissingMode(false) }
+      );
+    } else {
+      markMissingMutation.mutate(
+        { id: orderId, data: { items, reason: missingReason.trim() || undefined } },
+        { onSuccess: () => setIsMissingMode(false) }
+      );
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container-fluid flex items-center justify-center h-96">
@@ -316,7 +402,18 @@ export function OrderDetailPage() {
             <Receipt className="size-4 mr-2" />
             Invoice
           </Button>
-          {!isRefunding && (
+          {!isRefunding && !isMissingMode && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleStartMissing}
+              className="text-orange-600 hover:text-orange-700"
+            >
+              <AlertTriangle className="size-4 mr-2" />
+              {order.status === 'MISSING' ? 'Resolve Missing' : 'Missing Products'}
+            </Button>
+          )}
+          {!isRefunding && !isMissingMode && (
             <Button
               variant="outline"
               size="sm"
@@ -521,6 +618,16 @@ export function OrderDetailPage() {
                 </div>
               )}
 
+              {/* Column headers in missing mode */}
+              {isMissingMode && (
+                <div className="grid grid-cols-[auto_1fr_80px_100px] gap-2 items-center px-4 py-2 bg-orange-50 dark:bg-orange-950/20 text-xs font-medium text-muted-foreground border-b">
+                  <span className="w-5" />
+                  <span>Product</span>
+                  <span className="text-center">Order Qty</span>
+                  <span className="text-center">{isResolvingMode ? 'Resolve Qty' : 'Missing Qty'}</span>
+                </div>
+              )}
+
               <ScrollArea className="max-h-[400px]">
                 <div className="divide-y">
                   {order.items?.map((item) => {
@@ -528,7 +635,80 @@ export function OrderDetailPage() {
 
                     return (
                       <div key={item.id} className="p-4">
-                        {isRefunding ? (
+                        {isMissingMode ? (
+                          (() => {
+                            const ms = missingItemStates[item.id];
+                            const maxQty = isResolvingMode
+                              ? (item.missingQuantity || 0)
+                              : item.quantity - (item.missingQuantity || 0);
+                            const isFullyMissing = !isResolvingMode && (item.missingQuantity || 0) >= item.quantity;
+                            return (
+                              <>
+                                <div className={`grid grid-cols-[auto_1fr_80px_100px] gap-2 items-center ${isFullyMissing ? 'opacity-50' : ''}`}>
+                                  <Checkbox
+                                    checked={ms?.selected ?? false}
+                                    disabled={isFullyMissing || maxQty <= 0}
+                                    onCheckedChange={(checked) =>
+                                      handleToggleMissingItem(item.id, checked === true)
+                                    }
+                                  />
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
+                                      {item.productVariant?.product?.imageUrl ? (
+                                        <img
+                                          src={item.productVariant.product.imageUrl}
+                                          alt={item.name || 'Product'}
+                                          className="h-12 w-12 rounded-lg object-cover"
+                                        />
+                                      ) : (
+                                        <Package className="size-5 text-muted-foreground" />
+                                      )}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-medium truncate">
+                                        {item.name || item.productVariant?.product?.name || 'Unknown'}
+                                      </p>
+                                      {item.sku && (
+                                        <p className="text-xs text-muted-foreground">{item.sku}</p>
+                                      )}
+                                      {(item.missingQuantity || 0) > 0 && !isResolvingMode && (
+                                        <p className="text-xs text-orange-600 font-medium">
+                                          {isFullyMissing
+                                            ? 'All missing'
+                                            : `${item.missingQuantity} of ${item.quantity} missing`}
+                                        </p>
+                                      )}
+                                      {isResolvingMode && (item.missingQuantity || 0) > 0 && (
+                                        <p className="text-xs text-orange-600 font-medium">
+                                          {item.missingQuantity} currently missing
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="text-center text-sm text-muted-foreground">
+                                    &times; {item.quantity}
+                                  </div>
+                                  <div className="text-center">
+                                    {ms?.selected ? (
+                                      <Input
+                                        type="number"
+                                        min={1}
+                                        max={maxQty}
+                                        value={ms.quantity}
+                                        onChange={(e) =>
+                                          handleMissingQtyChange(item.id, parseInt(e.target.value) || 0)
+                                        }
+                                        className="h-8 text-sm text-center"
+                                      />
+                                    ) : (
+                                      <span className="text-sm text-muted-foreground">&ndash;</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()
+                        ) : isRefunding ? (
                           <>
                             {/* Refund mode row */}
                             <div className={`grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center ${item.refundedQuantity >= item.quantity ? 'opacity-50' : ''}`}>
@@ -657,6 +837,13 @@ export function OrderDetailPage() {
                                   {item.refundedQuantity >= item.quantity
                                     ? 'Fully refunded'
                                     : `${item.refundedQuantity} of ${item.quantity} refunded`}
+                                </p>
+                              )}
+                              {(item.missingQuantity || 0) > 0 && (
+                                <p className="text-xs text-orange-600 font-medium mt-0.5">
+                                  {item.missingQuantity >= item.quantity
+                                    ? 'All missing'
+                                    : `${item.missingQuantity} of ${item.quantity} missing`}
                                 </p>
                               )}
                             </div>
@@ -845,6 +1032,64 @@ export function OrderDetailPage() {
                           <>
                             <RotateCcw className="size-4 mr-2" />
                             Process Refund (${Math.min(refundTotals.totalRefund, refundTotals.totalAvailable).toFixed(2)})
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Missing products summary */}
+                {isMissingMode && (
+                  <div className="space-y-3 pt-3">
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-orange-600">
+                        <AlertTriangle className="size-3.5 inline mr-1.5" />
+                        {isResolvingMode ? 'Resolving missing items' : 'Marking items as missing'}
+                      </span>
+                      <span className="text-sm font-medium">
+                        {missingSelectedCount} item{missingSelectedCount !== 1 ? 's' : ''} selected
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm text-muted-foreground">Reason (optional):</label>
+                      <Input
+                        value={missingReason}
+                        onChange={(e) => setMissingReason(e.target.value)}
+                        placeholder="Enter reason..."
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 justify-end pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCancelMissing}
+                        disabled={markMissingMutation.isPending || resolveMissingMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-orange-600 hover:text-orange-700"
+                        onClick={handleSubmitMissing}
+                        disabled={
+                          markMissingMutation.isPending ||
+                          resolveMissingMutation.isPending ||
+                          missingSelectedCount === 0
+                        }
+                      >
+                        {(markMissingMutation.isPending || resolveMissingMutation.isPending) ? (
+                          <>
+                            <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-orange-600 mr-2" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="size-4 mr-2" />
+                            {isResolvingMode ? 'Resolve Missing' : 'Mark as Missing'}
                           </>
                         )}
                       </Button>
