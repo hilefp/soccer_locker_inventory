@@ -67,6 +67,7 @@ export interface OrderItem {
   productVariant?: {
     id: string;
     sku: string;
+    attributes?: Record<string, string>;
     product?: {
       id: string;
       name: string;

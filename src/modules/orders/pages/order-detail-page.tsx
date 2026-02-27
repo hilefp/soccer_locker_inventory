@@ -10,7 +10,6 @@ import {
   Truck,
   Clock,
   Building,
-  Hash,
   History,
   ChevronRight,
   FileText,
@@ -669,7 +668,16 @@ export function OrderDetailPage() {
                                         {item.name || item.productVariant?.product?.name || 'Unknown'}
                                       </p>
                                       {item.sku && (
-                                        <p className="text-xs text-muted-foreground">{item.sku}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          SKU: {item.sku}
+                                        </p>
+                                      )}
+                                      {item.attributes && Object.keys(item.attributes).length > 0 && (
+                                        <p className="text-xs text-muted-foreground">
+                                          {Object.entries(item.attributes)
+                                            .map(([key, value]) => `${key}: ${value}`)
+                                            .join(' | ')}
+                                        </p>
                                       )}
                                       {(item.missingQuantity || 0) > 0 && !isResolvingMode && (
                                         <p className="text-xs text-orange-600 font-medium">
@@ -817,21 +825,18 @@ export function OrderDetailPage() {
                                   {item.name || item.productVariant?.product?.name || 'Unknown Product'}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                {item.sku && (
-                                  <span className="flex items-center gap-1">
-                                    <Hash className="size-3" />
-                                    {item.sku}
-                                  </span>
-                                )}
-                                {item.attributes && Object.keys(item.attributes).length > 0 && (
-                                  <span>
-                                    {Object.entries(item.attributes)
-                                      .map(([key, value]) => `${key}: ${value}`)
-                                      .join(' | ')}
-                                  </span>
-                                )}
-                              </div>
+                              {item.sku && (
+                                <p className="text-xs text-muted-foreground">
+                                  SKU: {item.sku}
+                                </p>
+                              )}
+                              {item.attributes && Object.keys(item.attributes).length > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                  {Object.entries(item.attributes)
+                                    .map(([key, value]) => `${key}: ${value}`)
+                                    .join(' | ')}
+                                </p>
+                              )}
                               {item.refundedQuantity > 0 && (
                                 <p className="text-xs text-destructive font-medium mt-0.5">
                                   {item.refundedQuantity >= item.quantity
