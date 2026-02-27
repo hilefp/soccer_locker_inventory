@@ -47,6 +47,7 @@ export const KANBAN_STATUS_ORDER: OrderStatus[] = [
   'PROCESSING',
   'SHIPPING',
   'DELIVERED',
+  'MISSING',
 ];
 
 // Order Item Interface
