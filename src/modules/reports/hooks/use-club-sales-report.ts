@@ -42,7 +42,7 @@ export function useClubSalesReport(
 
   useEffect(() => {
     fetchData();
-  }, [filters?.clubId, filters?.startDate, filters?.endDate]);
+  }, [filters?.clubId, filters?.startDate, filters?.endDate, filters?.groupBy]);
 
   return {
     data,

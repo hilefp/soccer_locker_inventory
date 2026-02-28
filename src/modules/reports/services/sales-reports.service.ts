@@ -50,6 +50,9 @@ class SalesReportsService {
     if (filters.endDate) {
       params.append('endDate', filters.endDate);
     }
+    if (filters.groupBy) {
+      params.append('groupBy', filters.groupBy);
+    }
 
     const url = `${this.baseUrl}/club-sales?${params.toString()}`;
     const response = await apiClient.get<ClubSalesReportDto>(url);

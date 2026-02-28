@@ -18,6 +18,8 @@ export interface ChartData {
   previousYearLabel: string;
 }
 
+export type GroupByPeriod = 'day' | 'week' | 'month';
+
 export interface GeneralSalesReportDto {
   netSales: number;
   grossSales: number;
@@ -31,13 +33,10 @@ export interface TopProduct {
   productVariantId: string;
   productName: string;
   sku: string;
-  quanttype GroupByPeriod = 'day' | 'week' | 'month';
-
-export itySold: number;
+  quantitySold: number;
   totalRevenue: number;
 }
-;
-  groupBy?: GroupByPeriod
+
 export interface ClubSalesReportDto {
   clubId: string;
   clubName: string;
@@ -46,16 +45,19 @@ export interface ClubSalesReportDto {
   itemsSold: number;
   topProduct: TopProduct | null;
   dateRange: DateRange;
+  chartData?: ChartData;
 }
 
 export interface SalesReportFilters {
   startDate?: string;
   endDate?: string;
   clubId?: string;
+  groupBy?: GroupByPeriod;
 }
 
 export interface ClubSalesFilters {
   clubId: string;
   startDate?: string;
   endDate?: string;
+  groupBy?: GroupByPeriod;
 }
