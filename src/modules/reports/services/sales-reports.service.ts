@@ -26,6 +26,9 @@ class SalesReportsService {
     if (filters?.clubId) {
       params.append('clubId', filters.clubId);
     }
+    if (filters?.groupBy) {
+      params.append('groupBy', filters.groupBy);
+    }
 
     const url = `${this.baseUrl}/sales/general${params.toString() ? `?${params.toString()}` : ''}`;
     const response = await apiClient.get<GeneralSalesReportDto>(url);

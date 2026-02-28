@@ -31,7 +31,7 @@ export function useGeneralSalesReport(
 
   useEffect(() => {
     fetchData();
-  }, [filters?.startDate, filters?.endDate, filters?.clubId]);
+  }, [filters?.startDate, filters?.endDate, filters?.clubId, filters?.groupBy]);
 
   return {
     data,
