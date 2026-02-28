@@ -79,3 +79,6 @@ export interface StockRankingDto {
   quantity: number;
   warehouse: string;
 }
+
+// Re-export sales reports types
+export * from './sales-reports.types';
