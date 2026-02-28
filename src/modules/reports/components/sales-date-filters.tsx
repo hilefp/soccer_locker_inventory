@@ -4,6 +4,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Button } from '@/shared/components/ui/button';
 import { Calendar, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { cn } from '@/shared/lib/utils';
 
 interface SalesDateFiltersProps {
   startDate: string;
@@ -16,6 +17,8 @@ interface SalesDateFiltersProps {
   onClubIdChange?: (clubId: string) => void;
 }
 
+type DatePeriod = 'today' | 'week' | 'month' | '6months' | 'year' | 'custom';
+
 export function SalesDateFilters({
   startDate,
   endDate,
@@ -27,6 +30,7 @@ export function SalesDateFilters({
   onClubIdChange,
 }: SalesDateFiltersProps) {
   const [dateError, setDateError] = useState<string>('');
+  const [selectedPeriod, setSelectedPeriod] = useState<DatePeriod>('custom');
 
   useEffect(() => {
     if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
@@ -36,7 +40,65 @@ export function SalesDateFilters({
     }
   }, [startDate, endDate]);
 
+  const formatDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handlePeriodClick = (period: DatePeriod) => {
+    setSelectedPeriod(period);
+    const today = new Date();
+    const endDateValue = formatDate(today);
+    let startDateValue = '';
+
+    switch (period) {
+      case 'today':
+        startDateValue = endDateValue;
+        break;
+      case 'week':
+        const weekAgo = new Date(today);
+        weekAgo.setDate(today.getDate() - 7);
+        startDateValue = formatDate(weekAgo);
+        break;
+      case 'month':
+        const monthAgo = new Date(today);
+        monthAgo.setMonth(today.getMonth() - 1);
+        startDateValue = formatDate(monthAgo);
+        break;
+      case '6months':
+        const sixMonthsAgo = new Date(today);
+        sixMonthsAgo.setMonth(today.getMonth() - 6);
+        startDateValue = formatDate(sixMonthsAgo);
+        break;
+      case 'year':
+        const yearAgo = new Date(today);
+        yearAgo.setFullYear(today.getFullYear() - 1);
+        startDateValue = formatDate(yearAgo);
+        break;
+      case 'custom':
+        return;
+    }
+
+    onStartDateChange(startDateValue);
+    onEndDateChange(endDateValue);
+  };
+
+  const handleCustomDateChange = () => {
+    setSelectedPeriod('custom');
+  };
+
   const hasActiveFilters = startDate || endDate || clubId;
+
+  const periodButtons: { label: string; value: DatePeriod }[] = [
+    { label: 'Hoy', value: 'today' },
+    { label: 'Esta semana', value: 'week' },
+    { label: 'Este mes', value: 'month' },
+    { label: '6 meses', value: '6months' },
+    { label: 'Este año', value: 'year' },
+    { label: 'Personalizado', value: 'custom' },
+  ];
 
   return (
     <Card>
@@ -47,28 +109,54 @@ export function SalesDateFilters({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="startDate">Start Date</Label>
-            <Input
-              id="startDate"
-              type="date"
-              value={startDate}
-              onChange={(e) => onStartDateChange(e.target.value)}
-              aria-label="Start date filter"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="endDate">End Date</Label>
-            <Input
-              id="endDate"
-              type="date"
-              value={endDate}
-              onChange={(e) => onEndDateChange(e.target.value)}
-              aria-label="End date filter"
-            />
-          </div>
+        <div className="flex flex-wrap gap-2">
+          {periodButtons.map((button) => (
+            <Button
+              key={button.value}
+              variant="outline"
+              size="sm"
+              onClick={() => handlePeriodClick(button.value)}
+              className={cn(
+                'transition-colors',
+                selectedPeriod === button.value &&
+                  'bg-yellow-400 text-black hover:bg-yellow-500 hover:text-black border-yellow-400'
+              )}
+            >
+              {button.label}
+            </Button>
+          ))}
         </div>
+
+        {selectedPeriod === 'custom' && (
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Start Date</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  onStartDateChange(e.target.value);
+                  handleCustomDateChange();
+                }}
+                aria-label="Start date filter"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endDate">End Date</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  onEndDateChange(e.target.value);
+                  handleCustomDateChange();
+                }}
+                aria-label="End date filter"
+              />
+            </div>
+          </div>
+        )}
 
         {showClubFilter && onClubIdChange && (
           <div className="space-y-2">

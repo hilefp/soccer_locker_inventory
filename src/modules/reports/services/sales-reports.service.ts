@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { apiClient } from '@/shared/lib/api-client';
 import {
   GeneralSalesReportDto,
   ClubSalesReportDto,
@@ -6,10 +6,8 @@ import {
   ClubSalesFilters,
 } from '../types/sales-reports.types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-
 class SalesReportsService {
-  private baseUrl = `${API_BASE_URL}/api/reports`;
+  private baseUrl = '/reports';
 
   /**
    * Get general sales report with optional filters
@@ -30,7 +28,7 @@ class SalesReportsService {
     }
 
     const url = `${this.baseUrl}/sales/general${params.toString() ? `?${params.toString()}` : ''}`;
-    const response = await axios.get<GeneralSalesReportDto>(url);
+    const response = await apiClient.get<GeneralSalesReportDto>(url);
     return response.data;
   }
 
@@ -51,7 +49,7 @@ class SalesReportsService {
     }
 
     const url = `${this.baseUrl}/club-sales?${params.toString()}`;
-    const response = await axios.get<ClubSalesReportDto>(url);
+    const response = await apiClient.get<ClubSalesReportDto>(url);
     return response.data;
   }
 }
