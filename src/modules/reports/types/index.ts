@@ -7,7 +7,13 @@ export interface ReportFilterDto {
   sortOrder?: 'asc' | 'desc';
 }
 
-// Products Reports Types
+export interface DateRange {
+  startDate: string | null;
+  endDate: string | null;
+}
+
+// ─── Products Reports Types ─────────────────────────────────────
+
 export interface ProductReportCount {
   count: number;
 }
@@ -21,7 +27,72 @@ export interface ProductVariantData {
   price: number;
 }
 
-// Stock Reports Types
+export interface CategoryStat {
+  categoryId: string;
+  categoryName: string;
+  totalProducts: number;
+  totalVariants: number;
+  inventoryValue: number;
+  averagePrice: number;
+  percentageOfTotal: number;
+}
+
+export interface BrandStat {
+  brandId: string;
+  brandName: string;
+  totalProducts: number;
+  totalVariants: number;
+  inventoryValue: number;
+  averagePrice: number;
+  percentageOfTotal: number;
+}
+
+export interface TopProductByValue {
+  productId: string;
+  productName: string;
+  totalValue: number;
+  quantity: number;
+  price: number;
+}
+
+export interface TopProductByStock {
+  productId: string;
+  productName: string;
+  totalQuantity: number;
+  price: number;
+}
+
+export interface PriceRangeItem {
+  range: string;
+  count: number;
+  percentage: number;
+}
+
+export interface ProductsReportDto {
+  totalProducts: number;
+  totalVariants: number;
+  activeProducts: number;
+  inactiveProducts: number;
+  averagePrice: number;
+  lowestPrice: number;
+  highestPrice: number;
+  totalInventoryValue: number;
+  totalInventoryCost: number;
+  potentialProfit: number;
+  averageProfitMargin: number;
+  productsWithStock: number;
+  productsOutOfStock: number;
+  productsWithLowStock: number;
+  categoryStats: CategoryStat[];
+  brandStats: BrandStat[];
+  topProductsByValue: TopProductByValue[];
+  topProductsByStock: TopProductByStock[];
+  priceRangeDistribution: PriceRangeItem[];
+  dateRange: DateRange;
+}
+
+// ─── Stock Reports Types ────────────────────────────────────────
+
 export interface StockTotalQuantity {
   totalQuantity: number;
 }
@@ -36,7 +107,7 @@ export interface Product {
 
 export interface ProductVariant {
   sku: string;
-  product?: Product; // Made optional/adjusted as per new spec response might differ slightly, but keeping consistent
+  product?: Product;
 }
 
 export interface StockObject {
@@ -78,6 +149,86 @@ export interface StockRankingDto {
   name: string;
   quantity: number;
   warehouse: string;
+}
+
+export interface WarehouseStat {
+  warehouseId: string;
+  warehouseName: string;
+  totalQuantity: number;
+  availableQuantity: number;
+  reservedQuantity: number;
+  inventoryValue: number;
+  uniqueProducts: number;
+  percentageOfTotal: number;
+}
+
+export interface StockCategoryStat {
+  categoryId: string;
+  categoryName: string;
+  totalQuantity: number;
+  inventoryValue: number;
+  productCount: number;
+  percentageOfTotal: number;
+}
+
+export interface MovementSummary {
+  totalEntries: number;
+  totalExits: number;
+  totalAdjustments: number;
+  totalTransfersIn: number;
+  totalTransfersOut: number;
+  totalDamaged: number;
+  totalLost: number;
+  netChange: number;
+}
+
+export interface StockTopProduct {
+  productId: string;
+  productName: string;
+  totalQuantity?: number;
+  totalValue?: number;
+  price: number;
+}
+
+export interface LowStockAlert {
+  productId: string;
+  productName: string;
+  variantName: string;
+  currentStock: number;
+  minimumStock: number;
+  warehouse: string;
+}
+
+export interface TurnoverMetrics {
+  averageDaysToSell: number;
+  turnoverRate: number;
+  fastMovingCount: number;
+  slowMovingCount: number;
+  obsoleteCount: number;
+}
+
+export interface StockReportDto {
+  totalQuantity: number;
+  totalAvailableQuantity: number;
+  totalReservedQuantity: number;
+  totalInventoryValueCost: number;
+  totalInventoryValueRetail: number;
+  potentialRevenue: number;
+  uniqueProducts: number;
+  uniqueVariants: number;
+  totalWarehouses: number;
+  productsWithStock: number;
+  productsOutOfStock: number;
+  productsWithLowStock: number;
+  stockAccuracy: number;
+  warehouseStats: WarehouseStat[];
+  categoryStats: StockCategoryStat[];
+  movementSummary: MovementSummary;
+  topProductsByQuantity: StockTopProduct[];
+  topProductsByValue: StockTopProduct[];
+  lowStockAlerts: LowStockAlert[];
+  turnoverMetrics: TurnoverMetrics;
+  dateRange: DateRange;
 }
 
 // Re-export sales reports types

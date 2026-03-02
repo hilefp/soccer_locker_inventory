@@ -7,10 +7,19 @@ import {
   StockInsertionHistory,
   StockObject,
   StockRankingDto,
+  StockReportDto,
   StockTotalQuantity,
 } from '../types';
 
 export const stockReportsService = {
+  getStockReport: async (filters?: ReportFilterDto) => {
+    const { data } = await apiClient.get<StockReportDto>(
+      '/reports-stock',
+      { params: filters }
+    );
+    return data;
+  },
+
   getTotalStockQuantity: async () => {
     const { data } = await apiClient.get<StockTotalQuantity>(
       '/reports-stock/total-quantity'
