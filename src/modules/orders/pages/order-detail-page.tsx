@@ -48,6 +48,7 @@ import {
   useOrderStatusHistory,
   useUpdateOrderStatus,
   useUpdateOrder,
+  useUpdateShipping,
   useRefundOrder,
 } from '@/modules/orders/hooks/use-orders';
 import {
@@ -103,6 +104,7 @@ export function OrderDetailPage() {
   const { data: statusHistory } = useOrderStatusHistory(orderId || '');
   const updateStatusMutation = useUpdateOrderStatus();
   const updateOrderMutation = useUpdateOrder();
+  const updateShippingMutation = useUpdateShipping();
   const refundMutation = useRefundOrder();
 
   useDocumentTitle(order ? `Order ${order.orderNumber}` : 'Order Details');
@@ -151,7 +153,7 @@ export function OrderDetailPage() {
 
   const saveAddress = () => {
     if (!orderId) return;
-    updateOrderMutation.mutate(
+    updateShippingMutation.mutate(
       { id: orderId, data: addressDraft },
       { onSuccess: () => setEditingAddress(false) }
     );
@@ -430,7 +432,7 @@ export function OrderDetailPage() {
                     variant="ghost"
                     size="sm"
                     onClick={saveAddress}
-                    disabled={updateOrderMutation.isPending}
+                    disabled={updateShippingMutation.isPending}
                     className="h-7 px-2 text-green-600 hover:text-green-700"
                   >
                     <Check className="size-3.5" />
