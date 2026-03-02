@@ -121,16 +121,16 @@ export default function StockReportsPage() {
       
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
         <SummaryCard
-          title="Total Stock Quantity"
-          value={totalQty?.totalQuantity?.toLocaleString() ?? 0}
-          icon={Boxes}
-          description="Total items in stock"
-        />
-        <SummaryCard
           title="Inventory Value"
           value={`$${inventoryValue?.totalValue?.toLocaleString() ?? '0.00'}`}
           icon={DollarSign}
           description="Total value of inventory"
+        />
+        <SummaryCard
+          title="Total Stock Quantity"
+          value={totalQty?.totalQuantity?.toLocaleString() ?? 0}
+          icon={Boxes}
+          description="Total items in stock"
         />
   
       </div>

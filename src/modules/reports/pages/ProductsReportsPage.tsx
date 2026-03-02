@@ -66,19 +66,19 @@ export default function ProductsReportsPage() {
         </Alert>
       )}
 
+      {/* ── Inventory Value ───────────────────────────────────── */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <SalesKpiCard title="Inventory Value (Retail)" value={data ? fmt(data.totalInventoryValue) : '$0.00'} icon={DollarSign} description="Total retail value" iconClassName="text-blue-600" loading={loading} />
+        <SalesKpiCard title="Inventory Cost" value={data ? fmt(data.totalInventoryCost) : '$0.00'} icon={DollarSign} description="Total cost" iconClassName="text-orange-600" loading={loading} />
+        <SalesKpiCard title="Potential Profit" value={data ? fmt(data.potentialProfit) : '$0.00'} icon={TrendingUp} description="Revenue - Cost" iconClassName="text-green-600" loading={loading} />
+      </div>
+
       {/* ── Main KPIs ─────────────────────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <SalesKpiCard title="Total Products" value={data ? fmtNum(data.totalProducts) : '0'} icon={Package} description="Products in catalog" iconClassName="text-blue-600" loading={loading} />
         <SalesKpiCard title="Total Variants" value={data ? fmtNum(data.totalVariants) : '0'} icon={Layers} description="Product variants" iconClassName="text-indigo-600" loading={loading} />
         <SalesKpiCard title="Average Price" value={data ? fmt(data.averagePrice) : '$0.00'} icon={DollarSign} description="Avg product price" iconClassName="text-green-600" loading={loading} />
         <SalesKpiCard title="Profit Margin" value={data ? fmtPct(data.averageProfitMargin) : '0%'} icon={TrendingUp} description="Avg profit margin" iconClassName="text-emerald-600" loading={loading} />
-      </div>
-
-      {/* ── Inventory Value ───────────────────────────────────── */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <SalesKpiCard title="Inventory Value (Retail)" value={data ? fmt(data.totalInventoryValue) : '$0.00'} icon={DollarSign} description="Total retail value" iconClassName="text-blue-600" loading={loading} />
-        <SalesKpiCard title="Inventory Cost" value={data ? fmt(data.totalInventoryCost) : '$0.00'} icon={DollarSign} description="Total cost" iconClassName="text-orange-600" loading={loading} />
-        <SalesKpiCard title="Potential Profit" value={data ? fmt(data.potentialProfit) : '$0.00'} icon={TrendingUp} description="Revenue - Cost" iconClassName="text-green-600" loading={loading} />
       </div>
 
       {/* ── Stock Status & Price Range ────────────────────────── */}
