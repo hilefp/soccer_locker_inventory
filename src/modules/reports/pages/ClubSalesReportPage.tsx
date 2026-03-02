@@ -5,24 +5,22 @@ import { SalesKpiCard } from '../components/sales-kpi-card';
 import { SalesDateFilters } from '../components/sales-date-filters';
 import { SalesChart } from '../components/sales-chart';
 import { TopProductCard } from '../components/top-product-card';
-import { DollarSign, ShoppingCart, Package } from 'lucide-react';
+import { DollarSign, ShoppingCart, Package, AlertCircle, Building2, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
-import { Search, X } from 'lucide-react';
 import { GroupByPeriod } from '../types/sales-reports.types';
+import { useClubs } from '@/modules/clubs/hooks/use-clubs';
 
 export default function ClubSalesReportPage() {
   useDocumentTitle('Club Sales Report');
 
   const [clubId, setClubId] = useState<string>('');
-  const [clubIdInput, setClubIdInput] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [groupBy, setGroupBy] = useState<GroupByPeriod>('day');
+  const { data: clubs, isLoading: clubsLoading } = useClubs();
 
   const { data, loading, error } = useClubSalesReport(
     clubId
@@ -35,16 +33,8 @@ export default function ClubSalesReportPage() {
       : null
   );
 
-  const handleSearch = () => {
-    if (!clubIdInput.trim()) {
-      return;
-    }
-    setClubId(clubIdInput.trim());
-  };
-
   const handleClearAll = () => {
     setClubId('');
-    setClubIdInput('');
     setStartDate('');
     setEndDate('');
   };
@@ -96,35 +86,34 @@ export default function ClubSalesReportPage() {
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-              <Search className="h-4.5 w-4.5 text-primary" />
+              <Building2 className="h-4.5 w-4.5 text-primary" />
             </div>
             <span>Seleccionar Club</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="clubIdInput" className="text-sm font-medium">
-                Club ID <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="clubIdInput"
-                type="text"
-                placeholder="Ingresa el ID del club (requerido)..."
-                value={clubIdInput}
-                onChange={(e) => setClubIdInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="rounded-lg border-2 focus:border-primary"
-                aria-label="Club ID input"
-                aria-required="true"
-              />
-            </div>
-            <div className="flex items-end">
-              <Button onClick={handleSearch} disabled={!clubIdInput.trim()}>
-                <Search className="mr-2 h-4 w-4" />
-                Buscar
-              </Button>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="clubSelect" className="text-sm font-medium">
+              Club <span className="text-destructive">*</span>
+            </Label>
+            <select
+              id="clubSelect"
+              value={clubId}
+              onChange={(e) => setClubId(e.target.value)}
+              disabled={clubsLoading}
+              className="w-full rounded-lg border-2 border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Club selector"
+              aria-required="true"
+            >
+              <option value="">
+                {clubsLoading ? 'Cargando clubs...' : 'Selecciona un club...'}
+              </option>
+              {clubs?.map((club) => (
+                <option key={club.id} value={club.id}>
+                  {club.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {clubId && (
@@ -259,10 +248,10 @@ export default function ClubSalesReportPage() {
       {!clubId && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <Search className="h-16 w-16 text-muted-foreground/50 mb-4" />
+            <Building2 className="h-16 w-16 text-muted-foreground/50 mb-4" />
             <h3 className="text-lg font-semibold mb-2">Ningún Club Seleccionado</h3>
             <p className="text-sm text-muted-foreground max-w-md">
-              Ingresa un ID de club arriba para ver las métricas de ventas detalladas y datos de
+              Selecciona un club arriba para ver las métricas de ventas detalladas y datos de
               rendimiento de ese club específico.
             </p>
           </CardContent>
