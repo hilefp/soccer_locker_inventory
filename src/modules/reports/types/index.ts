@@ -50,21 +50,26 @@ export interface BrandStat {
 export interface TopProductByValue {
   productId: string;
   productName: string;
-  totalValue: number;
-  quantity: number;
-  price: number;
+  sku: string;
+  totalStock: number;
+  inventoryValue: number;
+  variantCount: number;
 }
 
 export interface TopProductByStock {
   productId: string;
   productName: string;
-  totalQuantity: number;
-  price: number;
+  sku: string;
+  totalStock: number;
+  inventoryValue: number;
+  variantCount: number;
 }
 
 export interface PriceRangeItem {
   range: string;
-  count: number;
+  minPrice: number;
+  maxPrice: number;
+  productCount: number;
   percentage: number;
 }
 

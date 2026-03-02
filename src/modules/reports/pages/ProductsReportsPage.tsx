@@ -148,7 +148,7 @@ export default function ProductsReportsPage() {
                         <div key={item.range} className="mb-2">
                           <div className="flex items-center justify-between text-sm mb-1">
                             <span>{item.range}</span>
-                            <span className="text-muted-foreground">{item.count} ({fmtPct(item.percentage)})</span>
+                            <span className="text-muted-foreground">{item.productCount} ({fmtPct(item.percentage)})</span>
                           </div>
                           <div className="h-2 rounded-full bg-muted">
                             <div className="h-2 rounded-full bg-primary" style={{ width: `${item.percentage}%` }} />
@@ -272,10 +272,10 @@ export default function ProductsReportsPage() {
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{i + 1}</span>
                       <div>
                         <p className="text-sm font-medium">{p.productName}</p>
-                        <p className="text-xs text-muted-foreground">{fmtNum(p.quantity)} units × {fmt(p.price)}</p>
+                        <p className="text-xs text-muted-foreground">{fmtNum(p.totalStock)} units · {p.variantCount} variants</p>
                       </div>
                     </div>
-                    <span className="font-semibold text-sm">{fmt(p.totalValue)}</span>
+                    <span className="font-semibold text-sm">{fmt(p.inventoryValue)}</span>
                   </div>
                 ))}
               </div>
@@ -297,10 +297,10 @@ export default function ProductsReportsPage() {
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-500/10 text-xs font-bold text-orange-600">{i + 1}</span>
                       <div>
                         <p className="text-sm font-medium">{p.productName}</p>
-                        <p className="text-xs text-muted-foreground">Price: {fmt(p.price)}</p>
+                        <p className="text-xs text-muted-foreground">{fmt(p.inventoryValue)} · {p.variantCount} variants</p>
                       </div>
                     </div>
-                    <span className="font-semibold text-sm">{fmtNum(p.totalQuantity)} units</span>
+                    <span className="font-semibold text-sm">{fmtNum(p.totalStock)} units</span>
                   </div>
                 ))}
               </div>
