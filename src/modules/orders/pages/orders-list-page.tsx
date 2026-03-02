@@ -65,7 +65,7 @@ export function OrdersListPage() {
       </div>
 
       <OrderListTable
-        orders={data?.data?.filter((o) => o.status !== 'PENDING_PAYMENT')}
+        orders={data?.data}
         meta={data?.meta}
         isLoading={isLoading}
         error={error?.message || null}
