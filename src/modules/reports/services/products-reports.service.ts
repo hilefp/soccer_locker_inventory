@@ -3,10 +3,19 @@ import {
   ProductReportAveragePrice,
   ProductReportCount,
   ProductVariantData,
+  ProductsReportDto,
   ReportFilterDto,
 } from '../types';
 
 export const productsReportsService = {
+  getProductsReport: async (filters?: ReportFilterDto) => {
+    const { data } = await apiClient.get<ProductsReportDto>(
+      '/reports/products',
+      { params: filters }
+    );
+    return data;
+  },
+
   getProductsCount: async (filters?: ReportFilterDto) => {
     const { data } = await apiClient.get<ProductReportCount>(
       '/reports/products/count',

@@ -2,15 +2,26 @@ import { apiClient } from '@/shared/lib/api-client';
 import {
   DamagedProductReport,
   InventoryValue,
+  InventoryValueFilters,
   LowStockVariantDto,
   ReportFilterDto,
   StockInsertionHistory,
+  StockInventoryValueResponse,
   StockObject,
   StockRankingDto,
+  StockReportDto,
   StockTotalQuantity,
 } from '../types';
 
 export const stockReportsService = {
+  getStockReport: async (filters?: ReportFilterDto) => {
+    const { data } = await apiClient.get<StockReportDto>(
+      '/reports-stock',
+      { params: filters }
+    );
+    return data;
+  },
+
   getTotalStockQuantity: async () => {
     const { data } = await apiClient.get<StockTotalQuantity>(
       '/reports-stock/total-quantity'
@@ -66,6 +77,14 @@ export const stockReportsService = {
   getStockRanking: async (filters?: ReportFilterDto) => {
     const { data } = await apiClient.get<StockRankingDto[]>(
       '/reports-stock/ranking',
+      { params: filters }
+    );
+    return data;
+  },
+
+  getInventoryValueReport: async (filters?: InventoryValueFilters) => {
+    const { data } = await apiClient.get<StockInventoryValueResponse>(
+      '/reports-stock/inventory-value-report',
       { params: filters }
     );
     return data;

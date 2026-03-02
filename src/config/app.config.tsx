@@ -66,6 +66,8 @@ export const MENU_SIDEBAR: MenuConfig = [
     children: [
       { title: 'Products Report', path: '/reports/products' },
       { title: 'Stock Report', path: '/reports/stock' },
+      { title: 'General Sales', path: '/reports/sales/general' },
+      { title: 'Club Sales', path: '/reports/sales/club' },
     ],
   },
   // {
