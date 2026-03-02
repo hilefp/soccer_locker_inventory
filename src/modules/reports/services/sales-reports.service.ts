@@ -58,6 +58,52 @@ class SalesReportsService {
     const response = await apiClient.get<ClubSalesReportDto>(url);
     return response.data;
   }
+
+  /**
+   * Export general sales report as Excel file
+   */
+  async exportGeneralSalesReport(filters?: SalesReportFilters): Promise<Blob> {
+    const params = new URLSearchParams();
+
+    if (filters?.startDate) {
+      params.append('startDate', filters.startDate);
+    }
+    if (filters?.endDate) {
+      params.append('endDate', filters.endDate);
+    }
+    if (filters?.clubId) {
+      params.append('clubId', filters.clubId);
+    }
+    if (filters?.groupBy) {
+      params.append('groupBy', filters.groupBy);
+    }
+
+    const url = `${this.baseUrl}/sales/general/export${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await apiClient.get(url, { responseType: 'blob' });
+    return response.data;
+  }
+
+  /**
+   * Export club-specific sales report as Excel file
+   */
+  async exportClubSalesReport(filters: ClubSalesFilters): Promise<Blob> {
+    const params = new URLSearchParams();
+    params.append('clubId', filters.clubId);
+
+    if (filters.startDate) {
+      params.append('startDate', filters.startDate);
+    }
+    if (filters.endDate) {
+      params.append('endDate', filters.endDate);
+    }
+    if (filters.groupBy) {
+      params.append('groupBy', filters.groupBy);
+    }
+
+    const url = `${this.baseUrl}/club-sales/export?${params.toString()}`;
+    const response = await apiClient.get(url, { responseType: 'blob' });
+    return response.data;
+  }
 }
 
 export const salesReportsService = new SalesReportsService();

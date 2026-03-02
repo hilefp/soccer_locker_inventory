@@ -12,6 +12,8 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { GroupByPeriod } from '../types/sales-reports.types';
 import { useClubs } from '@/modules/clubs/hooks/use-clubs';
+import { useClubSalesExport } from '../hooks/use-club-sales-export';
+import { ExportExcelButton } from '../components/export-excel-button';
 
 export default function ClubSalesReportPage() {
   useDocumentTitle('Club Sales Report');
@@ -22,16 +24,17 @@ export default function ClubSalesReportPage() {
   const [groupBy, setGroupBy] = useState<GroupByPeriod>('day');
   const { data: clubs, isLoading: clubsLoading } = useClubs();
 
-  const { data, loading, error } = useClubSalesReport(
-    clubId
-      ? {
-          clubId,
-          startDate: startDate || undefined,
-          endDate: endDate || undefined,
-          groupBy,
-        }
-      : null
-  );
+  const clubFilters = clubId
+    ? {
+        clubId,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        groupBy,
+      }
+    : null;
+
+  const { data, loading, error } = useClubSalesReport(clubFilters);
+  const { exporting, exportToExcel } = useClubSalesExport(clubFilters);
 
   const handleClearAll = () => {
     setClubId('');
@@ -74,11 +77,20 @@ export default function ClubSalesReportPage() {
   return (
     <div className="container-fluid space-y-6 lg:space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Club Sales Report</h1>
-        <p className="text-muted-foreground mt-2">
-          Detailed sales performance and metrics for a specific club.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Club Sales Report</h1>
+          <p className="text-muted-foreground mt-2">
+            Detailed sales performance and metrics for a specific club.
+          </p>
+        </div>
+        {clubId && (
+          <ExportExcelButton
+            onClick={exportToExcel}
+            loading={exporting}
+            disabled={loading}
+          />
+        )}
       </div>
 
       {/* Club Selector */}
