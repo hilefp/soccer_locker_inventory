@@ -3,6 +3,7 @@ import { stockReportsService } from '../services/stock-reports.service';
 import {
   DamagedProductReport,
   InventoryValue,
+  InventoryValueFilters,
   ReportFilterDto,
   StockObject,
   StockRankingDto,
@@ -21,6 +22,11 @@ import { ObsoleteVariantsTable } from '../components/obsolete-variants-table';
 import { MonthlyEntriesVsExitsChart } from '../components/monthly-entries-vs-exits-chart';
 import { MonthlyTotalStockChart } from '../components/monthly-total-stock-chart';
 import { InventoryReportFilters } from '../components/inventory-report-filters';
+import { useStockInventoryValue } from '../hooks/use-stock-inventory-value';
+import { InventoryValueKPIs } from '../components/inventory-value-kpis';
+import { InventoryValueBySkuTable } from '../components/inventory-value-by-sku-table';
+import { InventoryValueByCategoryTable } from '../components/inventory-value-by-category-table';
+import { InventoryValueCategoryChart } from '../components/inventory-value-category-chart';
 
 export default function StockReportsPage() {
   useDocumentTitle('Stock Reports');
@@ -28,7 +34,8 @@ export default function StockReportsPage() {
   const [endDate, setEndDate] = useState<string>('');
   const [rankingSort, setRankingSort] = useState<'asc' | 'desc'>('desc');
 
-  const [activeTab, setActiveTab] = useState<'movements' | 'stock'>('movements');
+  const [activeTab, setActiveTab] = useState<'movements' | 'stock' | 'inventory-value'>('movements');
+  const [invValueFilters, setInvValueFilters] = useState<InventoryValueFilters>();
   const [filters, setFilters] = useState<ReportFilterDto>();
 
   const [totalQty, setTotalQty] = useState<StockTotalQuantity | null>(null);
@@ -40,6 +47,7 @@ export default function StockReportsPage() {
 
   const totalStockQuery = useMonthlyTotalStock(filters);
   const entriesVsExitsQuery = useMonthlyEntriesVsExits(filters);
+  const inventoryValueReport = useStockInventoryValue(invValueFilters);
 
   const handleApplyFilters = (newFilters: ReportFilterDto) => {
     setFilters(newFilters);
@@ -140,9 +148,10 @@ export default function StockReportsPage() {
  
               {/* Reports Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="movements">Movements</TabsTrigger>
           <TabsTrigger value="stock">Stock</TabsTrigger>
+          <TabsTrigger value="inventory-value">Inventory Value</TabsTrigger>
        </TabsList>
 
         {/* Movements Tab */}
@@ -163,7 +172,26 @@ export default function StockReportsPage() {
           />
         </TabsContent>
 
-       
+        {/* Inventory Value Tab */}
+        <TabsContent value="inventory-value" className="space-y-6 mt-6">
+          <InventoryValueKPIs
+            data={inventoryValueReport.data}
+            loading={inventoryValueReport.loading}
+          />
+          <InventoryValueCategoryChart
+            data={inventoryValueReport.data?.inventoryValueByCategory ?? []}
+            loading={inventoryValueReport.loading}
+          />
+          <InventoryValueByCategoryTable
+            data={inventoryValueReport.data?.inventoryValueByCategory ?? []}
+            loading={inventoryValueReport.loading}
+          />
+          <InventoryValueBySkuTable
+            data={inventoryValueReport.data?.inventoryValueBySku ?? []}
+            loading={inventoryValueReport.loading}
+          />
+        </TabsContent>
+
       </Tabs> 
       </div>
 

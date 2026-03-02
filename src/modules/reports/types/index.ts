@@ -236,5 +236,51 @@ export interface StockReportDto {
   dateRange: DateRange;
 }
 
+// ─── Inventory Value Report Types ───────────────────────────────
+
+export interface InventoryValueBySku {
+  variantId: string;
+  productName: string;
+  sku: string;
+  quantity: number;
+  unitCost: number;
+  unitPrice: number;
+  inventoryValueCost: number;
+  inventoryValueRetail: number;
+  potentialProfit: number;
+  categoryName: string;
+}
+
+export interface InventoryValueByCategory {
+  categoryId: string;
+  categoryName: string;
+  totalQuantity: number;
+  productCount: number;
+  variantCount: number;
+  inventoryValueCost: number;
+  inventoryValueRetail: number;
+  potentialProfit: number;
+  profitMargin: number;
+  percentageOfTotal: number;
+}
+
+export interface StockInventoryValueResponse {
+  totalInventoryValueCost: number;
+  totalInventoryValueRetail: number;
+  totalPotentialProfit: number;
+  overallProfitMargin: number;
+  totalQuantity: number;
+  inventoryValueBySku: InventoryValueBySku[];
+  inventoryValueByCategory: InventoryValueByCategory[];
+  dateRange: DateRange;
+}
+
+export interface InventoryValueFilters {
+  categoryId?: string;
+  brandId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 // Re-export sales reports types
 export * from './sales-reports.types';
