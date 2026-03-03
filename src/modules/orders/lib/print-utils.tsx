@@ -266,16 +266,22 @@ export const generateInvoiceHTML = (order: Order): string => {
 
   const itemsHTML = order.items
     ?.map(
-      (item) => `
+      (item) => {
+        const variantAttrs = item.productVariant?.attributes || {};
+        const itemAttrs = item.attributes || {};
+        const size = itemAttrs.size || itemAttrs.Size || variantAttrs.size || variantAttrs.Size;
+        return `
     <tr>
       <td>
         <div class="product-name">${escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
         ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
+        ${size ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(size)}</div>` : ''}
       </td>
       <td class="right">${item.quantity}</td>
       <td class="right">$${Number(item.unitPrice).toFixed(2)}</td>
     </tr>
-  `
+  `;
+      }
     )
     .join('') || '<tr><td colspan="3">No items</td></tr>';
 
@@ -382,6 +388,8 @@ export const generatePackingSlipHTML = (order: Order): string => {
     ?.map((item) => {
       const imageUrl = item.productVariant?.product?.imageUrl;
       const attributes = item.attributes || {};
+      const variantAttrs = item.productVariant?.attributes || {};
+      const size = attributes.size || attributes.Size || variantAttrs.size || variantAttrs.Size;
 
       return `
         <tr>
@@ -395,7 +403,7 @@ export const generatePackingSlipHTML = (order: Order): string => {
               <div style="flex: 1;">
                 <div class="product-name">${escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
                 ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
-                ${attributes.size ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(attributes.size)}</div>` : ''}
+                ${size ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(size)}</div>` : ''}
                 ${attributes.parkLocation || attributes['Park Location'] ? `<div class="product-meta"><strong>Park Location (Choose one):</strong> ${escapeHtml(attributes.parkLocation || attributes['Park Location'])}</div>` : ''}
                 ${attributes.birthYear || attributes['Birth Year'] ? `<div class="product-meta"><strong>Birth Year:</strong> ${escapeHtml(attributes.birthYear || attributes['Birth Year'])}</div>` : ''}
               </div>
