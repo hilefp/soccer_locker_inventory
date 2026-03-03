@@ -34,7 +34,7 @@ export function WarehouseStocksTab({ warehouseStocks }: WarehouseStocksTabProps)
 
   return (
     <div className="space-y-4">
-      {warehouseStocks.map((stock) => (
+      {warehouseStocks.filter((s) => s.warehouseType === 'MAIN').map((stock) => (
         <Card key={stock.warehouseId}>
           <CardHeader>
             <div className="flex items-start justify-between">
