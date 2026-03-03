@@ -28,6 +28,7 @@ import {
   Eye,
   User,
   Clock,
+  AlertTriangle,
 } from 'lucide-react';
 import { Card, CardHeader } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
@@ -59,7 +60,7 @@ const STATUS_ICONS: Record<OrderStatus, React.ElementType> = {
   PROCESSING: Cog,
   SHIPPING: Truck,
   DELIVERED: CheckCircle,
-  MISSING: Package,
+  MISSING: AlertTriangle,
   REFUND: Package,
   FAILED: Package,
 };
@@ -156,6 +157,34 @@ function OrderCard({ order, isDragging, onViewDetails }: OrderCardProps) {
           <Badge variant="info" appearance="light" size="sm" className="rounded-full">
             {order.club.name}
           </Badge>
+        )}
+
+        {/* Missing Items */}
+        {order.status === 'MISSING' && order.items && order.items.some((i) => (i.missingQuantity || 0) > 0) && (
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-md px-2.5 py-1.5 space-y-1">
+            <div className="flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
+              <AlertTriangle className="size-3 shrink-0" />
+              Missing Items
+            </div>
+            {order.items
+              .filter((i) => (i.missingQuantity || 0) > 0)
+              .map((item) => (
+                <div key={item.id} className="text-xs">
+                  <span className="text-red-600 dark:text-red-400 font-medium">
+                    {item.missingQuantity} of {item.quantity}
+                  </span>
+                  {' '}
+                  <span className="text-red-700 dark:text-red-300">
+                    {item.name || item.productVariant?.product?.name || 'Unknown'}
+                    {item.attributes && Object.keys(item.attributes).length > 0 && (
+                      <span className="text-red-500 dark:text-red-400/70">
+                        {' — '}{Object.values(item.attributes).join(', ')}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
+          </div>
         )}
 
         {/* View Details Button */}

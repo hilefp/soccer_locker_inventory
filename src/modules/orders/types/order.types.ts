@@ -47,6 +47,7 @@ export const KANBAN_STATUS_ORDER: OrderStatus[] = [
   'PROCESSING',
   'SHIPPING',
   'DELIVERED',
+  'MISSING',
 ];
 
 // Order Item Interface
@@ -61,10 +62,12 @@ export interface OrderItem {
   unitPrice: number;
   totalPrice: number;
   refundedQuantity: number;
+  missingQuantity: number;
   createdAt: string;
   productVariant?: {
     id: string;
     sku: string;
+    attributes?: Record<string, string>;
     product?: {
       id: string;
       name: string;
@@ -323,6 +326,30 @@ export interface BulkPrintResponse {
   count: number;
   presignedUrls: string[];
   expiresIn: string;
+}
+
+// Missing Products Types
+export interface MarkMissingItemRequest {
+  orderItemId: string;
+  quantity: number;
+}
+
+export interface MarkMissingRequest {
+  items: MarkMissingItemRequest[];
+  reason?: string;
+}
+
+export interface ResolveMissingRequest {
+  items: MarkMissingItemRequest[];
+  reason?: string;
+}
+
+export interface MissingItemSummary {
+  id: string;
+  name: string;
+  sku: string | null;
+  quantity: number;
+  missingQuantity: number;
 }
 
 // Refund Types

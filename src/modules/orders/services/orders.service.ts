@@ -17,6 +17,9 @@ import {
   BulkPrintResponse,
   RefundOrderRequest,
   RefundOrderResponse,
+  MarkMissingRequest,
+  ResolveMissingRequest,
+  MissingItemSummary,
 } from '@/modules/orders/types';
 
 const BASE_URL = '/inventory/orders';
@@ -198,6 +201,30 @@ export const ordersService = {
    */
   async refundOrder(id: string, data: RefundOrderRequest): Promise<RefundOrderResponse> {
     const response = await apiClient.post<RefundOrderResponse>(`${BASE_URL}/${id}/refund`, data);
+    return response.data;
+  },
+
+  /**
+   * Get missing items summary for an order
+   */
+  async getMissingItems(id: string): Promise<MissingItemSummary[]> {
+    const response = await apiClient.get<MissingItemSummary[]>(`${BASE_URL}/${id}/missing`);
+    return response.data;
+  },
+
+  /**
+   * Mark items as missing
+   */
+  async markMissing(id: string, data: MarkMissingRequest): Promise<Order> {
+    const response = await apiClient.post<Order>(`${BASE_URL}/${id}/missing`, data);
+    return response.data;
+  },
+
+  /**
+   * Resolve missing items
+   */
+  async resolveMissing(id: string, data: ResolveMissingRequest): Promise<Order> {
+    const response = await apiClient.post<Order>(`${BASE_URL}/${id}/missing/resolve`, data);
     return response.data;
   },
 };
