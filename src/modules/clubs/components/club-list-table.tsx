@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ClubFormSheet } from './club-form-sheet';
-import { ClubDetailsSheet } from './club-details-sheet';
 import { useDeleteClub } from '../hooks/use-clubs';
 import { Club } from '../types';
 import { Badge, BadgeProps } from '@/shared/components/ui/badge';
@@ -64,17 +63,11 @@ export function ClubListTable({
   const deleteMutation = useDeleteClub();
 
   // Modal state
-  const [isClubDetailsOpen, setIsClubDetailsOpen] = useState(false);
   const [isEditClubOpen, setIsEditClubOpen] = useState(false);
   const [isCreateClubOpen, setIsCreateClubOpen] = useState(false);
   const [selectedClubId, setSelectedClubId] = useState<string | undefined>(
     undefined,
   );
-
-  const handleClubClick = useCallback((club: Club) => {
-    setSelectedClubId(club.id);
-    setIsClubDetailsOpen(true);
-  }, []);
 
   const columns = useMemo<ColumnDef<Club>[]>(
     () => [
@@ -116,8 +109,7 @@ export function ClubListTable({
               </div>
               <div className="flex flex-col gap-1">
                 <Link
-                  to="#"
-                  onClick={() => handleClubClick(club)}
+                  to={`/clubs/${club.id}`}
                   className="text-sm font-medium tracking-[-1%] cursor-pointer hover:text-primary"
                 >
                   {club.name}
@@ -132,7 +124,7 @@ export function ClubListTable({
           );
         },
         enableSorting: true,
-        size: 200,
+        size: 180,
       },
       {
         id: 'description',
@@ -151,7 +143,7 @@ export function ClubListTable({
           );
         },
         enableSorting: false,
-        size: 200,
+        size: 180,
       },
       {
         id: 'location',
@@ -170,7 +162,7 @@ export function ClubListTable({
           );
         },
         enableSorting: false,
-        size: 150,
+        size: 120,
       },
       {
         id: 'contact',
@@ -180,7 +172,7 @@ export function ClubListTable({
           return (
             <div className="flex flex-col gap-0.5">
               {club.email && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground truncate">
                   {club.email}
                 </span>
               )}
@@ -196,7 +188,7 @@ export function ClubListTable({
           );
         },
         enableSorting: false,
-        size: 150,
+        size: 130,
       },
       {
         id: 'status',
@@ -286,10 +278,10 @@ export function ClubListTable({
             </div>
           );
         },
-        size: 60,
+        size: 100,
       },
     ],
-    [handleClubClick, deleteMutation.mutateAsync],
+    [deleteMutation.mutateAsync],
   );
 
   const filteredData = useMemo(() => {
@@ -388,13 +380,6 @@ export function ClubListTable({
           </CardFooter>
         </Card>
       </DataGrid>
-
-      {/* Club Details Sheet */}
-      <ClubDetailsSheet
-        open={isClubDetailsOpen}
-        onOpenChange={setIsClubDetailsOpen}
-        clubId={selectedClubId}
-      />
 
       {/* Edit Club Sheet */}
       <ClubFormSheet
