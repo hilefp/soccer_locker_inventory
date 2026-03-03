@@ -1,6 +1,6 @@
 'use client';
 
-import { type JSX, useCallback } from 'react';
+import { type JSX, useCallback, useMemo } from 'react';
 import { MENU_SIDEBAR } from   '@/config/app.config';
 import { type MenuConfig, type MenuItem } from '@/config/types';
 import { Link, useLocation } from 'react-router-dom';
@@ -21,6 +21,19 @@ import { ScrollArea } from '@/shared/components/ui/scroll-area';
 export function SidebarMenu() {
   const { pathname } = useLocation();
 
+  // Collect all menu paths for smarter matching
+  const allMenuPaths = useMemo(() => {
+    const paths: string[] = [];
+    const collect = (items: MenuConfig) => {
+      for (const item of items) {
+        if (item.path) paths.push(item.path);
+        if (item.children) collect(item.children);
+      }
+    };
+    collect(MENU_SIDEBAR);
+    return paths;
+  }, []);
+
   // Memoize matchPath to prevent unnecessary re-renders
   const matchPath = useCallback(
     (path: string): boolean => {
@@ -28,22 +41,27 @@ export function SidebarMenu() {
       if (path === pathname) {
         return true;
       }
-      
+
       // Don't match root path
       if (path === '/store-inventory') {
         return false;
       }
-      
-      // For paths longer than 1 character, check if pathname starts with path
-      // but ensure it's followed by a slash or end of string to avoid partial matches
+
+      // For prefix matching, only match if no other menu path is a better (longer) match
       if (path.length > 1) {
         const pathWithSlash = path + '/';
-        return pathname.startsWith(pathWithSlash) || pathname === path;
+        if (pathname.startsWith(pathWithSlash)) {
+          // Check if a more specific sibling path matches
+          const hasBetterMatch = allMenuPaths.some(
+            (other) => other !== path && other.length > path.length && pathname.startsWith(other),
+          );
+          return !hasBetterMatch;
+        }
       }
-      
+
       return false;
     },
-    [pathname],
+    [pathname, allMenuPaths],
   );
 
   // Global classNames for consistent styling
