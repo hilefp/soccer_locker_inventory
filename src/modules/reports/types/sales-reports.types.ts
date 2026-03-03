@@ -37,6 +37,12 @@ export interface TopProduct {
   totalRevenue: number;
 }
 
+export interface TopSellingVariant {
+  productName: string;
+  sku: string;
+  quantitySold: number;
+}
+
 export interface ClubSalesReportDto {
   clubId: string;
   clubName: string;
@@ -46,6 +52,7 @@ export interface ClubSalesReportDto {
   topProduct: TopProduct | null;
   dateRange: DateRange;
   chartData?: ChartData;
+  topSellingVariants: TopSellingVariant[];
 }
 
 export interface SalesReportFilters {
