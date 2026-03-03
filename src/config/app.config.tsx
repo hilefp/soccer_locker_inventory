@@ -172,6 +172,10 @@ export const MENU_SIDEBAR: MenuConfig = [
         title: 'Users',
         path: '/settings/users',
       },
+      {
+        title: 'Configurations',
+        path: '/settings/configurations',
+      },
     ],
   },
 ];
