@@ -51,7 +51,7 @@ export function InventoryValueCategoryChart({ data, loading }: InventoryValueCat
           {(['retail', 'cost', 'profit'] as ViewMode[]).map((mode) => (
             <Button
               key={mode}
-              variant={viewMode === mode ? 'default' : 'outline'}
+              variant={viewMode === mode ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setViewMode(mode)}
             >

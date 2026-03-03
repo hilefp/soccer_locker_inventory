@@ -6,6 +6,10 @@ import {
   CreateOrderRequest,
   UpdateOrderRequest,
   UpdateShippingRequest,
+  CreateOrderNoteRequest,
+  RefundOrderRequest,
+  MarkMissingRequest,
+  ResolveMissingRequest,
 } from '@/modules/orders/types';
 import { toast } from 'sonner';
 import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
@@ -219,6 +223,155 @@ export function useUpdateShipping() {
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       console.error('Error updating shipping:', error);
       toast.error(error?.response?.data?.message || 'Failed to update shipping information');
+    },
+  });
+}
+
+// Hook to fetch order notes
+export function useOrderNotes(id: string) {
+  return useQuery({
+    queryKey: [...orderKeys.all, id, 'notes'] as const,
+    queryFn: () => ordersService.getOrderNotes(id),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+// Hook to create an order note
+export function useCreateOrderNote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId, data }: { orderId: string; data: CreateOrderNoteRequest }) =>
+      ordersService.createOrderNote(orderId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.orderId, 'notes'] });
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      console.error('Error creating order note:', error);
+    },
+  });
+}
+
+// Hook to delete an order note
+export function useDeleteOrderNote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId, noteId }: { orderId: string; noteId: string }) =>
+      ordersService.deleteOrderNote(orderId, noteId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.orderId, 'notes'] });
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      console.error('Error deleting order note:', error);
+    },
+  });
+}
+
+// Hook to refund an order
+export function useRefundOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: RefundOrderRequest }) =>
+      ordersService.refundOrder(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: orderKeys.statusHistory(variables.id) });
+      queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      queryClient.invalidateQueries({ queryKey: orderKeys.statistics() });
+      toast.custom(
+        (t) => (
+          <Alert variant="mono" icon="success" close={true} onClose={() => toast.dismiss(t)}>
+            <AlertIcon>
+              <Info />
+            </AlertIcon>
+            <AlertTitle>Refund processed successfully.</AlertTitle>
+          </Alert>
+        ),
+        { duration: 5000 }
+      );
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      console.error('Error processing refund:', error);
+      toast.error(error?.response?.data?.message || 'Failed to process refund');
+    },
+  });
+}
+
+// Hook to fetch missing items for an order
+export function useMissingItems(id: string) {
+  return useQuery({
+    queryKey: [...orderKeys.all, id, 'missing'] as const,
+    queryFn: () => ordersService.getMissingItems(id),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+// Hook to mark items as missing
+export function useMarkMissing() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: MarkMissingRequest }) =>
+      ordersService.markMissing(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: orderKeys.statusHistory(variables.id) });
+      queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.id, 'notes'] });
+      queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.id, 'missing'] });
+      queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      queryClient.invalidateQueries({ queryKey: orderKeys.statistics() });
+      toast.custom(
+        (t) => (
+          <Alert variant="mono" icon="success" close={true} onClose={() => toast.dismiss(t)}>
+            <AlertIcon>
+              <Info />
+            </AlertIcon>
+            <AlertTitle>Items marked as missing.</AlertTitle>
+          </Alert>
+        ),
+        { duration: 5000 }
+      );
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      console.error('Error marking items as missing:', error);
+      toast.error(error?.response?.data?.message || 'Failed to mark items as missing');
+    },
+  });
+}
+
+// Hook to resolve missing items
+export function useResolveMissing() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ResolveMissingRequest }) =>
+      ordersService.resolveMissing(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: orderKeys.statusHistory(variables.id) });
+      queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.id, 'notes'] });
+      queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.id, 'missing'] });
+      queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      queryClient.invalidateQueries({ queryKey: orderKeys.statistics() });
+      toast.custom(
+        (t) => (
+          <Alert variant="mono" icon="success" close={true} onClose={() => toast.dismiss(t)}>
+            <AlertIcon>
+              <Info />
+            </AlertIcon>
+            <AlertTitle>Missing items resolved successfully.</AlertTitle>
+          </Alert>
+        ),
+        { duration: 5000 }
+      );
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      console.error('Error resolving missing items:', error);
+      toast.error(error?.response?.data?.message || 'Failed to resolve missing items');
     },
   });
 }

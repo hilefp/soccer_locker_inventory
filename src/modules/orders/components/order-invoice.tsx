@@ -10,7 +10,6 @@ import { Separator } from '@/shared/components/ui/separator';
 import { Printer, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order } from '@/modules/orders/types';
-import { OrderQRCode } from './order-qr-code';
 import { OrderStatusBadge } from './order-status-badge';
 import { formatDate } from '@/shared/lib/helpers';
 
@@ -34,270 +33,16 @@ export function OrderInvoice({ order, open, onOpenChange }: OrderInvoiceProps) {
     .filter(Boolean)
     .join(', ');
 
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
+  const handlePrint = async () => {
+    // Dynamic import to reduce bundle size (Vercel best practice: bundle-dynamic-imports)
+    const { generateBulkPrintDocument, openPrintWindow } = await import('@/modules/orders/lib/print-utils');
+
+    const htmlContent = generateBulkPrintDocument([order], 'INVOICE');
+    const success = openPrintWindow(htmlContent);
+
+    if (!success) {
       toast.error('Please allow popups to print');
-      return;
     }
-
-    const contentElement = contentRef.current;
-    if (!contentElement) return;
-
-    // Get QR code SVG
-    const qrElement = contentElement.querySelector('.qr-code-container svg');
-    const qrString = qrElement ? new XMLSerializer().serializeToString(qrElement) : '';
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Invoice - ${order.orderNumber}</title>
-          <style>
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            body {
-              font-family: Arial, sans-serif;
-              padding: 20mm;
-              color: #000;
-              font-size: 11pt;
-            }
-            .header {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
-              margin-bottom: 20px;
-              padding-bottom: 15px;
-              border-bottom: 2px solid #000;
-            }
-            .header-left h1 {
-              font-size: 28pt;
-              font-weight: bold;
-              margin-bottom: 8px;
-            }
-            .header-left .meta {
-              font-size: 10pt;
-              line-height: 1.6;
-            }
-            .qr-code {
-              width: 100px;
-              height: 100px;
-            }
-            .addresses {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 30px;
-              margin: 20px 0;
-            }
-            .address-block {
-              padding: 10px;
-              background: #f9f9f9;
-              border-radius: 4px;
-            }
-            .address-title {
-              font-size: 10pt;
-              font-weight: bold;
-              text-transform: uppercase;
-              margin-bottom: 8px;
-              color: #666;
-            }
-            .address-content {
-              font-size: 10pt;
-              line-height: 1.6;
-            }
-            .items-table {
-              width: 100%;
-              margin: 20px 0;
-              border-collapse: collapse;
-            }
-            .items-table th {
-              background: #f0f0f0;
-              padding: 10px;
-              text-align: left;
-              font-size: 10pt;
-              font-weight: bold;
-              text-transform: uppercase;
-              border-bottom: 2px solid #000;
-            }
-            .items-table th.right {
-              text-align: right;
-            }
-            .items-table td {
-              padding: 10px;
-              border-bottom: 1px solid #ddd;
-              font-size: 10pt;
-            }
-            .items-table td.right {
-              text-align: right;
-            }
-            .item-meta {
-              font-size: 9pt;
-              color: #666;
-              margin-top: 2px;
-            }
-            .totals {
-              margin-top: 20px;
-              display: flex;
-              justify-content: flex-end;
-            }
-            .totals-table {
-              width: 300px;
-            }
-            .totals-row {
-              display: flex;
-              justify-content: space-between;
-              padding: 8px 0;
-              font-size: 10pt;
-            }
-            .totals-row.subtotal,
-            .totals-row.tax,
-            .totals-row.shipping {
-              border-bottom: 1px solid #ddd;
-            }
-            .totals-row.total {
-              font-size: 14pt;
-              font-weight: bold;
-              padding-top: 12px;
-              border-top: 2px solid #000;
-              margin-top: 5px;
-            }
-            .footer {
-              margin-top: 30px;
-              padding-top: 15px;
-              border-top: 1px solid #ddd;
-              font-size: 9pt;
-              color: #666;
-            }
-            @media print {
-              body {
-                padding: 10mm;
-              }
-              @page {
-                margin: 0;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="header-left">
-              <h1>INVOICE</h1>
-              <div class="meta">
-                <div><strong>Order Number:</strong> ${order.orderNumber}</div>
-                <div><strong>Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
-                <div><strong>Status:</strong> ${order.status}</div>
-              </div>
-            </div>
-            <div class="qr-code">${qrString}</div>
-          </div>
-
-          <div class="addresses">
-            <div class="address-block">
-              <div class="address-title">Bill To</div>
-              <div class="address-content">
-                <div><strong>${order.shippingName || 'N/A'}</strong></div>
-                ${order.customerUser?.email ? `<div>${order.customerUser.email}</div>` : ''}
-                ${order.shippingPhone ? `<div>${order.shippingPhone}</div>` : ''}
-              </div>
-            </div>
-            <div class="address-block">
-              <div class="address-title">Ship To</div>
-              <div class="address-content">
-                <div><strong>${order.shippingName || 'N/A'}</strong></div>
-                ${shippingAddress ? `<div>${shippingAddress}</div>` : '<div>No shipping address</div>'}
-              </div>
-            </div>
-          </div>
-
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th class="right">Qty</th>
-                <th class="right">Price</th>
-                <th class="right">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${order.items
-                ?.map(
-                  (item) => `
-                <tr>
-                  <td>
-                    <div><strong>${item.name || item.productVariant?.product?.name || 'Unknown Product'}</strong></div>
-                    ${
-                      item.sku || (item.attributes && Object.keys(item.attributes).length > 0)
-                        ? `<div class="item-meta">
-                      ${item.sku ? `SKU: ${item.sku}` : ''}
-                      ${
-                        item.attributes && Object.keys(item.attributes).length > 0
-                          ? ` | ${Object.entries(item.attributes)
-                              .map(([key, value]) => `${key}: ${value}`)
-                              .join(' | ')}`
-                          : ''
-                      }
-                    </div>`
-                        : ''
-                    }
-                  </td>
-                  <td class="right">${item.quantity}</td>
-                  <td class="right">$${Number(item.unitPrice).toFixed(2)}</td>
-                  <td class="right">$${Number(item.totalPrice).toFixed(2)}</td>
-                </tr>
-              `
-                )
-                .join('') || '<tr><td colspan="4">No items</td></tr>'}
-            </tbody>
-          </table>
-
-          <div class="totals">
-            <div class="totals-table">
-              <div class="totals-row subtotal">
-                <span>Subtotal</span>
-                <span>$${Number(order.subtotal).toFixed(2)}</span>
-              </div>
-              <div class="totals-row tax">
-                <span>Tax</span>
-                <span>$${Number(order.taxTotal).toFixed(2)}</span>
-              </div>
-              <div class="totals-row shipping">
-                <span>Shipping</span>
-                <span>$${Number(order.shippingTotal).toFixed(2)}</span>
-              </div>
-              <div class="totals-row total">
-                <span>TOTAL</span>
-                <span>$${Number(order.total || 0).toFixed(2)} ${order.currency || 'USD'}</span>
-              </div>
-            </div>
-          </div>
-
-          ${
-            order.carrier || order.trackingNumber
-              ? `
-          <div class="footer">
-            ${order.carrier ? `<div><strong>Carrier:</strong> ${order.carrier}</div>` : ''}
-            ${order.trackingNumber ? `<div><strong>Tracking:</strong> ${order.trackingNumber}</div>` : ''}
-            ${order.shippedAt ? `<div><strong>Shipped:</strong> ${formatDate(new Date(order.shippedAt))}</div>` : ''}
-          </div>
-          `
-              : ''
-          }
-
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
   };
 
   return (
@@ -324,9 +69,6 @@ export function OrderInvoice({ order, open, onOpenChange }: OrderInvoiceProps) {
                   <OrderStatusBadge status={order.status} size="sm" />
                 </div>
               </div>
-            </div>
-            <div className="qr-code-container">
-              <OrderQRCode order={order} size={100} />
             </div>
           </div>
 

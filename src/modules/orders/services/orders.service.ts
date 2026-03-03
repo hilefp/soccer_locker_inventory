@@ -3,6 +3,8 @@ import {
   Order,
   OrderItem,
   OrderStatusHistory,
+  OrderNote,
+  CreateOrderNoteRequest,
   OrderListResponse,
   OrderStatistics,
   OrderFilterParams,
@@ -13,6 +15,11 @@ import {
   AssignOrderRequest,
   BulkPrintRequest,
   BulkPrintResponse,
+  RefundOrderRequest,
+  RefundOrderResponse,
+  MarkMissingRequest,
+  ResolveMissingRequest,
+  MissingItemSummary,
 } from '@/modules/orders/types';
 
 const BASE_URL = '/inventory/orders';
@@ -136,10 +143,88 @@ export const ordersService = {
   },
 
   /**
+   * Get multiple orders by IDs in parallel with graceful partial failure handling
+   * (Vercel best practice: async-parallel with Promise.allSettled)
+   */
+  async getOrdersByIds(ids: string[]): Promise<{ orders: Order[]; failedCount: number }> {
+    const results = await Promise.allSettled(
+      ids.map((id) => ordersService.getOrder(id))
+    );
+
+    const orders: Order[] = [];
+    let failedCount = 0;
+
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        orders.push(result.value);
+      } else {
+        failedCount++;
+      }
+    }
+
+    return { orders, failedCount };
+  },
+
+  /**
    * Bulk print packing slips or invoices
    */
   async bulkPrint(data: BulkPrintRequest): Promise<BulkPrintResponse> {
     const response = await apiClient.post<BulkPrintResponse>(`${BASE_URL}/bulk-print`, data);
+    return response.data;
+  },
+
+  /**
+   * Get order notes
+   */
+  async getOrderNotes(id: string): Promise<OrderNote[]> {
+    const response = await apiClient.get<OrderNote[]>(`${BASE_URL}/${id}/notes`);
+    return response.data;
+  },
+
+  /**
+   * Create an order note
+   */
+  async createOrderNote(id: string, data: CreateOrderNoteRequest): Promise<OrderNote> {
+    const response = await apiClient.post<OrderNote>(`${BASE_URL}/${id}/notes`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete an order note
+   */
+  async deleteOrderNote(id: string, noteId: string): Promise<void> {
+    await apiClient.delete(`${BASE_URL}/${id}/notes/${noteId}`);
+  },
+
+  /**
+   * Refund an order (full or partial)
+   */
+  async refundOrder(id: string, data: RefundOrderRequest): Promise<RefundOrderResponse> {
+    const response = await apiClient.post<RefundOrderResponse>(`${BASE_URL}/${id}/refund`, data);
+    return response.data;
+  },
+
+  /**
+   * Get missing items summary for an order
+   */
+  async getMissingItems(id: string): Promise<MissingItemSummary[]> {
+    const response = await apiClient.get<MissingItemSummary[]>(`${BASE_URL}/${id}/missing`);
+    return response.data;
+  },
+
+  /**
+   * Mark items as missing
+   */
+  async markMissing(id: string, data: MarkMissingRequest): Promise<Order> {
+    const response = await apiClient.post<Order>(`${BASE_URL}/${id}/missing`, data);
+    return response.data;
+  },
+
+  /**
+   * Resolve missing items
+   */
+  async resolveMissing(id: string, data: ResolveMissingRequest): Promise<Order> {
+    const response = await apiClient.post<Order>(`${BASE_URL}/${id}/missing/resolve`, data);
     return response.data;
   },
 };

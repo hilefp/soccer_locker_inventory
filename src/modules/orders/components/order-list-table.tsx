@@ -158,7 +158,7 @@ export function OrderListTable({
   const { data: clubs } = useClubs();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('NEW');
   const [clubFilter, setClubFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [inputValue, setInputValue] = useState('');
@@ -186,8 +186,18 @@ export function OrderListTable({
 
   const handleBulkPrint = async (documentType: DocumentType) => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
+
+    // Early exit guards (Vercel best practice: js-early-exit)
     if (selectedRows.length === 0) {
       toast.error('No orders selected');
+      return;
+    }
+
+    // Dynamically import print utilities to access MAX_BULK_PRINT constant (Vercel best practice: bundle-dynamic-imports)
+    const { generateBulkPrintDocument, openPrintWindow, MAX_BULK_PRINT } = await import('@/modules/orders/lib/print-utils');
+
+    if (selectedRows.length > MAX_BULK_PRINT) {
+      toast.error(`Maximum ${MAX_BULK_PRINT} orders per bulk print. You selected ${selectedRows.length}.`);
       return;
     }
 
@@ -195,23 +205,31 @@ export function OrderListTable({
 
     setIsBulkPrinting(true);
     try {
-      const response = await ordersService.bulkPrint({
-        orderIds,
-        documentType,
-      });
+      // Fetch full order details with graceful partial failure handling (Vercel best practice: async-parallel)
+      const { orders: fullOrders, failedCount } = await ordersService.getOrdersByIds(orderIds);
 
-      // Download all PDFs
-      response.presignedUrls.forEach((url, index) => {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${documentType.toLowerCase()}_${orderIds[index]}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      });
+      if (fullOrders.length === 0) {
+        toast.error('Failed to fetch order details. Please try again.');
+        return;
+      }
+
+      if (failedCount > 0) {
+        toast.warning(`${failedCount} order(s) could not be loaded and will be skipped.`);
+      }
+
+      // Generate print document with all successfully fetched orders
+      const htmlContent = generateBulkPrintDocument(fullOrders, documentType);
+
+      // Open print window
+      const success = openPrintWindow(htmlContent);
+
+      if (!success) {
+        toast.error('Please allow popups to print');
+        return;
+      }
 
       toast.success(
-        `Successfully generated ${response.count} ${
+        `Ready to print ${fullOrders.length} ${
           documentType === 'PACKING_SLIP' ? 'packing slip(s)' : 'invoice(s)'
         }`
       );
@@ -295,24 +313,24 @@ export function OrderListTable({
         enableSorting: true,
         size: 120,
       },
-      {
-        id: 'itemCount',
-        accessorFn: (row) => row.itemCount,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Items" column={column} />
-        ),
-        cell: (info) => {
-          const count = info.row.original.itemCount;
-          return (
-            <div className="flex items-center gap-1.5">
-              <Package className="size-4 text-muted-foreground" />
-              <span className="text-sm">{count}</span>
-            </div>
-          );
-        },
-        enableSorting: true,
-        size: 80,
-      },
+      // {
+      //   id: 'itemCount',
+      //   accessorFn: (row) => row.itemCount,
+      //   header: ({ column }) => (
+      //     <DataGridColumnHeader title="Items" column={column} />
+      //   ),
+      //   cell: (info) => {
+      //     const count = info.row.original.itemCount;
+      //     return (
+      //       <div className="flex items-center gap-1.5">
+      //         <Package className="size-4 text-muted-foreground" />
+      //         <span className="text-sm">{count}</span>
+      //       </div>
+      //     );
+      //   },
+      //   enableSorting: true,
+      //   size: 80,
+      // },
       {
         id: 'total',
         accessorFn: (row) => row.total,
@@ -349,19 +367,19 @@ export function OrderListTable({
         enableSorting: true,
         size: 120,
       },
-      {
-        id: 'shippingCity',
-        accessorFn: (row) => row.shippingCity,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="City" column={column} />
-        ),
-        cell: (info) => {
-          const city = info.row.original.shippingCity;
-          return <span className="text-sm">{city || '-'}</span>;
-        },
-        enableSorting: true,
-        size: 120,
-      },
+      // {
+      //   id: 'shippingCity',
+      //   accessorFn: (row) => row.shippingCity,
+      //   header: ({ column }) => (
+      //     <DataGridColumnHeader title="City" column={column} />
+      //   ),
+      //   cell: (info) => {
+      //     const city = info.row.original.shippingCity;
+      //     return <span className="text-sm">{city || '-'}</span>;
+      //   },
+      //   enableSorting: true,
+      //   size: 120,
+      // },
       {
         id: 'tracking',
         accessorFn: (row) => row.trackingNumber,
