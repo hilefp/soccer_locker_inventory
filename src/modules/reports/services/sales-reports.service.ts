@@ -104,6 +104,28 @@ class SalesReportsService {
     const response = await apiClient.get(url, { responseType: 'blob' });
     return response.data;
   }
+
+  /**
+   * Export club sales variations (top selling variants) as Excel file
+   */
+  async exportClubSalesVariations(filters: ClubSalesFilters): Promise<Blob> {
+    const params = new URLSearchParams();
+    params.append('clubId', filters.clubId);
+
+    if (filters.startDate) {
+      params.append('startDate', filters.startDate);
+    }
+    if (filters.endDate) {
+      params.append('endDate', filters.endDate);
+    }
+    if (filters.groupBy) {
+      params.append('groupBy', filters.groupBy);
+    }
+
+    const url = `${this.baseUrl}/club-sales/export-variations?${params.toString()}`;
+    const response = await apiClient.get(url, { responseType: 'blob' });
+    return response.data;
+  }
 }
 
 export const salesReportsService = new SalesReportsService();

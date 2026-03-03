@@ -5,6 +5,7 @@ import { SalesKpiCard } from '../components/sales-kpi-card';
 import { SalesDateFilters } from '../components/sales-date-filters';
 import { SalesChart } from '../components/sales-chart';
 import { TopProductCard } from '../components/top-product-card';
+import { TopSellingVariantsTable } from '../components/top-selling-variants-table';
 import { DollarSign, ShoppingCart, Package, AlertCircle, Building2, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { Label } from '@/shared/components/ui/label';
@@ -244,6 +245,15 @@ export default function ClubSalesReportPage() {
 
       {/* Top Product Section - Only show when club is selected */}
       {clubId && <TopProductCard topProduct={data?.topProduct || null} loading={loading} />}
+
+      {/* Top Selling Variants Table - Only show when club is selected */}
+      {clubId && clubFilters && (
+        <TopSellingVariantsTable
+          data={data?.topSellingVariants || []}
+          filters={clubFilters}
+          loading={loading}
+        />
+      )}
 
       {/* Date Range Info */}
       {data?.dateRange && (data.dateRange.startDate || data.dateRange.endDate) && (
