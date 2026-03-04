@@ -17,12 +17,12 @@ export function SidebarHeader() {
       <Link to="/dashboard">
         <div className="dark:hidden">
           <img
-            src={toAbsoluteUrl('/media/app/logo.svg')}
-            className="default-logo h-[50px] max-w-none"
+            src={toAbsoluteUrl('/media/app/soccerlocker-team-logo.svg')}
+            className="default-logo h-[60px] max-w-none"
             alt="Default Logo"
           />
           <img
-            src={toAbsoluteUrl('/media/app/logo.svg')}
+            src={toAbsoluteUrl('/media/app/soccerlocker-team-logo.svg')}
             className="small-logo h-[22px] max-w-none"
             alt="Mini Logo"
           />
