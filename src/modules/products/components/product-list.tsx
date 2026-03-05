@@ -19,7 +19,6 @@ import {
   Info,
   Search,
   Settings,
-  Star,
   Trash,
   X,
   Package,
@@ -341,31 +340,6 @@ export function ProductListTable({
         size: 90,
         meta: {
           cellClassName: '',
-        },
-      },
-      {
-        id: 'rating',
-        accessorFn: () => {},
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Rating" column={column} />
-        ),
-        cell: () => {
-          return (
-            <Badge
-              size="sm"
-              variant="warning"
-              appearance="outline"
-              className="rounded-full"
-            >
-              <Star className="text-[#FEC524]" fill="#FEC524" />
-              5.0
-            </Badge>
-          );
-        },
-        enableSorting: true,
-        size: 85,
-        meta: {
-          cellClassName: 'text-center',
         },
       },
       {
