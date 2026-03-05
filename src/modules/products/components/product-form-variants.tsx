@@ -96,11 +96,11 @@ export function ProductFormVariants({
       });
 
       if (response.success && response.variants) {
-        // Invalidate the product query to refetch the data with new variants
-        queryClient.invalidateQueries({ queryKey: productKeys.detail(productId) });
-
-        // Update local state
+        // Update local state immediately
         onVariantsChange?.(response.variants);
+
+        // Refetch the product query to get the latest data with new variants
+        await queryClient.refetchQueries({ queryKey: productKeys.detail(productId) });
 
         // Show success toast
         toast.custom(
@@ -572,11 +572,11 @@ export function ProductFormVariants({
                             id="price"
                             type="number"
                             step="0.01"
-                            value={editingVariant.price}
+                            value={editingVariant.price === 0 ? '' : editingVariant.price}
                             onChange={(e) =>
                               setEditingVariant({
                                 ...editingVariant,
-                                price: parseFloat(e.target.value) || 0,
+                                price: e.target.value ? parseFloat(e.target.value) : 0,
                               })
                             }
                             placeholder="0.00"

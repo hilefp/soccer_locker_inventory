@@ -12,8 +12,8 @@ export function ProductNavigationTabs() {
       return '/products';
     } else if (path.startsWith('/products/categories')) {
       return '/products/categories';
-    } else if (path.startsWith('/products/variants')) {
-      return '/products/variants';
+    } else if (path.startsWith('/products/brands')) {
+      return '/products/brands';
     } else if (path.startsWith('/products/attributes')) {
       return '/products/attributes';
     }

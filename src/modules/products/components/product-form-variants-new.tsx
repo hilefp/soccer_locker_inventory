@@ -375,9 +375,9 @@ export function ProductFormVariantsNew({ mode, variants, onVariantsChange }: Pro
                         type="number"
                         step="0.01"
                         placeholder="0.00"
-                        value={newVariant.price}
+                        value={newVariant.price === 0 ? '' : newVariant.price}
                         onChange={(e) =>
-                          setNewVariant({ ...newVariant, price: parseFloat(e.target.value) || 0 })
+                          setNewVariant({ ...newVariant, price: e.target.value ? parseFloat(e.target.value) : 0 })
                         }
                       />
                       <DollarSign className="size-3" />

@@ -96,8 +96,8 @@ export function ProductFormBasicInfo({
               type="number"
               step="0.01"
               placeholder="0.00"
-              value={price}
-              onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+              value={price === 0 ? '' : price}
+              onChange={(e) => setPrice(e.target.value ? parseFloat(e.target.value) : 0)}
               disabled={isLoading}
             />
           </div>
