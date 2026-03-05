@@ -96,11 +96,11 @@ export function ProductFormVariants({
       });
 
       if (response.success && response.variants) {
-        // Invalidate the product query to refetch the data with new variants
-        queryClient.invalidateQueries({ queryKey: productKeys.detail(productId) });
-
-        // Update local state
+        // Update local state immediately
         onVariantsChange?.(response.variants);
+
+        // Refetch the product query to get the latest data with new variants
+        await queryClient.refetchQueries({ queryKey: productKeys.detail(productId) });
 
         // Show success toast
         toast.custom(
