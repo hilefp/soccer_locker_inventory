@@ -453,11 +453,12 @@ export function ProductListTable({
       result = result.filter((item) => item.created > '2023-01-01');
     }
 
-    // Apply search filter - only search in product title
+    // Apply search filter - search in product title and SKU
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter((item) =>
-        item.productInfo.title.toLowerCase().includes(query),
+        item.productInfo.title.toLowerCase().includes(query) ||
+        item.productInfo.label.toLowerCase().includes(query),
       );
     }
 
