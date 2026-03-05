@@ -572,11 +572,11 @@ export function ProductFormVariants({
                             id="price"
                             type="number"
                             step="0.01"
-                            value={editingVariant.price}
+                            value={editingVariant.price === 0 ? '' : editingVariant.price}
                             onChange={(e) =>
                               setEditingVariant({
                                 ...editingVariant,
-                                price: parseFloat(e.target.value) || 0,
+                                price: e.target.value ? parseFloat(e.target.value) : 0,
                               })
                             }
                             placeholder="0.00"
