@@ -33,6 +33,11 @@ export interface ProductVariant {
   isActive?: boolean;
   isDefault?: boolean;
 
+  // Inventory Management
+  trackInventory?: boolean; // If true, check stock before allowing purchase
+  allowBackorder?: boolean; // If true, allow purchase even when out of stock (with notification)
+  lowStockThreshold?: number; // Threshold to show low stock warning
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -56,6 +61,11 @@ export interface ProductVariantRequest {
   isActive?: boolean;
   minPrice?: number | string;
   maxPrice?: number | string;
+
+  // Inventory Management
+  trackInventory?: boolean;
+  allowBackorder?: boolean;
+  lowStockThreshold?: number;
 }
 
 export interface ProductRequest {

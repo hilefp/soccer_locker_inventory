@@ -16,6 +16,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Input, InputWrapper } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
+import { Switch } from '@/shared/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -66,6 +67,9 @@ export function ProductFormVariantsNew({ mode, variants, onVariantsChange }: Pro
     imageUrl: '',
     imageUrls: [],
     isActive: true,
+    trackInventory: false,
+    allowBackorder: false,
+    lowStockThreshold: undefined,
   });
 
   // Helper to format attributes for display
@@ -90,6 +94,9 @@ export function ProductFormVariantsNew({ mode, variants, onVariantsChange }: Pro
       imageUrl: '',
       imageUrls: [],
       isActive: true,
+      trackInventory: false,
+      allowBackorder: false,
+      lowStockThreshold: undefined,
     });
     setEditingId(null);
   };
@@ -476,6 +483,76 @@ export function ProductFormVariantsNew({ mode, variants, onVariantsChange }: Pro
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                {/* Inventory Management */}
+                <div className="border rounded-md p-4 space-y-3">
+                  <Label className="text-sm font-medium">Inventory Management</Label>
+                  
+                  {/* Track Inventory */}
+                  <div className="flex items-center justify-between space-x-2">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="track-inventory-new" className="text-xs font-medium">
+                        Track Inventory
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Monitor stock levels for this variant
+                      </p>
+                    </div>
+                    <Switch
+                      id="track-inventory-new"
+                      checked={newVariant.trackInventory || false}
+                      onCheckedChange={(value) =>
+                        setNewVariant({ ...newVariant, trackInventory: value })
+                      }
+                    />
+                  </div>
+
+                  {/* Allow Backorder - Only show if tracking inventory */}
+                  {newVariant.trackInventory && (
+                    <div className="flex items-center justify-between space-x-2 pt-2 border-t">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="allow-backorder-new" className="text-xs font-medium">
+                          Allow Backorder
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          {newVariant.allowBackorder
+                            ? 'Allow purchase when out of stock'
+                            : 'Block purchase when out of stock'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="allow-backorder-new"
+                        checked={newVariant.allowBackorder || false}
+                        onCheckedChange={(value) =>
+                          setNewVariant({ ...newVariant, allowBackorder: value })
+                        }
+                      />
+                    </div>
+                  )}
+
+                  {/* Low Stock Threshold */}
+                  {newVariant.trackInventory && (
+                    <div className="space-y-2 pt-2 border-t">
+                      <Label htmlFor="low-stock-threshold-new" className="text-xs font-medium">
+                        Low Stock Threshold
+                      </Label>
+                      <Input
+                        id="low-stock-threshold-new"
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="e.g., 10"
+                        value={newVariant.lowStockThreshold || ''}
+                        onChange={(e) =>
+                          setNewVariant({
+                            ...newVariant,
+                            lowStockThreshold: e.target.value ? parseInt(e.target.value) : undefined,
+                          })
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons */}
