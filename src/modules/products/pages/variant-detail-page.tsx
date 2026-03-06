@@ -18,6 +18,7 @@ import { VariantDetailBasicInfo } from '@/modules/products/components/variant-de
 import { VariantDetailPricing } from '@/modules/products/components/variant-detail/variant-detail-pricing';
 import { VariantDetailPhysicalAttributes } from '@/modules/products/components/variant-detail/variant-detail-physical-attributes';
 import { VariantDetailAttributesStatus } from '@/modules/products/components/variant-detail/variant-detail-attributes-status';
+import { VariantDetailInventoryManagement } from '@/modules/products/components/variant-detail/variant-detail-inventory-management';
 import { useProductVariant, useUpdateProductVariant, useDeleteProductVariant, useSetDefaultVariant } from '@/modules/products/hooks/use-product-variants';
 import { useProduct } from '@/modules/products/hooks/use-products';
 import { ProductVariant } from '@/modules/products/types/product.type';
@@ -69,6 +70,9 @@ export function VariantDetailPage() {
           imageUrl: editingVariant.imageUrl,
           imageUrls: editingVariant.imageUrls,
           isActive: editingVariant.isActive,
+          trackInventory: editingVariant.trackInventory,
+          allowBackorder: editingVariant.allowBackorder,
+          lowStockThreshold: editingVariant.lowStockThreshold,
         },
       });
     } catch (error) {
@@ -187,6 +191,23 @@ export function VariantDetailPage() {
           attributes={editingVariant.attributes}
           isActive={editingVariant.isActive !== false}
           setIsActive={(value) => setEditingVariant({ ...editingVariant, isActive: value })}
+          isSaving={isSaving}
+        />
+
+        {/* Inventory Management */}
+        <VariantDetailInventoryManagement
+          trackInventory={editingVariant.trackInventory || false}
+          setTrackInventory={(value) =>
+            setEditingVariant({ ...editingVariant, trackInventory: value })
+          }
+          allowBackorder={editingVariant.allowBackorder || false}
+          setAllowBackorder={(value) =>
+            setEditingVariant({ ...editingVariant, allowBackorder: value })
+          }
+          lowStockThreshold={editingVariant.lowStockThreshold}
+          setLowStockThreshold={(value) =>
+            setEditingVariant({ ...editingVariant, lowStockThreshold: value })
+          }
           isSaving={isSaving}
         />
 
