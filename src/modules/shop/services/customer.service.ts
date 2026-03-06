@@ -4,6 +4,7 @@ import {
   CustomerFilterParams,
   CustomerListResponse,
   CustomerStatus,
+  UpdateCustomerRequest,
 } from "@/modules/shop/types/customer.type";
 
 export const customerService = {
@@ -55,6 +56,11 @@ export const customerService = {
 
   async suspendCustomer(id: string): Promise<Customer> {
     const response = await apiClient.patch<Customer>(`/admin-shop/customers/${id}/suspend`);
+    return response.data;
+  },
+
+  async updateCustomer(id: string, data: UpdateCustomerRequest): Promise<Customer> {
+    const response = await apiClient.put<Customer>(`/inventory/customers/${id}`, data);
     return response.data;
   },
 };

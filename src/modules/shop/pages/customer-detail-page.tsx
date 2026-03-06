@@ -25,6 +25,7 @@ import { useCustomer, useActivateCustomer, useDeactivateCustomer, useSuspendCust
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { formatDate } from '@/shared/lib/helpers';
 import { CustomerStatus } from '@/modules/shop/types/customer.type';
+import { CustomerEditSheet } from '@/modules/shop/components/customer-edit-sheet';
 
 const getStatusBadgeVariant = (status: CustomerStatus): 'success' | 'warning' | 'destructive' | 'secondary' => {
   switch (status) {
@@ -168,6 +169,7 @@ export function CustomerDetailPage() {
           >
             {getStatusLabel(customer.status)}
           </Badge>
+          <CustomerEditSheet customer={customer} />
           {customer.status !== 'ACTIVE' && (
             <Button
               variant="outline"

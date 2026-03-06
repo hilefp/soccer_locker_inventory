@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { customerService } from '@/modules/shop/services/customer.service';
-import { CustomerFilterParams, CustomerStatus } from '@/modules/shop/types/customer.type';
+import { CustomerFilterParams, CustomerStatus, UpdateCustomerRequest } from '@/modules/shop/types/customer.type';
 import { toast } from 'sonner';
 import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
 import { Info } from 'lucide-react';
@@ -172,6 +172,43 @@ export function useSuspendCustomer() {
     onError: (error) => {
       console.error('Error suspending customer:', error);
       toast.error('Failed to suspend customer');
+    },
+  });
+}
+
+// Hook to update customer information
+export function useUpdateCustomer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateCustomerRequest }) =>
+      customerService.updateCustomer(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: customerKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: customerKeys.all });
+
+      toast.custom(
+        (t) => (
+          <Alert
+            variant="mono"
+            icon="success"
+            close={true}
+            onClose={() => toast.dismiss(t)}
+          >
+            <AlertIcon>
+              <Info />
+            </AlertIcon>
+            <AlertTitle>Customer information updated successfully.</AlertTitle>
+          </Alert>
+        ),
+        {
+          duration: 5000,
+        },
+      );
+    },
+    onError: (error) => {
+      console.error('Error updating customer:', error);
+      toast.error('Failed to update customer information');
     },
   });
 }
