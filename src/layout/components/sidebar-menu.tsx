@@ -1,6 +1,6 @@
 'use client';
 
-import { type JSX, useCallback } from 'react';
+import { type JSX, useCallback, useMemo } from 'react';
 import { MENU_SIDEBAR } from   '@/config/app.config';
 import { type MenuConfig, type MenuItem } from '@/config/types';
 import { Link, useLocation } from 'react-router-dom';
@@ -17,9 +17,11 @@ import {
 } from '@/shared/components/ui/accordion-menu';
 import { Badge } from '@/shared/components/ui/badge';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
+import { useAuthStore } from '@/shared/stores/auth-store';
 
 export function SidebarMenu() {
   const { pathname } = useLocation();
+  const user = useAuthStore((state) => state.user);
 
   // Memoize matchPath to prevent unnecessary re-renders
   const matchPath = useCallback(
@@ -60,6 +62,39 @@ export function SidebarMenu() {
     subContent: 'py-0',
     indicator: '',
   };
+
+  const hasPermission = useCallback(
+    (requiredPermissions?: string[]): boolean => {
+      if (!requiredPermissions || requiredPermissions.length === 0) return true;
+      if (user?.roles?.includes('SUPER_ADMIN')) return true;
+      const userPermissions = user?.permissions ?? [];
+      return requiredPermissions.some((p) => userPermissions.includes(p));
+    },
+    [user],
+  );
+
+  const filterMenuItems = useCallback(
+    (items: MenuConfig): MenuConfig => {
+      return items.reduce<MenuConfig>((acc, item) => {
+        if (!hasPermission(item.permissions)) return acc;
+        if (item.children) {
+          const filteredChildren = filterMenuItems(item.children);
+          if (filteredChildren.length > 0) {
+            acc.push({ ...item, children: filteredChildren });
+          }
+        } else {
+          acc.push(item);
+        }
+        return acc;
+      }, []);
+    },
+    [hasPermission],
+  );
+
+  const filteredMenu = useMemo(
+    () => filterMenuItems(MENU_SIDEBAR),
+    [filterMenuItems],
+  );
 
   const buildMenu = (items: MenuConfig): JSX.Element[] => {
     return items.map((item: MenuItem, index: number) => {
@@ -237,7 +272,7 @@ export function SidebarMenu() {
         collapsible
         classNames={classNames}
       >
-        {buildMenu(MENU_SIDEBAR)}
+        {buildMenu(filteredMenu)}
       </AccordionMenu>
     </ScrollArea>
   );

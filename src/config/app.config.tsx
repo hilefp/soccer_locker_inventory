@@ -21,6 +21,7 @@ export const MENU_SIDEBAR: MenuConfig = [
   {
     title: 'Products',
     icon: Package,
+    permissions: ['products:read'],
     children: [
       {
         title: 'Product',
@@ -39,12 +40,14 @@ export const MENU_SIDEBAR: MenuConfig = [
   {
     title: 'Inventory',
     icon: Boxes,
+    permissions: ['stock:read'],
     children: [
       { title: 'Inventory', path: '/inventory' },
-      { title: 'Stock Entries', path: '/inventory/stock-entries/new' },
+      { title: 'Stock Entries', path: '/inventory/stock-entries/new', permissions: ['stock:write'] },
       {
         title: 'Warehouse Management',
         path: '/inventory/warehouses',
+        permissions: ['warehouses:read'],
       },
       {
         title: 'Stock Movements',
@@ -55,6 +58,7 @@ export const MENU_SIDEBAR: MenuConfig = [
   {
     title: 'Orders',
     icon: ClipboardList,
+    permissions: ['orders:read'],
     children: [
       { title: 'Order List', path: '/orders' },
       { title: 'Order Tracking', path: '/orders/tracking' },
@@ -63,6 +67,7 @@ export const MENU_SIDEBAR: MenuConfig = [
   {
     title: 'Reports',
     icon: BarChart,
+    permissions: ['reports:read'],
     children: [
       { title: 'Products Report', path: '/reports/products' },
       { title: 'Stock Report', path: '/reports/stock' },
@@ -147,6 +152,7 @@ export const MENU_SIDEBAR: MenuConfig = [
   {
     title: 'Clubs',
     icon: ClubIcon,
+    permissions: ['clubs:read'],
     children: [
       {
         title: 'All clubs',
@@ -157,6 +163,7 @@ export const MENU_SIDEBAR: MenuConfig = [
   {
     title: 'Shop',
     icon: ShoppingCart,
+    permissions: ['users:read'],
     children: [
       {
         title: 'Customers',
@@ -167,6 +174,7 @@ export const MENU_SIDEBAR: MenuConfig = [
   {
     title: 'Settings',
     icon: Settings2,
+    permissions: ['users:manage'],
     children: [
       {
         title: 'Users',
