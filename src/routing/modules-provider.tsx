@@ -55,7 +55,9 @@ export function ModulesProvider() {
                 <Route element={<DefaultLayout />}>
                   <Route path="products/*" element={<RenderRouteTree route={productsRoutes} />} />
                   <Route path="inventory/*" element={<RenderRouteTree route={inventoryRoutes} />} />
-                  <Route path="settings/*" element={<RenderRouteTree route={settingsRoutes} />} />
+                  <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']} />}>
+                    <Route path="settings/*" element={<RenderRouteTree route={settingsRoutes} />} />
+                  </Route>
                   <Route path="clubs/*" element={<RenderRouteTree route={clubsRoutes} />} />
                   <Route path="dashboard/*" element={<RenderRouteTree route={dashboardRoutes} />} />
                   <Route path="reports/*" element={<RenderRouteTree route={reportsRoutes} />} />
