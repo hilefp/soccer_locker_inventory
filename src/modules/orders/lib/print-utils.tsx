@@ -444,12 +444,7 @@ export const generatePackingSlipHTML = (order: Order): string => {
   return `
     <div class="header">
       <img src="${LOGO_PATH}" alt="Soccer Locker" class="logo" />
-      <div class="company-info">
-        <div class="company-name">${COMPANY_INFO.name}</div>
-        <div>${COMPANY_INFO.address}</div>
-        <div>${COMPANY_INFO.city}</div>
-        <div>${COMPANY_INFO.email}</div>
-      </div>
+      <h3 class="order-number-header" style="margin: 0;">#${escapeHtml(order.orderNumber)}</h3>
     </div>
 
     ${order.isRushOrder ? '<div class="rush-banner">RUSH ORDER</div>' : ''}
@@ -465,18 +460,16 @@ export const generatePackingSlipHTML = (order: Order): string => {
             <div>${escapeHtml(order.shippingCity)}, ${escapeHtml(order.shippingState)} ${escapeHtml(order.shippingPostalCode)}</div>
             ${order.shippingPhone ? `<div>${escapeHtml(order.shippingPhone)}</div>` : ''}
           </div>
-          <div class="info-section">
-            <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
-            <div><strong>Shipping Method:</strong> ${escapeHtml(order.carrier) || 'Standard Shipping'}</div>
-          </div>
         </div>
+      </div>
+      <div style="text-align: left; margin-right: 30px;">
+        <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
+        <div><strong>Shipping Method:</strong> ${escapeHtml(order.carrier) || 'Standard Shipping'}</div>
       </div>
       <div class="qr-code-section">
         <img src="${getQRCodeUrl(order.orderNumber)}" alt="QR Code for order ${escapeHtml(order.orderNumber)}" />
       </div>
     </div>
-
-    <h3 class="order-number-header">#${escapeHtml(order.orderNumber)}</h3>
 
     <table class="product-table">
       <thead>
