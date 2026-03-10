@@ -35,21 +35,23 @@ export function AdjustStockDrawer({
 }: AdjustStockDrawerProps) {
   const { user } = useAuth();
   const adjustStockMutation = useAdjustStock();
-  const [adjustmentQuantity, setAdjustmentQuantity] = useState<number>(0);
+  const [adjustmentInput, setAdjustmentInput] = useState<string>('');
   const [reason, setReason] = useState<string>('');
+
+  const adjustmentQuantity = adjustmentInput === '' || adjustmentInput === '-' ? 0 : parseInt(adjustmentInput, 10) || 0;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
     // Allow empty string and minus sign for user to type
     if (value === '' || value === '-') {
-      setAdjustmentQuantity(0);
+      setAdjustmentInput(value);
       return;
     }
 
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue)) {
-      setAdjustmentQuantity(numValue);
+      setAdjustmentInput(String(numValue));
     }
   };
 
@@ -98,7 +100,7 @@ export function AdjustStockDrawer({
   };
 
   const resetForm = () => {
-    setAdjustmentQuantity(0);
+    setAdjustmentInput('');
     setReason('');
   };
 
@@ -131,7 +133,7 @@ export function AdjustStockDrawer({
             <Input
               id="adjustment"
               type="number"
-              value={adjustmentQuantity}
+              value={adjustmentInput}
               onChange={handleInputChange}
               className="text-center text-4xl font-bold h-20 border-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="0"

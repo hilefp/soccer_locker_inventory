@@ -19,6 +19,7 @@ function RoleGuard({
 
   return <>{children}</>;
 }
+import { AppSettingsPage } from './pages/app-settings-page';
 
 export const settingsRoutes: RouteObject = {
   path: '',

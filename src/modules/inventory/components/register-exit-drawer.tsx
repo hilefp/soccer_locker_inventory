@@ -36,30 +36,33 @@ export function RegisterExitDrawer({
 }: RegisterExitDrawerProps) {
   const { user } = useAuth();
   const registerExitMutation = useRegisterStockExit();
-  const [exitQuantity, setExitQuantity] = useState<number>(1);
+  const [exitInput, setExitInput] = useState<string>('');
   const [reason, setReason] = useState<string>('');
+
+  const exitQuantity = exitInput === '' ? 0 : parseInt(exitInput, 10) || 0;
 
   const handleIncrement = () => {
     if (exitQuantity < currentStock) {
-      setExitQuantity((prev) => prev + 1);
+      setExitInput(String(exitQuantity + 1));
     }
   };
 
   const handleDecrement = () => {
-    setExitQuantity((prev) => Math.max(1, prev - 1));
+    const newVal = Math.max(0, exitQuantity - 1);
+    setExitInput(newVal === 0 ? '' : String(newVal));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
     if (value === '') {
-      setExitQuantity(1);
+      setExitInput('');
       return;
     }
 
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 1 && numValue <= currentStock) {
-      setExitQuantity(numValue);
+      setExitInput(String(numValue));
     }
   };
 
@@ -111,7 +114,7 @@ export function RegisterExitDrawer({
   };
 
   const resetForm = () => {
-    setExitQuantity(1);
+    setExitInput('');
     setReason('');
   };
 
@@ -147,7 +150,7 @@ export function RegisterExitDrawer({
                 <Input
                   id="exit-quantity"
                   type="number"
-                  value={exitQuantity}
+                  value={exitInput}
                   onChange={handleInputChange}
                   className="text-center text-4xl font-bold h-20 border-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="0"
