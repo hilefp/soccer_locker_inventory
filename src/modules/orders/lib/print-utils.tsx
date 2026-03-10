@@ -213,6 +213,18 @@ const getCommonStyles = () => `
     height: 100px;
   }
 
+  .rush-banner {
+    background-color: #3bb143;
+    color: #fff;
+    text-align: center;
+    font-size: 14pt;
+    font-weight: bold;
+    padding: 8px 0;
+    margin-bottom: 15px;
+    letter-spacing: 2px;
+    border-radius: 4px;
+  }
+
   .footer {
     margin-top: auto;
     padding-top: 15px;
@@ -345,6 +357,12 @@ export const generateInvoiceHTML = (order: Order): string => {
             <span>Shipping ${order.carrier ? `via ${escapeHtml(order.carrier)}` : ''}</span>
             <span>$${Number(order.shippingTotal || 0).toFixed(2)}</span>
           </div>
+          ${order.isRushOrder && Number(order.rushFee) > 0 ? `
+          <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #ddd;">
+            <span>Rush Order Fee</span>
+            <span>$${Number(order.rushFee).toFixed(2)}</span>
+          </div>
+          ` : ''}
           <div style="display: flex; justify-content: space-between; padding: 5px 0;">
             <span>FL Tax</span>
             <span>$${Number(order.taxTotal || 0).toFixed(2)}</span>
@@ -426,6 +444,8 @@ export const generatePackingSlipHTML = (order: Order): string => {
         <div>${COMPANY_INFO.email}</div>
       </div>
     </div>
+
+    ${order.isRushOrder ? '<div class="rush-banner">RUSH ORDER</div>' : ''}
 
     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
       <div style="flex: 1;">

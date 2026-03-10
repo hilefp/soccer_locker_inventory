@@ -164,6 +164,12 @@ export function OrderInvoice({ order, open, onOpenChange }: OrderInvoiceProps) {
                 <span className="text-muted-foreground">Shipping</span>
                 <span>${Number(order.shippingTotal).toFixed(2)}</span>
               </div>
+              {order.isRushOrder && Number(order.rushFee) > 0 && (
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-muted-foreground">Rush Order Fee</span>
+                  <span>${Number(order.rushFee).toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between py-3 text-lg font-bold border-t-2">
                 <span>TOTAL</span>
                 <span>
