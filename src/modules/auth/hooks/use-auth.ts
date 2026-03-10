@@ -37,6 +37,16 @@ export function useAuth() {
     return roles.some((role) => hasRole(role));
   };
 
+  const hasPermission = (permission: string): boolean => {
+    if (user?.roles?.includes('SUPER_ADMIN')) return true;
+    return user?.permissions?.includes(permission) ?? false;
+  };
+
+  const hasAnyPermission = (permissions: string[]): boolean => {
+    if (user?.roles?.includes('SUPER_ADMIN')) return true;
+    return permissions.some((p) => user?.permissions?.includes(p)) ?? false;
+  };
+
   return {
     user,
     isAuthenticated,
@@ -46,6 +56,8 @@ export function useAuth() {
     logout,
     hasRole,
     hasAnyRole,
+    hasPermission,
+    hasAnyPermission,
     clearError,
   };
 }
