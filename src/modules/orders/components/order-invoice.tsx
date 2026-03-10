@@ -126,14 +126,26 @@ export function OrderInvoice({ order, open, onOpenChange }: OrderInvoiceProps) {
                         <div className="font-medium">
                           {item.name || item.productVariant?.product?.name || 'Unknown Product'}
                         </div>
-                        {(item.sku || (item.attributes && Object.keys(item.attributes).length > 0)) && (
+                        {item.sku && (
                           <div className="text-xs text-muted-foreground mt-1">
-                            {item.sku && `SKU: ${item.sku}`}
-                            {item.attributes &&
-                              Object.keys(item.attributes).length > 0 &&
-                              ` | ${Object.entries(item.attributes)
-                                .map(([key, value]) => `${key}: ${value}`)
-                                .join(' | ')}`}
+                            SKU: {item.sku}
+                          </div>
+                        )}
+                        {(() => {
+                          const attrs = item.attributes || {};
+                          const variantAttrs = item.productVariant?.attributes || {};
+                          const size = attrs.size || attrs.Size || variantAttrs.size || variantAttrs.Size;
+                          return size ? (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Size: {size}
+                            </div>
+                          ) : null;
+                        })()}
+                        {item.customFields && Object.keys(item.customFields).length > 0 && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {Object.entries(item.customFields).map(([key, value]) => (
+                              <div key={key}>{key}: {value}</div>
+                            ))}
                           </div>
                         )}
                       </td>

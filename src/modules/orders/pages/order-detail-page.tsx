@@ -683,6 +683,13 @@ export function OrderDetailPage() {
                                             .join(' | ')}
                                         </p>
                                       )}
+                                      {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                        <div className="text-xs text-muted-foreground">
+                                          {Object.entries(item.customFields).map(([key, value]) => (
+                                            <p key={key}>{key}: {value}</p>
+                                          ))}
+                                        </div>
+                                      )}
                                       {(item.missingQuantity || 0) > 0 && !isResolvingMode && (
                                         <p className="text-xs text-orange-600 font-medium">
                                           {isFullyMissing
@@ -840,6 +847,13 @@ export function OrderDetailPage() {
                                     .map(([key, value]) => `${key}: ${value}`)
                                     .join(' | ')}
                                 </p>
+                              )}
+                              {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                <div className="text-xs text-muted-foreground">
+                                  {Object.entries(item.customFields).map(([key, value]) => (
+                                    <p key={key}>{key}: {value}</p>
+                                  ))}
+                                </div>
                               )}
                               {item.refundedQuantity > 0 && (
                                 <p className="text-xs text-destructive font-medium mt-0.5">

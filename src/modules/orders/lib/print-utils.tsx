@@ -288,6 +288,11 @@ export const generateInvoiceHTML = (order: Order): string => {
         <div class="product-name">${escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
         ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
         ${size ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(size)}</div>` : ''}
+        ${item.customFields && Object.keys(item.customFields).length > 0
+          ? Object.entries(item.customFields)
+              .map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`)
+              .join('')
+          : ''}
       </td>
       <td class="right">${item.quantity}</td>
       <td class="right">$${Number(item.unitPrice).toFixed(2)}</td>
@@ -424,6 +429,11 @@ export const generatePackingSlipHTML = (order: Order): string => {
                 ${size ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(size)}</div>` : ''}
                 ${attributes.parkLocation || attributes['Park Location'] ? `<div class="product-meta"><strong>Park Location (Choose one):</strong> ${escapeHtml(attributes.parkLocation || attributes['Park Location'])}</div>` : ''}
                 ${attributes.birthYear || attributes['Birth Year'] ? `<div class="product-meta"><strong>Birth Year:</strong> ${escapeHtml(attributes.birthYear || attributes['Birth Year'])}</div>` : ''}
+                ${item.customFields && Object.keys(item.customFields).length > 0
+                  ? Object.entries(item.customFields)
+                      .map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`)
+                      .join('')
+                  : ''}
               </div>
             </div>
           </td>
