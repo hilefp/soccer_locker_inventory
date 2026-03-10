@@ -73,10 +73,19 @@ export function SidebarMenu() {
     [user],
   );
 
+  const hasRole = useCallback(
+    (requiredRoles?: string[]): boolean => {
+      if (!requiredRoles || requiredRoles.length === 0) return true;
+      const userRoles = user?.roles ?? [];
+      return requiredRoles.some((r) => userRoles.includes(r));
+    },
+    [user],
+  );
+
   const filterMenuItems = useCallback(
     (items: MenuConfig): MenuConfig => {
       return items.reduce<MenuConfig>((acc, item) => {
-        if (!hasPermission(item.permissions)) return acc;
+        if (!hasPermission(item.permissions) || !hasRole(item.roles)) return acc;
         if (item.children) {
           const filteredChildren = filterMenuItems(item.children);
           if (filteredChildren.length > 0) {
@@ -88,7 +97,7 @@ export function SidebarMenu() {
         return acc;
       }, []);
     },
-    [hasPermission],
+    [hasPermission, hasRole],
   );
 
   const filteredMenu = useMemo(
