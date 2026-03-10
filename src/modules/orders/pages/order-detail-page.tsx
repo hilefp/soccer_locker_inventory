@@ -584,16 +584,18 @@ export function OrderDetailPage() {
         </Card>
 
         {/* Notes (static customer note) */}
-        {order.notes && (
-          <Card>
-            <CardHeader className="py-4">
-              <h2 className="text-lg font-semibold">Notes</h2>
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader className="py-4">
+            <h2 className="text-lg font-semibold">Notes</h2>
+          </CardHeader>
+          <CardContent>
+            {order.notes ? (
               <p className="text-sm whitespace-pre-wrap">{order.notes}</p>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-sm text-muted-foreground">No notes</p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Order Items */}
         <div className="lg:col-span-2 space-y-5">
