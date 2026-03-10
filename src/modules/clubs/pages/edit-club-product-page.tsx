@@ -109,7 +109,6 @@ export function EditClubProductPage() {
 
         },
       });
-      navigate(`/clubs/${clubId}`);
     } catch (error) {
       console.error('Error updating club product:', error);
     }
