@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Order } from '@/modules/orders/types';
 import { OrderStatusBadge } from './order-status-badge';
 import { formatDate } from '@/shared/lib/helpers';
+import { extractSize } from '@/modules/orders/lib/extract-size';
 
 interface OrderInvoiceProps {
   order: Order;
@@ -132,14 +133,21 @@ export function OrderInvoice({ order, open, onOpenChange }: OrderInvoiceProps) {
                           </div>
                         )}
                         {(() => {
-                          const attrs = item.attributes || {};
-                          const variantAttrs = item.productVariant?.attributes || {};
-                          const size = attrs.size || attrs.Size || variantAttrs.size || variantAttrs.Size;
-                          return size ? (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Size: {size}
-                            </div>
-                          ) : null;
+                          const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                          return (
+                            <>
+                              {sizeValue && (
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  Size: {sizeValue}
+                                </div>
+                              )}
+                              {rest.length > 0 && (
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}
+                                </div>
+                              )}
+                            </>
+                          );
                         })()}
                         {item.customFields && Object.keys(item.customFields).length > 0 && (
                           <div className="text-xs text-muted-foreground mt-1">

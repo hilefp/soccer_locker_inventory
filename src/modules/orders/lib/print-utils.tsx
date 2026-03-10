@@ -1,5 +1,6 @@
 import { Order } from '@/modules/orders/types';
 import { formatDate } from '@/shared/lib/helpers';
+import { extractSize } from '@/modules/orders/lib/extract-size';
 
 /**
  * Escape HTML to prevent XSS in print documents
@@ -279,15 +280,14 @@ export const generateInvoiceHTML = (order: Order): string => {
   const itemsHTML = order.items
     ?.map(
       (item) => {
-        const variantAttrs = item.productVariant?.attributes || {};
-        const itemAttrs = item.attributes || {};
-        const size = itemAttrs.size || itemAttrs.Size || variantAttrs.size || variantAttrs.Size;
+        const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
         return `
     <tr>
       <td>
         <div class="product-name">${escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
         ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
-        ${size ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(size)}</div>` : ''}
+        ${sizeValue ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(sizeValue)}</div>` : ''}
+        ${rest.length > 0 ? rest.map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('') : ''}
         ${item.customFields && Object.keys(item.customFields).length > 0
           ? Object.entries(item.customFields)
               .map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`)
@@ -410,9 +410,7 @@ export const generatePackingSlipHTML = (order: Order): string => {
   const itemsHTML = order.items
     ?.map((item) => {
       const imageUrl = item.productVariant?.product?.imageUrl;
-      const attributes = item.attributes || {};
-      const variantAttrs = item.productVariant?.attributes || {};
-      const size = attributes.size || attributes.Size || variantAttrs.size || variantAttrs.Size;
+      const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
 
       return `
         <tr>
@@ -426,9 +424,8 @@ export const generatePackingSlipHTML = (order: Order): string => {
               <div style="flex: 1;">
                 <div class="product-name">${escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
                 ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
-                ${size ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(size)}</div>` : ''}
-                ${attributes.parkLocation || attributes['Park Location'] ? `<div class="product-meta"><strong>Park Location (Choose one):</strong> ${escapeHtml(attributes.parkLocation || attributes['Park Location'])}</div>` : ''}
-                ${attributes.birthYear || attributes['Birth Year'] ? `<div class="product-meta"><strong>Birth Year:</strong> ${escapeHtml(attributes.birthYear || attributes['Birth Year'])}</div>` : ''}
+                ${sizeValue ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(sizeValue)}</div>` : ''}
+                ${rest.length > 0 ? rest.map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('') : ''}
                 ${item.customFields && Object.keys(item.customFields).length > 0
                   ? Object.entries(item.customFields)
                       .map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`)
