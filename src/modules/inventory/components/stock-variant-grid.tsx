@@ -222,9 +222,9 @@ export function StockVariantGrid({
                 {variant.productName}
               </h3>
 
-              {/* Variant Name */}
-              <p className="text-sm text-muted-foreground line-clamp-1">
-                {variant.variantName}
+              {/* Size */}
+              <p className="text-sm font-semibold line-clamp-1">
+                {variant.variantName.includes(':') ? variant.variantName.split(':').slice(1).join(':').trim() : variant.variantName}
               </p>
 
               {/* SKU */}
