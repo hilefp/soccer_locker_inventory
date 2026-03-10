@@ -63,6 +63,7 @@ import {
 import { ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
 import type { OrderItem } from '@/modules/orders/types';
 import { useAuthStore } from '@/shared/stores/auth-store';
+import { extractSize } from '@/modules/orders/lib/extract-size';
 
 interface RefundItemState {
   selected: boolean;
@@ -583,16 +584,18 @@ export function OrderDetailPage() {
         </Card>
 
         {/* Notes (static customer note) */}
-        {order.notes && (
-          <Card>
-            <CardHeader className="py-4">
-              <h2 className="text-lg font-semibold">Notes</h2>
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader className="py-4">
+            <h2 className="text-lg font-semibold">Notes</h2>
+          </CardHeader>
+          <CardContent>
+            {order.notes ? (
               <p className="text-sm whitespace-pre-wrap">{order.notes}</p>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-sm text-muted-foreground">No notes</p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Order Items */}
         <div className="lg:col-span-2 space-y-5">
@@ -676,12 +679,27 @@ export function OrderDetailPage() {
                                           SKU: {item.sku}
                                         </p>
                                       )}
-                                      {item.attributes && Object.keys(item.attributes).length > 0 && (
-                                        <p className="text-xs text-muted-foreground">
-                                          {Object.entries(item.attributes)
-                                            .map(([key, value]) => `${key}: ${value}`)
-                                            .join(' | ')}
-                                        </p>
+                                      {(() => {
+                                        const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                                        return (
+                                          <>
+                                            {sizeValue && (
+                                              <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>
+                                            )}
+                                            {rest.length > 0 && (
+                                              <p className="text-xs text-muted-foreground">
+                                                {rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}
+                                              </p>
+                                            )}
+                                          </>
+                                        );
+                                      })()}
+                                      {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                        <div className="text-xs text-muted-foreground">
+                                          {Object.entries(item.customFields).map(([key, value]) => (
+                                            <p key={key}>{key}: {value}</p>
+                                          ))}
+                                        </div>
                                       )}
                                       {(item.missingQuantity || 0) > 0 && !isResolvingMode && (
                                         <p className="text-xs text-orange-600 font-medium">
@@ -834,12 +852,27 @@ export function OrderDetailPage() {
                                   SKU: {item.sku}
                                 </p>
                               )}
-                              {item.attributes && Object.keys(item.attributes).length > 0 && (
-                                <p className="text-xs text-muted-foreground">
-                                  {Object.entries(item.attributes)
-                                    .map(([key, value]) => `${key}: ${value}`)
-                                    .join(' | ')}
-                                </p>
+                              {(() => {
+                                const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                                return (
+                                  <>
+                                    {sizeValue && (
+                                      <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>
+                                    )}
+                                    {rest.length > 0 && (
+                                      <p className="text-xs text-muted-foreground">
+                                        {rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}
+                                      </p>
+                                    )}
+                                  </>
+                                );
+                              })()}
+                              {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                <div className="text-xs text-muted-foreground">
+                                  {Object.entries(item.customFields).map(([key, value]) => (
+                                    <p key={key}>{key}: {value}</p>
+                                  ))}
+                                </div>
                               )}
                               {item.refundedQuantity > 0 && (
                                 <p className="text-xs text-destructive font-medium mt-0.5">

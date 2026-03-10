@@ -58,6 +58,7 @@ export interface OrderItem {
   name: string | null;
   sku: string | null;
   attributes: Record<string, string> | null;
+  customFields: Record<string, string> | null;
   quantity: number;
   unitPrice: number;
   totalPrice: number;

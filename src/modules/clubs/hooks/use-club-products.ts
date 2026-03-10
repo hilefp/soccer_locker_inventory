@@ -82,8 +82,11 @@ export function useUpdateClubProduct(clubId: string) {
       clubProductId: string;
       data: UpdateClubProductDto;
     }) => clubProductsService.updateClubProduct(clubId, clubProductId, data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, clubId] });
+      queryClient.invalidateQueries({
+        queryKey: [CLUB_PRODUCT_QUERY_KEY, clubId, variables.clubProductId],
+      });
       queryClient.invalidateQueries({
         queryKey: [CLUB_STATS_QUERY_KEY, clubId],
       });

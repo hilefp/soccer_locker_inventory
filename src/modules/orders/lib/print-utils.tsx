@@ -1,5 +1,6 @@
 import { Order } from '@/modules/orders/types';
 import { formatDate } from '@/shared/lib/helpers';
+import { extractSize } from '@/modules/orders/lib/extract-size';
 
 /**
  * Escape HTML to prevent XSS in print documents
@@ -279,15 +280,19 @@ export const generateInvoiceHTML = (order: Order): string => {
   const itemsHTML = order.items
     ?.map(
       (item) => {
-        const variantAttrs = item.productVariant?.attributes || {};
-        const itemAttrs = item.attributes || {};
-        const size = itemAttrs.size || itemAttrs.Size || variantAttrs.size || variantAttrs.Size;
+        const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
         return `
     <tr>
       <td>
         <div class="product-name">${escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
         ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
-        ${size ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(size)}</div>` : ''}
+        ${sizeValue ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(sizeValue)}</div>` : ''}
+        ${rest.length > 0 ? rest.map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('') : ''}
+        ${item.customFields && Object.keys(item.customFields).length > 0
+          ? Object.entries(item.customFields)
+              .map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`)
+              .join('')
+          : ''}
       </td>
       <td class="right">${item.quantity}</td>
       <td class="right">$${Number(item.unitPrice).toFixed(2)}</td>
@@ -405,9 +410,7 @@ export const generatePackingSlipHTML = (order: Order): string => {
   const itemsHTML = order.items
     ?.map((item) => {
       const imageUrl = item.productVariant?.product?.imageUrl;
-      const attributes = item.attributes || {};
-      const variantAttrs = item.productVariant?.attributes || {};
-      const size = attributes.size || attributes.Size || variantAttrs.size || variantAttrs.Size;
+      const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
 
       return `
         <tr>
@@ -421,9 +424,13 @@ export const generatePackingSlipHTML = (order: Order): string => {
               <div style="flex: 1;">
                 <div class="product-name">${escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
                 ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
-                ${size ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(size)}</div>` : ''}
-                ${attributes.parkLocation || attributes['Park Location'] ? `<div class="product-meta"><strong>Park Location (Choose one):</strong> ${escapeHtml(attributes.parkLocation || attributes['Park Location'])}</div>` : ''}
-                ${attributes.birthYear || attributes['Birth Year'] ? `<div class="product-meta"><strong>Birth Year:</strong> ${escapeHtml(attributes.birthYear || attributes['Birth Year'])}</div>` : ''}
+                ${sizeValue ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(sizeValue)}</div>` : ''}
+                ${rest.length > 0 ? rest.map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('') : ''}
+                ${item.customFields && Object.keys(item.customFields).length > 0
+                  ? Object.entries(item.customFields)
+                      .map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`)
+                      .join('')
+                  : ''}
               </div>
             </div>
           </td>
@@ -437,12 +444,7 @@ export const generatePackingSlipHTML = (order: Order): string => {
   return `
     <div class="header">
       <img src="${LOGO_PATH}" alt="Soccer Locker" class="logo" />
-      <div class="company-info">
-        <div class="company-name">${COMPANY_INFO.name}</div>
-        <div>${COMPANY_INFO.address}</div>
-        <div>${COMPANY_INFO.city}</div>
-        <div>${COMPANY_INFO.email}</div>
-      </div>
+      <h3 class="order-number-header" style="margin: 0;">#${escapeHtml(order.orderNumber)}</h3>
     </div>
 
     ${order.isRushOrder ? '<div class="rush-banner">RUSH ORDER</div>' : ''}
@@ -458,18 +460,16 @@ export const generatePackingSlipHTML = (order: Order): string => {
             <div>${escapeHtml(order.shippingCity)}, ${escapeHtml(order.shippingState)} ${escapeHtml(order.shippingPostalCode)}</div>
             ${order.shippingPhone ? `<div>${escapeHtml(order.shippingPhone)}</div>` : ''}
           </div>
-          <div class="info-section">
-            <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
-            <div><strong>Shipping Method:</strong> ${escapeHtml(order.carrier) || 'Standard Shipping'}</div>
-          </div>
         </div>
+      </div>
+      <div style="text-align: left; margin-right: 30px;">
+        <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
+        <div><strong>Shipping Method:</strong> ${escapeHtml(order.carrier) || 'Standard Shipping'}</div>
       </div>
       <div class="qr-code-section">
         <img src="${getQRCodeUrl(order.orderNumber)}" alt="QR Code for order ${escapeHtml(order.orderNumber)}" />
       </div>
     </div>
-
-    <h3 class="order-number-header">#${escapeHtml(order.orderNumber)}</h3>
 
     <table class="product-table">
       <thead>
