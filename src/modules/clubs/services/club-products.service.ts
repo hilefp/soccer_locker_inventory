@@ -107,6 +107,14 @@ export const clubProductsService = {
     await apiClient.delete(`/admin/clubs/${clubId}/products/${clubProductId}`);
   },
 
+  // Get available tags for a club's products
+  async getClubProductTags(clubId: string): Promise<string[]> {
+    const response = await apiClient.get<string[]>(
+      `/admin/clubs/${clubId}/products/tags`
+    );
+    return response.data;
+  },
+
   // Get stats for club products
   async getClubProductStats(clubId: string): Promise<ClubProductStats> {
     const response = await apiClient.get<ClubProductStats>(

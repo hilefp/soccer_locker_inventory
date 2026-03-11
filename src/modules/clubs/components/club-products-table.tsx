@@ -145,7 +145,7 @@ export function ClubProductsTable({
 
           // Display club price if it's a string (could be a range), otherwise format the base price
           const displayPrice = isCustomPrice
-            ? (typeof clubPrice === 'string' ? clubPrice : `$${formatPrice(clubPrice)}`)
+            ? (typeof clubPrice === 'string' ? `$${clubPrice}` : `$${formatPrice(clubPrice)}`)
             : (basePrice ? `$${formatPrice(basePrice)}` : '-');
 
           const basePriceDisplay = basePrice ? `$${formatPrice(basePrice)}` : null;

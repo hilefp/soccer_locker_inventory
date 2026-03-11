@@ -17,6 +17,7 @@ import { Switch } from '@/shared/components/ui/switch';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { Badge } from '@/shared/components/ui/badge';
 import { ProductFormImageUpload } from '@/modules/products/components/product-form-image-upload';
+import { TagMultiSelect } from '@/modules/tags/components/tag-multi-select';
 
 interface EditClubProductSheetProps {
   clubId: string;
@@ -37,6 +38,7 @@ export function EditClubProductSheet({
   const [customDescription, setCustomDescription] = useState<string>('');
   const [isActive, setIsActive] = useState(true);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
 
   const updateMutation = useUpdateClubProduct(clubId);
 
@@ -48,6 +50,7 @@ export function EditClubProductSheet({
       setCustomDescription(clubProduct.description || '');
       setIsActive(clubProduct.isActive);
       setImageUrls(clubProduct.imageUrls || []);
+      setTags(clubProduct.tags || []);
     }
   }, [clubProduct]);
 
@@ -63,6 +66,7 @@ export function EditClubProductSheet({
           description: customDescription || undefined,
           isActive,
           imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+          tags,
         },
       });
       onOpenChange(false);
@@ -215,6 +219,15 @@ export function EditClubProductSheet({
                     Default: {baseDescription}
                   </p>
                 )}
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label>Tags</Label>
+                <TagMultiSelect selectedTags={tags} onTagsChange={setTags} />
+                <p className="text-xs text-muted-foreground">
+                  Tags are used as filter tabs in the club shop
+                </p>
               </div>
 
               {/* Active Status */}
