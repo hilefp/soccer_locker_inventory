@@ -1,6 +1,7 @@
 import { Navigate, RouteObject } from 'react-router-dom';
 import { UserListPage } from './pages/user-list-page';
 import { RolesPermissionsPage } from './pages/roles-permissions-page';
+import { CouponListPage } from './pages/coupon-list-page';
 import { useAuthStore } from '@/shared/stores/auth-store';
 
 function RoleGuard({
@@ -35,6 +36,10 @@ export const settingsRoutes: RouteObject = {
           <RolesPermissionsPage />
         </RoleGuard>
       ),
+    },
+    {
+      path: 'coupon-codes',
+      element: <CouponListPage />,
     },
   ],
 };

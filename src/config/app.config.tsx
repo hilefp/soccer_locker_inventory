@@ -185,6 +185,10 @@ export const MENU_SIDEBAR: MenuConfig = [
         path: '/settings/roles-permissions',
         roles: ['SUPER_ADMIN', 'ADMIN'],
       },
+      {
+        title: 'Coupon Codes',
+        path: '/settings/coupon-codes',
+      },
     ],
   },
 ];
