@@ -14,6 +14,7 @@ export interface ClubProduct {
   imageUrls?: string[]; // Override product images
 
   // Club-specific fields
+  tags?: string[];
   isActive: boolean;
 
   // Timestamps
@@ -33,6 +34,7 @@ export interface CreateClubProductDto {
   description?: string;
   imageUrls?: string[];
   isActive?: boolean;
+  tags?: string[];
 }
 
 // DTO for updating club products
@@ -43,6 +45,7 @@ export interface UpdateClubProductDto {
   imageUrls?: string[];
   isActive?: boolean;
   customFields?: CustomFields[];
+  tags?: string[];
 }
 
 // DTO for bulk adding products

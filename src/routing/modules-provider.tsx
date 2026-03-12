@@ -37,6 +37,7 @@ import { dashboardRoutes } from '@/modules/dashboard/route';
 import { reportsRoutes } from '@/modules/reports/routes';
 import { shopRoutes } from '@/modules/shop/routes';
 import { ordersRoutes } from '@/modules/orders/routes';
+import { tagsRoutes } from '@/modules/tags/routes';
 
 export function ModulesProvider() {
   return (
@@ -64,6 +65,9 @@ export function ModulesProvider() {
                   </Route>
                   <Route element={<ProtectedRoute allowedPermissions={['clubs:read']} />}>
                     <Route path="clubs/*" element={<RenderRouteTree route={clubsRoutes} />} />
+                  </Route>
+                  <Route element={<ProtectedRoute allowedPermissions={['tags:read']} />}>
+                    <Route path="tags/*" element={<RenderRouteTree route={tagsRoutes} />} />
                   </Route>
                   <Route path="dashboard/*" element={<RenderRouteTree route={dashboardRoutes} />} />
                   <Route element={<ProtectedRoute allowedPermissions={['reports:read']} />}>

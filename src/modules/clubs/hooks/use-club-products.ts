@@ -10,6 +10,7 @@ import type {
 const QUERY_KEY = 'club-products';
 const CLUB_PRODUCT_QUERY_KEY = 'club-product';
 const CLUB_STATS_QUERY_KEY = 'club-product-stats';
+const CLUB_PRODUCT_TAGS_QUERY_KEY = 'club-product-tags';
 
 // Get a single club product
 export function useClubProduct(
@@ -44,6 +45,15 @@ export function useClubProductStats(clubId: string | undefined) {
   return useQuery({
     queryKey: [CLUB_STATS_QUERY_KEY, clubId],
     queryFn: () => clubProductsService.getClubProductStats(clubId!),
+    enabled: !!clubId,
+  });
+}
+
+// Get available tags for a club's products
+export function useClubProductTags(clubId: string | undefined) {
+  return useQuery({
+    queryKey: [CLUB_PRODUCT_TAGS_QUERY_KEY, clubId],
+    queryFn: () => clubProductsService.getClubProductTags(clubId!),
     enabled: !!clubId,
   });
 }

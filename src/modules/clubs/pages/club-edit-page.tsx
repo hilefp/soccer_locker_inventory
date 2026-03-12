@@ -76,8 +76,8 @@ export function ClubEditPage() {
     const clubData = {
       name,
       description: description || undefined,
-      logoUrl: logoUrl || undefined,
-      imageUrl: imageUrl || undefined,
+      logoUrl: logoUrl || null,
+      imageUrl: imageUrl || null,
       websiteUrl: websiteUrl || undefined,
       email: email || undefined,
       phone: phone || undefined,
