@@ -1,6 +1,6 @@
 // Order Status Enum
 export type OrderStatus =
-  // | 'PENDING_PAYMENT'
+  | 'PENDING_PAYMENT'
   | 'NEW'
   | 'PRINT'
   | 'PICKING_UP'
@@ -13,7 +13,7 @@ export type OrderStatus =
 
 // Order Status Flow Configuration
 export const ORDER_STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
-  // PENDING_PAYMENT: [],
+  PENDING_PAYMENT: [],
   NEW: ['PRINT', 'MISSING', 'REFUND'],
   PRINT: ['PICKING_UP', 'MISSING', 'REFUND'],
   PICKING_UP: ['PROCESSING', 'MISSING', 'REFUND'],
@@ -27,7 +27,7 @@ export const ORDER_STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
 
 // Order Status Labels
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  // PENDING_PAYMENT: 'Pending Payment',
+  PENDING_PAYMENT: 'Pending Payment',
   NEW: 'New',
   PRINT: 'Print',
   PICKING_UP: 'Picking Up',
@@ -141,6 +141,8 @@ export interface Order {
   notes: string | null;
   totalRefunded: number;
   shippingRefunded: boolean;
+  paymentStatus: string | null;
+  paymentId: string | null;
   createdAt: string;
   updatedAt: string;
   items?: OrderItem[];
@@ -170,6 +172,7 @@ export interface CreateOrderRequest {
   clubId?: string;
   customerUserId?: string;
   assignedInventoryUserId?: string;
+  warehouseId?: string;
   status?: OrderStatus;
   subtotal?: number;
   taxTotal?: number;
@@ -359,11 +362,13 @@ export interface RefundOrderRequest {
   items?: RefundItemRequest[];
   refundShipping?: boolean;
   reason?: string;
-  restockItems?: boolean;
 }
 
 export interface RefundOrderResponse {
+  orderId: string;
+  orderNumber: string;
   refundId: string;
-  amount: number;
-  status: string;
+  refundAmount: number;
+  refundStatus: string;
+  message: string;
 }

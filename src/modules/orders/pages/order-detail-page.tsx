@@ -20,6 +20,8 @@ import {
   RotateCcw,
   HelpCircle,
   AlertTriangle,
+  CreditCard,
+  Info,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/shared/components/ui/card';
@@ -98,7 +100,6 @@ export function OrderDetailPage() {
   // Refund state
   const [isRefunding, setIsRefunding] = useState(false);
   const [refundShipping, setRefundShipping] = useState(false);
-  const [restockItems, setRestockItems] = useState(true);
   const [refundReason, setRefundReason] = useState('');
   const [refundItemStates, setRefundItemStates] = useState<Record<string, RefundItemState>>({});
 
@@ -193,7 +194,6 @@ export function OrderDetailPage() {
   const handleStartRefund = () => {
     setRefundItemStates(initRefundStates());
     setRefundShipping(false);
-    setRestockItems(true);
     setRefundReason('');
     setIsRefunding(true);
   };
@@ -253,7 +253,6 @@ export function OrderDetailPage() {
           items: items.length > 0 ? items : undefined,
           refundShipping: refundShipping || undefined,
           reason: refundReason.trim() || undefined,
-          restockItems: restockItems || undefined,
         },
       },
       { onSuccess: () => setIsRefunding(false) }
@@ -425,6 +424,20 @@ export function OrderDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Stock Reservation Info Banner */}
+      {order.status !== 'DELIVERED' && order.status !== 'REFUND' && order.status !== 'FAILED' && (
+        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30 p-4">
+          <Info className="size-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+          <div className="text-sm text-blue-800 dark:text-blue-300">
+            {order.status === 'PENDING_PAYMENT' ? (
+              <p>Stock is reserved for this order and is not available for other customers. It will remain reserved until payment is confirmed or the order is cancelled.</p>
+            ) : (
+              <p>Stock is reserved for this order. It will be automatically deducted from inventory when the order is marked as <strong>Delivered</strong>. If cancelled, the reserved stock will be released back to inventory.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
@@ -964,14 +977,6 @@ export function OrderDetailPage() {
                 {isRefunding && (
                   <div className="space-y-3 pt-3">
                     <Separator />
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Restock refunded items:</span>
-                      <Checkbox
-                        checked={restockItems}
-                        onCheckedChange={(checked) => setRestockItems(checked === true)}
-                      />
-                    </div>
-                    <Separator />
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Amount already refunded:</span>
                       <span className="font-medium">-${refundTotals.amountAlreadyRefunded.toFixed(2)}</span>
@@ -1173,6 +1178,39 @@ export function OrderDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-5">
+          {/* Payment Info */}
+          {order.paymentStatus && (
+            <Card>
+              <CardHeader className="py-4">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="size-5 text-muted-foreground" />
+                  <h2 className="text-lg font-semibold">Payment</h2>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <span className="text-sm text-muted-foreground">Status</span>
+                  <p className="font-medium">
+                    <Badge
+                      variant={order.paymentStatus === 'COMPLETED' ? 'success' : order.paymentStatus === 'PENDING' ? 'warning' : 'secondary'}
+                      appearance="light"
+                      size="sm"
+                      className="rounded-full"
+                    >
+                      {order.paymentStatus}
+                    </Badge>
+                  </p>
+                </div>
+                {order.paymentId && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Payment ID</span>
+                    <p className="font-medium text-xs break-all">{order.paymentId}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* QR Code Card */}
           <OrderQRCodeCard order={order} />
 

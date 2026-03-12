@@ -26,6 +26,7 @@ import {
   Cog,
   Truck,
   CheckCircle,
+  CreditCard,
   Eye,
   User,
   Clock,
@@ -56,6 +57,7 @@ import { toast } from 'sonner';
 
 // Status icons mapping
 const STATUS_ICONS: Record<OrderStatus, React.ElementType> = {
+  PENDING_PAYMENT: CreditCard,
   NEW: Package,
   PRINT: Printer,
   PICKING_UP: ShoppingBag,
@@ -69,6 +71,7 @@ const STATUS_ICONS: Record<OrderStatus, React.ElementType> = {
 
 // Status colors for columns
 const STATUS_COLORS: Record<OrderStatus, string> = {
+  PENDING_PAYMENT: 'border-orange-500',
   NEW: 'border-blue-500',
   PRINT: 'border-gray-500',
   PICKING_UP: 'border-yellow-500',
