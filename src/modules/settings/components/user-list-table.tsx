@@ -2,8 +2,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import { UserFormSheet } from './user-form-sheet';
 import { UserDetailsSheet } from './user-details-sheet';
-import { useDeleteInventoryUser } from '../hooks/use-inventory-users';
+import { useDeleteInventoryUser, useUserRoles } from '../hooks/use-inventory-users';
 import { InventoryUser, UserStatus } from '../types';
+import { useAuthStore } from '@/shared/stores/auth-store';
 import { Badge, BadgeProps } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -58,6 +59,24 @@ const getStatusVariant = (status: UserStatus): 'primary' | 'destructive' | 'seco
   }
 };
 
+function UserRoleBadge({ userId }: { userId: string }) {
+  const { data: userRoles = [], isLoading } = useUserRoles(userId);
+
+  if (isLoading) {
+    return <span className="text-xs text-muted-foreground">...</span>;
+  }
+
+  if (userRoles.length === 0) {
+    return <span className="text-xs text-muted-foreground">No role</span>;
+  }
+
+  return (
+    <Badge variant="outline" appearance="light">
+      {userRoles[0].role.name}
+    </Badge>
+  );
+}
+
 export function UserListTable({
   users = [],
   isLoading = false,
@@ -72,6 +91,10 @@ export function UserListTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'firstName', desc: false },
   ]);
+
+  // Auth store to check current user's role
+  const { user: currentUser } = useAuthStore();
+  const isAdmin = currentUser?.roles?.includes('SUPER_ADMIN') || currentUser?.roles?.includes('ADMIN');
 
   // React Query hook for delete mutation
   const deleteMutation = useDeleteInventoryUser();
@@ -198,6 +221,15 @@ export function UserListTable({
         size: 80,
       },
       {
+        id: 'role',
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Role" column={column} />
+        ),
+        cell: ({ row }) => <UserRoleBadge userId={row.original.id} />,
+        enableSorting: false,
+        size: 120,
+      },
+      {
         id: 'actions',
         header: () => '',
         enableSorting: false,
@@ -235,31 +267,35 @@ export function UserListTable({
               >
                 <Eye />
               </Button>
-              <Button
-                variant="dim"
-                mode="icon"
-                size="sm"
-                onClick={handleEdit}
-                title="Edit user"
-              >
-                <SquarePen />
-              </Button>
-              <Button
-                variant="dim"
-                mode="icon"
-                size="sm"
-                onClick={handleDelete}
-                title="Delete user"
-              >
-                <Trash />
-              </Button>
+              {isAdmin && (
+                <>
+                  <Button
+                    variant="dim"
+                    mode="icon"
+                    size="sm"
+                    onClick={handleEdit}
+                    title="Edit user"
+                  >
+                    <SquarePen />
+                  </Button>
+                  <Button
+                    variant="dim"
+                    mode="icon"
+                    size="sm"
+                    onClick={handleDelete}
+                    title="Delete user"
+                  >
+                    <Trash />
+                  </Button>
+                </>
+              )}
             </div>
           );
         },
         size: 60,
       },
     ],
-    [handleUserClick, deleteMutation.mutateAsync],
+    [handleUserClick, deleteMutation.mutateAsync, isAdmin],
   );
 
   const filteredData = useMemo(() => {

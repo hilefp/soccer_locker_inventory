@@ -35,20 +35,22 @@ export function PhysicalCountDrawer({
 }: PhysicalCountDrawerProps) {
   const { user } = useAuth();
   const physicalCountMutation = useRegisterPhysicalCount();
-  const [countedQuantity, setCountedQuantity] = useState<number>(0);
+  const [countedInput, setCountedInput] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+
+  const countedQuantity = countedInput === '' ? 0 : parseInt(countedInput, 10) || 0;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
     if (value === '') {
-      setCountedQuantity(0);
+      setCountedInput('');
       return;
     }
 
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 0) {
-      setCountedQuantity(numValue);
+      setCountedInput(String(numValue));
     }
   };
 
@@ -88,7 +90,7 @@ export function PhysicalCountDrawer({
   };
 
   const resetForm = () => {
-    setCountedQuantity(0);
+    setCountedInput('');
     setNotes('');
   };
 
@@ -121,7 +123,7 @@ export function PhysicalCountDrawer({
             <Input
               id="counted"
               type="number"
-              value={countedQuantity}
+              value={countedInput}
               onChange={handleInputChange}
               className="text-center text-4xl font-bold h-20 border-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="0"

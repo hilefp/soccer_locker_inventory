@@ -65,6 +65,7 @@ import {
 import { ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
 import type { OrderItem } from '@/modules/orders/types';
 import { useAuthStore } from '@/shared/stores/auth-store';
+import { extractSize } from '@/modules/orders/lib/extract-size';
 
 interface RefundItemState {
   selected: boolean;
@@ -100,6 +101,8 @@ export function OrderDetailPage() {
   // Refund state
   const [isRefunding, setIsRefunding] = useState(false);
   const [refundShipping, setRefundShipping] = useState(false);
+  const [refundRushFee, setRefundRushFee] = useState(false);
+  const [restockItems, setRestockItems] = useState(true);
   const [refundReason, setRefundReason] = useState('');
   const [refundItemStates, setRefundItemStates] = useState<Record<string, RefundItemState>>({});
 
@@ -194,6 +197,8 @@ export function OrderDetailPage() {
   const handleStartRefund = () => {
     setRefundItemStates(initRefundStates());
     setRefundShipping(false);
+    setRefundRushFee(false);
+    setRestockItems(true);
     setRefundReason('');
     setIsRefunding(true);
   };
@@ -234,11 +239,12 @@ export function OrderDetailPage() {
       }
     });
     const shippingRefund = refundShipping ? Number(order?.shippingTotal ?? 0) : 0;
+    const rushFeeRefund = refundRushFee ? Number(order?.rushFee ?? 0) : 0;
     const amountAlreadyRefunded = Number(order?.totalRefunded ?? 0);
     const totalAvailable = Number(order?.total ?? 0) - amountAlreadyRefunded;
-    const totalRefund = totalItemRefund + totalTaxRefund + shippingRefund;
-    return { totalItemRefund, totalTaxRefund, shippingRefund, totalRefund, amountAlreadyRefunded, totalAvailable };
-  }, [refundItemStates, refundShipping, order?.shippingTotal, order?.total, order?.totalRefunded]);
+    const totalRefund = totalItemRefund + totalTaxRefund + shippingRefund + rushFeeRefund;
+    return { totalItemRefund, totalTaxRefund, shippingRefund, rushFeeRefund, totalRefund, amountAlreadyRefunded, totalAvailable };
+  }, [refundItemStates, refundShipping, refundRushFee, order?.shippingTotal, order?.rushFee, order?.total, order?.totalRefunded]);
 
   const handleSubmitRefund = () => {
     if (!orderId || refundTotals.totalRefund <= 0) return;
@@ -252,6 +258,7 @@ export function OrderDetailPage() {
         data: {
           items: items.length > 0 ? items : undefined,
           refundShipping: refundShipping || undefined,
+          refundRushFee: refundRushFee || undefined,
           reason: refundReason.trim() || undefined,
         },
       },
@@ -592,16 +599,18 @@ export function OrderDetailPage() {
         </Card>
 
         {/* Notes (static customer note) */}
-        {order.notes && (
-          <Card>
-            <CardHeader className="py-4">
-              <h2 className="text-lg font-semibold">Notes</h2>
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader className="py-4">
+            <h2 className="text-lg font-semibold">Notes</h2>
+          </CardHeader>
+          <CardContent>
+            {order.notes ? (
               <p className="text-sm whitespace-pre-wrap">{order.notes}</p>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-sm text-muted-foreground">No notes</p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Order Items */}
         <div className="lg:col-span-2 space-y-5">
@@ -685,12 +694,27 @@ export function OrderDetailPage() {
                                           SKU: {item.sku}
                                         </p>
                                       )}
-                                      {item.attributes && Object.keys(item.attributes).length > 0 && (
-                                        <p className="text-xs text-muted-foreground">
-                                          {Object.entries(item.attributes)
-                                            .map(([key, value]) => `${key}: ${value}`)
-                                            .join(' | ')}
-                                        </p>
+                                      {(() => {
+                                        const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                                        return (
+                                          <>
+                                            {sizeValue && (
+                                              <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>
+                                            )}
+                                            {rest.length > 0 && (
+                                              <p className="text-xs text-muted-foreground">
+                                                {rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}
+                                              </p>
+                                            )}
+                                          </>
+                                        );
+                                      })()}
+                                      {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                        <div className="text-xs text-muted-foreground">
+                                          {Object.entries(item.customFields).map(([key, value]) => (
+                                            <p key={key}>{key}: {value}</p>
+                                          ))}
+                                        </div>
                                       )}
                                       {(item.missingQuantity || 0) > 0 && !isResolvingMode && (
                                         <p className="text-xs text-orange-600 font-medium">
@@ -843,12 +867,27 @@ export function OrderDetailPage() {
                                   SKU: {item.sku}
                                 </p>
                               )}
-                              {item.attributes && Object.keys(item.attributes).length > 0 && (
-                                <p className="text-xs text-muted-foreground">
-                                  {Object.entries(item.attributes)
-                                    .map(([key, value]) => `${key}: ${value}`)
-                                    .join(' | ')}
-                                </p>
+                              {(() => {
+                                const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                                return (
+                                  <>
+                                    {sizeValue && (
+                                      <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>
+                                    )}
+                                    {rest.length > 0 && (
+                                      <p className="text-xs text-muted-foreground">
+                                        {rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}
+                                      </p>
+                                    )}
+                                  </>
+                                );
+                              })()}
+                              {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                <div className="text-xs text-muted-foreground">
+                                  {Object.entries(item.customFields).map(([key, value]) => (
+                                    <p key={key}>{key}: {value}</p>
+                                  ))}
+                                </div>
                               )}
                               {item.refundedQuantity > 0 && (
                                 <p className="text-xs text-destructive font-medium mt-0.5">
@@ -933,6 +972,58 @@ export function OrderDetailPage() {
                       )}
                     </div>
                   )}
+
+                  {/* Rush fee row in refund mode */}
+                  {isRefunding && order.isRushOrder && Number(order.rushFee) > 0 && (
+                    <div className="p-4">
+                      <div className={`grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center ${order.rushRefunded ? 'opacity-50' : ''}`}>
+                        <Checkbox
+                          checked={refundRushFee}
+                          disabled={order.rushRefunded}
+                          onCheckedChange={(checked) => setRefundRushFee(checked === true)}
+                        />
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
+                            <Clock className="size-5 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">Rush Order Fee</p>
+                            {order.rushRefunded && (
+                              <p className="text-xs text-destructive font-medium">Already refunded</p>
+                            )}
+                          </div>
+                        </div>
+                        <span />
+                        <span />
+                        <div className="text-right text-sm font-medium">
+                          ${Number(order.rushFee).toFixed(2)}
+                        </div>
+                        <div className="text-right text-sm text-muted-foreground">&ndash;</div>
+                      </div>
+                      {refundRushFee && (
+                        <div className="grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center mt-2">
+                          <span className="w-5" />
+                          <span />
+                          <span />
+                          <span />
+                          <Input
+                            type="text"
+                            value={Number(order.rushFee).toFixed(2)}
+                            readOnly
+                            className="h-8 text-sm text-right bg-muted/30"
+                            tabIndex={-1}
+                          />
+                          <Input
+                            type="text"
+                            value="0"
+                            readOnly
+                            className="h-8 text-sm text-right bg-muted/30"
+                            tabIndex={-1}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
               <Separator />
@@ -961,6 +1052,24 @@ export function OrderDetailPage() {
                     )}
                   </div>
                 </div>
+                {order.isRushOrder && Number(order.rushFee) > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Rush Fee
+                      {order.rushRefunded && (
+                        <span className="text-destructive ml-1">(Refunded)</span>
+                      )}
+                    </span>
+                    <div className="text-right">
+                      <span>${Number(order.rushFee).toFixed(2)}</span>
+                      {order.rushRefunded && (
+                        <div className="text-destructive text-xs font-medium">
+                         -${Number(order.rushFee).toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
@@ -996,7 +1105,7 @@ export function OrderDetailPage() {
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Items + tax + shipping (if selected)</p>
+                            <p>Items + tax + shipping + rush fee (if selected)</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

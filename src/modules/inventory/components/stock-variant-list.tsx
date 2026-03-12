@@ -50,6 +50,7 @@ export interface IData {
   totalQuantity: number;
   totalReserved: number;
   totalAvailable: number;
+  size: string;
   warehouseCount: number;
   lastMovement: string | null;
   status: {
@@ -102,6 +103,7 @@ const convertStockVariantToIData = (variant: StockVariantItem): IData => {
       title: variant.productName,
       label: variant.variantName,
     },
+    size: variant.variantName.includes(':') ? variant.variantName.split(':').slice(1).join(':').trim() : variant.variantName,
     categoryName: variant.categoryName,
     totalQuantity: variant.totalQuantity,
     totalReserved: variant.totalReserved,
@@ -217,22 +219,31 @@ export function StockVariantListTable({
                   <Package className="h-6 w-6 text-muted-foreground" />
                 )}
               </Card>
-              <div className="flex flex-col gap-1">
-                <Link
-                  to={`/inventory/stocks/variant/${info.row.original.productVariantId}`}
-                  className="text-sm font-medium tracking-[-1%] cursor-pointer hover:text-primary"
-                >
-                  {productInfo.title}
-                </Link>
-                <span className="text-xs text-muted-foreground">
-                  {productInfo.label}
-                </span>
-              </div>
+              <Link
+                to={`/inventory/stocks/variant/${info.row.original.productVariantId}`}
+                className="text-sm font-medium tracking-[-1%] cursor-pointer hover:text-primary"
+              >
+                {productInfo.title}
+              </Link>
             </div>
           );
         },
         enableSorting: true,
         size: 200,
+      },
+      {
+        id: 'size',
+        accessorFn: (row) => row.size,
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Size" column={column} />
+        ),
+        cell: (info) => (
+          <span className="text-sm">
+            {(info.getValue() as string) || '-'}
+          </span>
+        ),
+        enableSorting: false,
+        size: 120,
       },
       {
         id: 'categoryName',
@@ -248,34 +259,34 @@ export function StockVariantListTable({
         enableSorting: false,
         size: 120,
       },
-      {
-        id: 'totalQuantity',
-        accessorFn: (row) => row.totalQuantity,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Total Qty" column={column} />
-        ),
-        cell: (info) => (
-          <span className="text-sm font-medium">
-            {info.getValue() as number}
-          </span>
-        ),
-        enableSorting: true,
-        size: 80,
-      },
-      {
-        id: 'totalReserved',
-        accessorFn: (row) => row.totalReserved,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Reserved" column={column} />
-        ),
-        cell: (info) => (
-          <span className="text-sm text-muted-foreground">
-            {info.getValue() as number}
-          </span>
-        ),
-        enableSorting: false,
-        size: 80,
-      },
+      // {
+      //   id: 'totalQuantity',
+      //   accessorFn: (row) => row.totalQuantity,
+      //   header: ({ column }) => (
+      //     <DataGridColumnHeader title="Total Qty" column={column} />
+      //   ),
+      //   cell: (info) => (
+      //     <span className="text-sm font-medium">
+      //       {info.getValue() as number}
+      //     </span>
+      //   ),
+      //   enableSorting: true,
+      //   size: 80,
+      // },
+      // {
+      //   id: 'totalReserved',
+      //   accessorFn: (row) => row.totalReserved,
+      //   header: ({ column }) => (
+      //     <DataGridColumnHeader title="Reserved" column={column} />
+      //   ),
+      //   cell: (info) => (
+      //     <span className="text-sm text-muted-foreground">
+      //       {info.getValue() as number}
+      //     </span>
+      //   ),
+      //   enableSorting: false,
+      //   size: 80,
+      // },
       {
         id: 'totalAvailable',
         accessorFn: (row) => row.totalAvailable,
@@ -290,20 +301,20 @@ export function StockVariantListTable({
         enableSorting: false,
         size: 80,
       },
-      {
-        id: 'warehouseCount',
-        accessorFn: (row) => row.warehouseCount,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Warehouses" column={column} />
-        ),
-        cell: (info) => (
-          <span className="text-sm">
-            {info.getValue() as number}
-          </span>
-        ),
-        enableSorting: false,
-        size: 90,
-      },
+      // {
+      //   id: 'warehouseCount',
+      //   accessorFn: (row) => row.warehouseCount,
+      //   header: ({ column }) => (
+      //     <DataGridColumnHeader title="Warehouses" column={column} />
+      //   ),
+      //   cell: (info) => (
+      //     <span className="text-sm">
+      //       {info.getValue() as number}
+      //     </span>
+      //   ),
+      //   enableSorting: false,
+      //   size: 90,
+      // },
       {
         id: 'status',
         accessorFn: (row) => row.status,

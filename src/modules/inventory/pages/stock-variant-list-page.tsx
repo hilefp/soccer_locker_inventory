@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { StockVariantListTable } from '../components/stock-variant-list';
 import { StockVariantGrid } from '../components/stock-variant-grid';
 import { Button } from '@/shared/components/ui/button';
@@ -11,8 +12,46 @@ type ViewMode = 'grid' | 'table';
 
 export function StockVariantListPage() {
   useDocumentTitle('Stock Variants');
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    (searchParams.get('view') as ViewMode) || 'table'
+  );
+  const searchQuery = searchParams.get('search') || '';
+
+  const setSearchQuery = useCallback(
+    (value: string) => {
+      setSearchParams(
+        (prev) => {
+          if (value) {
+            prev.set('search', value);
+          } else {
+            prev.delete('search');
+          }
+          return prev;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
+
+  const handleViewModeChange = useCallback(
+    (mode: ViewMode) => {
+      setViewMode(mode);
+      setSearchParams(
+        (prev) => {
+          if (mode !== 'table') {
+            prev.set('view', mode);
+          } else {
+            prev.delete('view');
+          }
+          return prev;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
 
   return (
     <div className="container-fluid space-y-5 lg:space-y-9">

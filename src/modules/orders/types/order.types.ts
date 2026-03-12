@@ -58,6 +58,7 @@ export interface OrderItem {
   name: string | null;
   sku: string | null;
   attributes: Record<string, string> | null;
+  customFields: Record<string, string> | null;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
@@ -139,6 +140,9 @@ export interface Order {
   pickedAt: string | null;
   processedAt: string | null;
   notes: string | null;
+  isRushOrder: boolean;
+  rushFee: number;
+  rushRefunded: boolean;
   totalRefunded: number;
   shippingRefunded: boolean;
   paymentStatus: string | null;
@@ -361,6 +365,7 @@ export interface RefundItemRequest {
 export interface RefundOrderRequest {
   items?: RefundItemRequest[];
   refundShipping?: boolean;
+  refundRushFee?: boolean;
   reason?: string;
 }
 

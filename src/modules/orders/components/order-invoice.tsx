@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Order } from '@/modules/orders/types';
 import { OrderStatusBadge } from './order-status-badge';
 import { formatDate } from '@/shared/lib/helpers';
+import { extractSize } from '@/modules/orders/lib/extract-size';
 
 interface OrderInvoiceProps {
   order: Order;
@@ -126,14 +127,33 @@ export function OrderInvoice({ order, open, onOpenChange }: OrderInvoiceProps) {
                         <div className="font-medium">
                           {item.name || item.productVariant?.product?.name || 'Unknown Product'}
                         </div>
-                        {(item.sku || (item.attributes && Object.keys(item.attributes).length > 0)) && (
+                        {item.sku && (
                           <div className="text-xs text-muted-foreground mt-1">
-                            {item.sku && `SKU: ${item.sku}`}
-                            {item.attributes &&
-                              Object.keys(item.attributes).length > 0 &&
-                              ` | ${Object.entries(item.attributes)
-                                .map(([key, value]) => `${key}: ${value}`)
-                                .join(' | ')}`}
+                            SKU: {item.sku}
+                          </div>
+                        )}
+                        {(() => {
+                          const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                          return (
+                            <>
+                              {sizeValue && (
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  Size: {sizeValue}
+                                </div>
+                              )}
+                              {rest.length > 0 && (
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                        {item.customFields && Object.keys(item.customFields).length > 0 && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {Object.entries(item.customFields).map(([key, value]) => (
+                              <div key={key}>{key}: {value}</div>
+                            ))}
                           </div>
                         )}
                       </td>
@@ -164,6 +184,12 @@ export function OrderInvoice({ order, open, onOpenChange }: OrderInvoiceProps) {
                 <span className="text-muted-foreground">Shipping</span>
                 <span>${Number(order.shippingTotal).toFixed(2)}</span>
               </div>
+              {order.isRushOrder && Number(order.rushFee) > 0 && (
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-muted-foreground">Rush Order Fee</span>
+                  <span>${Number(order.rushFee).toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between py-3 text-lg font-bold border-t-2">
                 <span>TOTAL</span>
                 <span>
