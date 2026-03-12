@@ -96,13 +96,17 @@ export function ProductFormVariants({
       });
 
       if (response.success && response.variants) {
-        // Update local state immediately
-        onVariantsChange?.(response.variants);
+        // Fetch fresh product data to get complete variants list (existing + new)
+        const freshProduct = await productService.getProduct(productId);
 
-        // Refetch the product query to get the latest data with new variants
-        await queryClient.refetchQueries({ queryKey: productKeys.detail(productId) });
+        // Update React Query cache with fresh data
+        queryClient.setQueryData(productKeys.detail(productId), freshProduct);
+
+        // Update parent state with the full variants list
+        onVariantsChange?.(freshProduct.variants || []);
 
         // Show success toast
+        const newCount = response.variants.length;
         toast.custom(
           (t) => (
             <Alert
@@ -115,7 +119,7 @@ export function ProductFormVariants({
                 <CheckCircle />
               </AlertIcon>
               <AlertTitle>
-                {response.variants.length} variation{response.variants.length !== 1 ? 's' : ''} generated successfully!
+                {newCount} variation{newCount !== 1 ? 's' : ''} generated successfully!
               </AlertTitle>
             </Alert>
           ),
