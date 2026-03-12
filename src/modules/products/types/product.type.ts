@@ -33,39 +33,26 @@ export interface ProductVariant {
   isActive?: boolean;
   isDefault?: boolean;
 
-  // Inventory Management
-  trackInventory?: boolean; // If true, check stock before allowing purchase
-  allowBackorder?: boolean; // If true, allow purchase even when out of stock (with notification)
-  lowStockThreshold?: number; // Threshold to show low stock warning
-
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface ProductVariantRequest {
-  sku: string;
+  sku?: string;
   barcode?: string;
-  attributes: ProductVariantAttributes;
-
-  price: number;
-  compareAtPrice?: number;
-  cost?: number;
-
-  weight?: number;
+  attributes?: Record<string, string>;
+  price?: number | string;
+  compareAtPrice?: number | string;
+  cost?: number | string;
+  weight?: number | string;
   weightUnit?: string;
-  dimensions?: ProductVariantDimensions;
+  dimensions?: string;
   dimensionUnit?: string;
-
   imageUrl?: string;
   imageUrls?: string[];
   isActive?: boolean;
   minPrice?: number | string;
   maxPrice?: number | string;
-
-  // Inventory Management
-  trackInventory?: boolean;
-  allowBackorder?: boolean;
-  lowStockThreshold?: number;
 }
 
 export interface ProductRequest {
