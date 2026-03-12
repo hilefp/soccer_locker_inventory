@@ -108,7 +108,7 @@ export function QuickActionsCard({ variantId, warehouseId, sku, currentStock }: 
             <span>Physical Count</span>
           </Button>
 
-          <Button
+          {/* <Button
             variant="outline"
             size="sm"
             onClick={handleGenerateReport}
@@ -116,7 +116,7 @@ export function QuickActionsCard({ variantId, warehouseId, sku, currentStock }: 
           >
             <FileText className="h-5 w-5 mr-3" />
             <span>Generate Report</span>
-          </Button>
+          </Button> */}
         </div>
 
         <div className="text-xs text-muted-foreground text-center mt-4 p-2 bg-accent/50 rounded-md">

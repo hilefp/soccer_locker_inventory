@@ -273,7 +273,7 @@ export function AddProductsToClubDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[80vh]">
+      <DialogContent className="max-w-5xl max-h-[80vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Add Products to Club</DialogTitle>
           <DialogDescription>
@@ -282,7 +282,7 @@ export function AddProductsToClubDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <DataGrid
             table={table}
             recordCount={filteredData?.length || 0}
@@ -338,7 +338,7 @@ export function AddProductsToClubDialog({
                     </p>
                   </div>
                 ) : (
-                  <ScrollArea className="h-[400px]">
+                  <ScrollArea className="max-h-[44vh]">
                     <DataGridTable />
                     <ScrollBar orientation="horizontal" />
                   </ScrollArea>

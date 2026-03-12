@@ -34,27 +34,30 @@ export function IncrementStockDrawer({
 }: IncrementStockDrawerProps) {
   const { user } = useAuth();
   const registerEntryMutation = useRegisterStockEntry();
-  const [quantity, setQuantity] = useState<number>(1);
+  const [quantityInput, setQuantityInput] = useState<string>('');
+
+  const quantity = quantityInput === '' ? 0 : parseInt(quantityInput, 10) || 0;
 
   const handleIncrement = () => {
-    setQuantity((prev) => prev + 1);
+    setQuantityInput(String(quantity + 1));
   };
 
   const handleDecrement = () => {
-    setQuantity((prev) => Math.max(0, prev - 1));
+    const newVal = Math.max(0, quantity - 1);
+    setQuantityInput(newVal === 0 ? '' : String(newVal));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Allow empty string for user to clear and type
+
     if (value === '') {
-      setQuantity(0);
+      setQuantityInput('');
       return;
     }
 
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 0) {
-      setQuantity(numValue);
+      setQuantityInput(String(numValue));
     }
   };
 
@@ -80,7 +83,7 @@ export function IncrementStockDrawer({
 
       toast.success(`Stock incremented by ${quantity} units for SKU: ${sku}`);
       onOpenChange(false);
-      setQuantity(1);
+      setQuantityInput('');
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to increment stock'
@@ -91,7 +94,7 @@ export function IncrementStockDrawer({
   const handleCancel = () => {
     onOpenChange(false);
     // Reset quantity on cancel
-    setQuantity(1);
+    setQuantityInput('');
   };
 
   return (
@@ -119,8 +122,9 @@ export function IncrementStockDrawer({
             <div className="flex-1 flex flex-col items-center gap-2">
               <Input
                 type="number"
-                value={quantity}
+                value={quantityInput}
                 onChange={handleInputChange}
+                placeholder="0"
                 className="text-center text-5xl font-bold h-24 border-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 min="0"
               />

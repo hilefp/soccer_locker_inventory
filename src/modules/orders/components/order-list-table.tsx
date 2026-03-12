@@ -564,7 +564,9 @@ export function OrderListTable({
     setDateRange(range || {});
     if (onDateRangeChange) {
       const startDate = range?.from?.toISOString().split('T')[0];
-      const endDate = range?.to?.toISOString().split('T')[0];
+      const endDate = range?.to
+        ? `${range.to.toISOString().split('T')[0]}T23:59:59`
+        : undefined;
       onDateRangeChange(startDate, endDate);
     }
   };
@@ -626,7 +628,7 @@ export function OrderListTable({
 
             {/* Club Filter */}
             <Select value={clubFilter} onValueChange={handleClubChange}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-auto whitespace-nowrap justify-start">
                 <Building2 className="size-3.5" />
                 <SelectValue placeholder="All Clubs" />
               </SelectTrigger>
@@ -643,7 +645,7 @@ export function OrderListTable({
             {/* Date Range Filter */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="min-w-[200px] justify-start">
+                <Button variant="outline" className="w-auto whitespace-nowrap justify-start">
                   <CalendarDays className="size-3.5" />
                   {dateRange.from ? (
                     dateRange.to ? (
@@ -677,6 +679,18 @@ export function OrderListTable({
               </PopoverContent>
             </Popover>
 
+            {/* Column Visibility */}
+            <DataGridColumnVisibility
+              table={table}
+              trigger={
+                <Button variant="outline">
+                  <Filter className="size-3.5" />
+                  Columns
+                </Button>
+              }
+            />
+
+
             {/* Bulk Print - Only show when rows are selected */}
             {Object.keys(rowSelection).length > 0 && (
               <DropdownMenu>
@@ -707,17 +721,6 @@ export function OrderListTable({
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-
-            {/* Column Visibility */}
-            <DataGridColumnVisibility
-              table={table}
-              trigger={
-                <Button variant="outline">
-                  <Filter className="size-3.5" />
-                  Columns
-                </Button>
-              }
-            />
           </CardToolbar>
         </CardHeader>
 

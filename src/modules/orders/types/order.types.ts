@@ -139,6 +139,9 @@ export interface Order {
   pickedAt: string | null;
   processedAt: string | null;
   notes: string | null;
+  isRushOrder: boolean;
+  rushFee: number;
+  rushRefunded: boolean;
   totalRefunded: number;
   shippingRefunded: boolean;
   createdAt: string;
@@ -358,6 +361,7 @@ export interface RefundItemRequest {
 export interface RefundOrderRequest {
   items?: RefundItemRequest[];
   refundShipping?: boolean;
+  refundRushFee?: boolean;
   reason?: string;
   restockItems?: boolean;
 }

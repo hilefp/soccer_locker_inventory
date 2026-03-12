@@ -227,19 +227,19 @@ export function StockVariantDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-        <QRCodeCard
-            sku={variant.sku}
-            productName={product.name}
-            variantId={variant.id}
-          />
-
-
-          {/* Quick Actions */}
+        {/* Quick Actions */}
           <QuickActionsCard
             variantId={variant.id}
             sku={variant.sku}
             currentStock={stockSummary.totalQuantity}
             warehouseId={warehouseStocks[0]?.warehouseId}
+          />
+
+
+        <QRCodeCard
+            sku={variant.sku}
+            productName={product.name}
+            variantId={variant.id}
           />
 
 
