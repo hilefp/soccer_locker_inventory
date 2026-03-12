@@ -4,6 +4,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Switch } from '@/shared/components/ui/switch';
+import { toast } from 'sonner';
 import {
   Sheet,
   SheetContent,
@@ -24,6 +25,7 @@ export function CustomerEditSheet({ customer }: CustomerEditSheetProps) {
   const [open, setOpen] = useState(false);
   const updateMutation = useUpdateCustomer();
   const profile = customer.customerProfile;
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState<UpdateCustomerRequest>({
     firstName: profile?.firstName || '',
@@ -61,16 +63,45 @@ export function CustomerEditSheet({ customer }: CustomerEditSheetProps) {
     }
   }, [customer, profile]);
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.firstName?.trim()) {
+      newErrors.firstName = 'First name is required';
+    }
+    if (!formData.lastName?.trim()) {
+      newErrors.lastName = 'Last name is required';
+    }
+    if (formData.phone && !/^\+?[0-9\s-()]+$/.test(formData.phone)) {
+      newErrors.phone = 'Invalid phone number format';
+    }
+    if (formData.avatarUrl && !/^https?:\/\/.+/.test(formData.avatarUrl)) {
+      newErrors.avatarUrl = 'Invalid URL format';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!validateForm()) {
+      toast.error('Please fix the validation errors');
+      return;
+    }
+
     try {
       await updateMutation.mutateAsync({
         id: customer.id,
         data: formData,
       });
+      toast.success('Customer updated successfully');
       setOpen(false);
-    } catch (error) {
+      setErrors({});
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update customer';
+      toast.error(errorMessage);
       console.error('Error updating customer:', error);
     }
   };
@@ -80,6 +111,13 @@ export function CustomerEditSheet({ customer }: CustomerEditSheetProps) {
       ...prev,
       [field]: value,
     }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   return (
@@ -105,22 +143,30 @@ export function CustomerEditSheet({ customer }: CustomerEditSheetProps) {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">First Name *</Label>
                 <Input
                   id="firstName"
                   value={formData.firstName}
                   onChange={(e) => handleChange('firstName', e.target.value)}
                   placeholder="John"
+                  className={errors.firstName ? 'border-destructive' : ''}
                 />
+                {errors.firstName && (
+                  <p className="text-xs text-destructive">{errors.firstName}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">Last Name *</Label>
                 <Input
                   id="lastName"
                   value={formData.lastName}
                   onChange={(e) => handleChange('lastName', e.target.value)}
                   placeholder="Doe"
+                  className={errors.lastName ? 'border-destructive' : ''}
                 />
+                {errors.lastName && (
+                  <p className="text-xs text-destructive">{errors.lastName}</p>
+                )}
               </div>
             </div>
 
@@ -132,7 +178,11 @@ export function CustomerEditSheet({ customer }: CustomerEditSheetProps) {
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
                 placeholder="+1234567890"
+                className={errors.phone ? 'border-destructive' : ''}
               />
+              {errors.phone && (
+                <p className="text-xs text-destructive">{errors.phone}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -153,7 +203,11 @@ export function CustomerEditSheet({ customer }: CustomerEditSheetProps) {
                 value={formData.avatarUrl}
                 onChange={(e) => handleChange('avatarUrl', e.target.value)}
                 placeholder="https://example.com/avatar.jpg"
+                className={errors.avatarUrl ? 'border-destructive' : ''}
               />
+              {errors.avatarUrl && (
+                <p className="text-xs text-destructive">{errors.avatarUrl}</p>
+              )}
             </div>
           </div>
 
