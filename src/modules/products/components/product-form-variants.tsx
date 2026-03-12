@@ -90,47 +90,51 @@ export function ProductFormVariants({
     setIsGenerating(true);
 
     try {
-      const response = await productService.generateVariations({
+      const previousCount = variants.length;
+
+      // Call generate API
+      await productService.generateVariations({
         productId,
         attributeIds: selectedAttributeIds,
       });
 
-      if (response.success && response.variants) {
-        // Fetch fresh product data to get complete variants list (existing + new)
-        const freshProduct = await productService.getProduct(productId);
+      // Fetch fresh product data to get complete variants list (existing + new)
+      const freshProduct = await productService.getProduct(productId);
 
-        // Update React Query cache with fresh data
-        queryClient.setQueryData(productKeys.detail(productId), freshProduct);
+      // Update React Query cache with fresh data
+      queryClient.setQueryData(productKeys.detail(productId), freshProduct);
 
-        // Update parent state with the full variants list
-        onVariantsChange?.(freshProduct.variants || []);
+      // Update parent state with the full variants list
+      const allVariants = freshProduct.variants || [];
+      onVariantsChange?.(allVariants);
 
-        // Show success toast
-        const newCount = response.variants.length;
-        toast.custom(
-          (t) => (
-            <Alert
-              variant="mono"
-              icon="success"
-              close={true}
-              onClose={() => toast.dismiss(t)}
-            >
-              <AlertIcon>
-                <CheckCircle />
-              </AlertIcon>
-              <AlertTitle>
-                {newCount} variation{newCount !== 1 ? 's' : ''} generated successfully!
-              </AlertTitle>
-            </Alert>
-          ),
-          {
-            duration: 5000,
-          }
-        );
+      // Show success toast
+      const newCount = allVariants.length - previousCount;
+      toast.custom(
+        (t) => (
+          <Alert
+            variant="mono"
+            icon="success"
+            close={true}
+            onClose={() => toast.dismiss(t)}
+          >
+            <AlertIcon>
+              <CheckCircle />
+            </AlertIcon>
+            <AlertTitle>
+              {newCount > 0
+                ? `${newCount} variation${newCount !== 1 ? 's' : ''} generated successfully!`
+                : `Variations generated! Total: ${allVariants.length}`}
+            </AlertTitle>
+          </Alert>
+        ),
+        {
+          duration: 5000,
+        }
+      );
 
-        setActiveTab('list');
-        setSelectedAttributeIds([]);
-      }
+      setActiveTab('list');
+      setSelectedAttributeIds([]);
     } catch (error) {
       console.error('Error generating variations:', error);
       toast.error('Failed to generate variations');
