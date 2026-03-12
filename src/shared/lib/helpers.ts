@@ -115,3 +115,21 @@ export function formatDateTime(input: Date | string | number): string {
     hour12: true,
   });
 }
+
+export function formatDateOnly(dateString: string): string {
+  if (!dateString) return 'N/A';
+  
+  const date = new Date(dateString);
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+  
+  const utcDate = new Date(Date.UTC(year, month, day));
+  
+  return utcDate.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+}
