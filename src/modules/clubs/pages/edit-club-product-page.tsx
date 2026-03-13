@@ -109,7 +109,7 @@ export function EditClubProductPage() {
           description: customDescription || undefined,
           customFields: customFields,
           isActive,
-          imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+          imageUrls,
           tags,
         },
       });
@@ -409,9 +409,9 @@ export function EditClubProductPage() {
 
             <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="isActive">Field Player Birthday</Label>
+                  <Label htmlFor="isActive">Field Player Birth Year</Label>
                   <p className="text-xs text-muted-foreground">
-                    Controls Show the field player birthday on the product
+                    Controls Show the field player birth year on the product
                   </p>
                 </div>
                 <Switch
@@ -464,16 +464,35 @@ export function EditClubProductPage() {
                   <Badge variant="outline">Custom</Badge>
                 )}
               </CardTitle>
-              {hasCustomImages && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setImageUrls(baseImageUrls)}
-                  className="h-6 text-xs"
-                >
-                  Reset to default
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {hasCustomImages && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const merged = [...imageUrls];
+                      for (const url of baseImageUrls) {
+                        if (!merged.includes(url)) merged.push(url);
+                      }
+                      setImageUrls(merged);
+                    }}
+                    className="h-6 text-xs"
+                    disabled={baseImageUrls.every((url) => imageUrls.includes(url))}
+                  >
+                    Include original images
+                  </Button>
+                )}
+                {hasCustomImages && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setImageUrls(baseImageUrls)}
+                    className="h-6 text-xs"
+                  >
+                    Reset to default
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
