@@ -1,4 +1,11 @@
-const SIZE_KEYS = ['size', 'all sizes', 'all size', "women's sizes", "Women's Size", 'Youth Sizes'];
+const SIZE_KEYS = [
+  'size', 'all sizes', 'all size',
+  "women's sizes", "women's size",
+  'youth sizes', 'youth',
+  'adult', 'adult sizes', 'adult size',
+  'kids', 'kids sizes', 'kids size',
+  "men's sizes", "men's size",
+];
 
 /**
  * Extracts the size value from item/variant attributes and returns
