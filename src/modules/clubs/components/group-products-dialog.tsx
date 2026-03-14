@@ -109,7 +109,7 @@ export function GroupProductsDialog({
                             {displayName}
                           </span>
                           {primaryId === cp.id && (
-                            <Badge variant="default" className="text-xs">
+                            <Badge variant="primary" className="text-xs">
                               <Star className="size-3 mr-1" />
                               Primary
                             </Badge>

@@ -122,7 +122,7 @@ export function ClubProductsTable({
                   )}
                   {isGrouped && (
                     <Badge
-                      variant={isPrimary ? 'default' : 'secondary'}
+                      variant={isPrimary ? 'primary' : 'secondary'}
                       appearance="light"
                       className="text-xs"
                     >
