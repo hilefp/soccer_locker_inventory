@@ -17,6 +17,10 @@ export interface ClubProduct {
   tags?: string[];
   isActive: boolean;
 
+  // Grouping fields
+  groupId?: string | null;
+  isGroupPrimary?: boolean;
+
   // Timestamps
   createdAt: string;
   updatedAt: string;
@@ -35,6 +39,8 @@ export interface CreateClubProductDto {
   imageUrls?: string[];
   isActive?: boolean;
   tags?: string[];
+  groupId?: string;
+  isGroupPrimary?: boolean;
 }
 
 // DTO for updating club products
@@ -46,6 +52,28 @@ export interface UpdateClubProductDto {
   isActive?: boolean;
   customFields?: CustomFields[];
   tags?: string[];
+  groupId?: string;
+  isGroupPrimary?: boolean;
+}
+
+// DTO for grouping club products
+export interface GroupClubProductsDto {
+  clubProductIds: string[];
+  primaryClubProductId: string;
+}
+
+// DTO for updating a group
+export interface UpdateGroupDto {
+  addClubProductIds?: string[];
+  removeClubProductIds?: string[];
+  primaryClubProductId?: string;
+}
+
+// Group response from the API
+export interface ClubProductGroup {
+  groupId: string;
+  primaryProduct: ClubProduct;
+  members: ClubProduct[];
 }
 
 // DTO for bulk adding products

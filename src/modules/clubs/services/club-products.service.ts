@@ -6,6 +6,9 @@ import type {
   AddProductsToClubDto,
   ClubProductFilters,
   ClubProductStats,
+  GroupClubProductsDto,
+  UpdateGroupDto,
+  ClubProductGroup,
 } from '../types/club-product';
 import { CustomFields } from '../types';
 
@@ -121,6 +124,49 @@ export const clubProductsService = {
       `/shop/clubs/${clubId}/products/stats`
     );
     return response.data;
+  },
+
+  // Group club products together
+  async groupClubProducts(
+    clubId: string,
+    data: GroupClubProductsDto
+  ): Promise<ClubProductGroup> {
+    const response = await apiClient.post<ClubProductGroup>(
+      `/admin/clubs/${clubId}/products/groups`,
+      data
+    );
+    return response.data;
+  },
+
+  // Get all groups for a club
+  async getClubProductGroups(clubId: string): Promise<ClubProductGroup[]> {
+    const response = await apiClient.get<ClubProductGroup[]>(
+      `/admin/clubs/${clubId}/products/groups`
+    );
+    return response.data;
+  },
+
+  // Update a group
+  async updateGroup(
+    clubId: string,
+    groupId: string,
+    data: UpdateGroupDto
+  ): Promise<ClubProductGroup> {
+    const response = await apiClient.put<ClubProductGroup>(
+      `/admin/clubs/${clubId}/products/groups/${groupId}`,
+      data
+    );
+    return response.data;
+  },
+
+  // Dissolve a group
+  async ungroupClubProducts(
+    clubId: string,
+    groupId: string
+  ): Promise<void> {
+    await apiClient.delete(
+      `/admin/clubs/${clubId}/products/groups/${groupId}`
+    );
   },
 };
 

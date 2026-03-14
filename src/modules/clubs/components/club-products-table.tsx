@@ -29,8 +29,8 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { Package, Search, SquarePen, Trash, X } from 'lucide-react';
-import { useRemoveClubProduct } from '../hooks/use-club-products';
+import { Group, Package, Search, SquarePen, Trash, Ungroup, X } from 'lucide-react';
+import { useRemoveClubProduct, useUngroupClubProducts } from '../hooks/use-club-products';
 
 interface ClubProductsTableProps {
   clubId: string;
@@ -38,6 +38,7 @@ interface ClubProductsTableProps {
   isLoading?: boolean;
   error?: string | null;
   onEditProduct?: (clubProduct: ClubProduct) => void;
+  onGroupSelected?: (selectedProducts: ClubProduct[]) => void;
 }
 
 // Helper to format price
@@ -52,6 +53,7 @@ export function ClubProductsTable({
   isLoading = false,
   error = null,
   onEditProduct,
+  onGroupSelected,
 }: ClubProductsTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
@@ -64,6 +66,7 @@ export function ClubProductsTable({
   ]);
 
   const removeMutation = useRemoveClubProduct(clubId);
+  const ungroupMutation = useUngroupClubProducts(clubId);
 
   const columns = useMemo<ColumnDef<ClubProduct>[]>(
     () => [
@@ -89,6 +92,8 @@ export function ClubProductsTable({
             clubProduct.imageUrls && clubProduct.imageUrls.length > 0
               ? clubProduct.imageUrls[0]
               : clubProduct.product?.imageUrls?.[0];
+          const isGrouped = !!clubProduct.groupId;
+          const isPrimary = clubProduct.isGroupPrimary;
 
           return (
             <div className="flex items-center gap-2.5">
@@ -115,9 +120,19 @@ export function ClubProductsTable({
                       Custom
                     </Badge>
                   )}
+                  {isGrouped && (
+                    <Badge
+                      variant={isPrimary ? 'primary' : 'secondary'}
+                      appearance="light"
+                      className="text-xs"
+                    >
+                      <Group className="size-3 mr-1" />
+                      {isPrimary ? 'Primary' : 'Grouped'}
+                    </Badge>
+                  )}
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  SKU: {clubProduct.product?.defaultVariant?.sku || 'N/A'}
+                  SKU: {clubProduct.product?.variants?.reduce((shortest, v) => (!shortest || v.sku.length < shortest.length ? v.sku : shortest), '' as string) || 'N/A'}
                 </span>
                 {isCustomName && clubProduct.product?.name && (
                   <span className="text-xs text-muted-foreground">
@@ -129,7 +144,7 @@ export function ClubProductsTable({
           );
         },
         enableSorting: true,
-        size: 250,
+        size: 300,
       },
       {
         id: 'price',
@@ -143,7 +158,6 @@ export function ClubProductsTable({
           const basePrice = clubProduct.product?.defaultVariant?.price;
           const isCustomPrice = clubPrice !== null && clubPrice !== undefined;
 
-          // Display club price if it's a string (could be a range), otherwise format the base price
           const displayPrice = isCustomPrice
             ? (typeof clubPrice === 'string' ? `$${clubPrice}` : `$${formatPrice(clubPrice)}`)
             : (basePrice ? `$${formatPrice(basePrice)}` : '-');
@@ -226,6 +240,24 @@ export function ClubProductsTable({
             }
           };
 
+          const handleUngroup = async () => {
+            if (!clubProduct.groupId) return;
+
+            if (
+              !confirm(
+                'Are you sure you want to dissolve this product group? All products will be shown separately in the shop.'
+              )
+            ) {
+              return;
+            }
+
+            try {
+              await ungroupMutation.mutateAsync(clubProduct.groupId);
+            } catch (error) {
+              console.error('Ungroup error:', error);
+            }
+          };
+
           return (
             <div className="flex items-center gap-1">
               <Button
@@ -237,6 +269,17 @@ export function ClubProductsTable({
               >
                 <SquarePen />
               </Button>
+              {clubProduct.groupId && (
+                <Button
+                  variant="dim"
+                  mode="icon"
+                  size="sm"
+                  onClick={handleUngroup}
+                  title="Ungroup products"
+                >
+                  <Ungroup />
+                </Button>
+              )}
               <Button
                 variant="dim"
                 mode="icon"
@@ -249,10 +292,10 @@ export function ClubProductsTable({
             </div>
           );
         },
-        size: 60,
+        size: 90,
       },
     ],
-    [onEditProduct, removeMutation]
+    [onEditProduct, removeMutation, ungroupMutation]
   );
 
   const filteredData = useMemo(() => {
@@ -264,7 +307,7 @@ export function ClubProductsTable({
       (cp) =>
         cp?.name?.toLowerCase().includes(query) ||
         cp?.product?.name?.toLowerCase().includes(query) ||
-        cp?.product?.defaultVariant?.sku?.toLowerCase().includes(query) ||
+        cp?.product?.variants?.some((v) => v.sku?.toLowerCase().includes(query)) ||
         cp?.description?.toLowerCase().includes(query)
     );
   }, [clubProducts, searchQuery]);
@@ -283,7 +326,24 @@ export function ClubProductsTable({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getRowId: (row) => row.id,
   });
+
+  const selectedCount = Object.keys(rowSelection).length;
+  const selectedProducts = table
+    .getSelectedRowModel()
+    .rows.map((row) => row.original);
+
+  // Only allow grouping ungrouped products
+  const canGroup =
+    selectedCount >= 2 &&
+    selectedProducts.every((p) => !p.groupId);
+
+  const handleGroupSelected = () => {
+    if (canGroup && onGroupSelected) {
+      onGroupSelected(selectedProducts);
+    }
+  };
 
   return (
     <DataGrid
@@ -317,6 +377,23 @@ export function ClubProductsTable({
                 </Button>
               )}
             </InputWrapper>
+            {selectedCount > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {selectedCount} selected
+                </span>
+                {canGroup && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGroupSelected}
+                  >
+                    <Group className="size-4 mr-1" />
+                    Group Selected
+                  </Button>
+                )}
+              </div>
+            )}
           </CardToolbar>
         </CardHeader>
         <CardTable>

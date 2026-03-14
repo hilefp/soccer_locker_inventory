@@ -9,6 +9,7 @@ import { useClub } from '../hooks/use-clubs';
 import { useClubProducts, useClubProductStats } from '../hooks/use-club-products';
 import { ClubProductsTable } from '../components/club-products-table';
 import { AddProductsToClubDialog } from '../components/add-products-to-club-dialog';
+import { GroupProductsDialog } from '../components/group-products-dialog';
 import { ClubProduct } from '../types/club-product';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
@@ -31,9 +32,16 @@ export function ClubDetailPage() {
 
   // Dialog state
   const [isAddProductsOpen, setIsAddProductsOpen] = useState(false);
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
+  const [productsToGroup, setProductsToGroup] = useState<ClubProduct[]>([]);
 
   const handleEditProduct = (clubProduct: ClubProduct) => {
     navigate(`/clubs/${clubId}/products/${clubProduct.id}/edit`);
+  };
+
+  const handleGroupSelected = (selectedProducts: ClubProduct[]) => {
+    setProductsToGroup(selectedProducts);
+    setIsGroupDialogOpen(true);
   };
 
   if (clubLoading) {
@@ -306,6 +314,7 @@ export function ClubDetailPage() {
             clubProducts={clubProducts}
             isLoading={productsLoading}
             onEditProduct={handleEditProduct}
+            onGroupSelected={handleGroupSelected}
           />
         </TabsContent>
       </Tabs>
@@ -316,6 +325,14 @@ export function ClubDetailPage() {
         open={isAddProductsOpen}
         onOpenChange={setIsAddProductsOpen}
         existingClubProducts={clubProducts}
+      />
+
+      {/* Group Products Dialog */}
+      <GroupProductsDialog
+        clubId={clubId!}
+        open={isGroupDialogOpen}
+        onOpenChange={setIsGroupDialogOpen}
+        selectedProducts={productsToGroup}
       />
     </div>
   );
