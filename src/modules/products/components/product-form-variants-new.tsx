@@ -16,6 +16,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Input, InputWrapper } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
+import { Switch } from '@/shared/components/ui/switch';
 import {
   Select,
   SelectContent,

@@ -23,8 +23,9 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useCustomer, useActivateCustomer, useDeactivateCustomer, useSuspendCustomer } from '@/modules/shop/hooks/use-customers';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
-import { formatDate } from '@/shared/lib/helpers';
+import { formatDate, formatDateOnly } from '@/shared/lib/helpers';
 import { CustomerStatus } from '@/modules/shop/types/customer.type';
+import { CustomerEditSheet } from '@/modules/shop/components/customer-edit-sheet';
 
 const getStatusBadgeVariant = (status: CustomerStatus): 'success' | 'warning' | 'destructive' | 'secondary' => {
   switch (status) {
@@ -168,6 +169,7 @@ export function CustomerDetailPage() {
           >
             {getStatusLabel(customer.status)}
           </Badge>
+          <CustomerEditSheet customer={customer} />
           {customer.status !== 'ACTIVE' && (
             <Button
               variant="outline"
@@ -291,7 +293,7 @@ export function CustomerDetailPage() {
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Birth Date</span>
               <span className="text-sm font-medium">
-                {profile?.birthDate ? formatDate(new Date(profile.birthDate)) : 'N/A'}
+                {profile?.birthDate ? formatDateOnly(profile.birthDate) : 'N/A'}
               </span>
             </div>
             <div className="flex justify-between items-center">

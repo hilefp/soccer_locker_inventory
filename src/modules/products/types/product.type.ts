@@ -38,19 +38,16 @@ export interface ProductVariant {
 }
 
 export interface ProductVariantRequest {
-  sku: string;
+  sku?: string;
   barcode?: string;
-  attributes: ProductVariantAttributes;
-
-  price: number;
-  compareAtPrice?: number;
-  cost?: number;
-
-  weight?: number;
+  attributes?: Record<string, string>;
+  price?: number | string;
+  compareAtPrice?: number | string;
+  cost?: number | string;
+  weight?: number | string;
   weightUnit?: string;
-  dimensions?: ProductVariantDimensions;
+  dimensions?: string;
   dimensionUnit?: string;
-
   imageUrl?: string;
   imageUrls?: string[];
   isActive?: boolean;

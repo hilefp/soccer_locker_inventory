@@ -54,7 +54,7 @@ export function VariantDetailPage() {
 
     try {
       await updateMutation.mutateAsync({
-        variantId,
+        id: variantId,
         data: {
           sku: editingVariant.sku,
           barcode: editingVariant.barcode,

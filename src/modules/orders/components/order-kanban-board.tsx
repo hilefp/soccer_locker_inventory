@@ -11,6 +11,7 @@ import {
   useSensor,
   useSensors,
   closestCenter,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -25,6 +26,7 @@ import {
   Cog,
   Truck,
   CheckCircle,
+  CreditCard,
   Eye,
   User,
   Clock,
@@ -51,9 +53,11 @@ import { useUpdateOrderStatus } from '@/modules/orders/hooks/use-orders';
 import { formatDate, timeAgo } from '@/shared/lib/helpers';
 import { cn } from '@/shared/lib/utils';
 import { useAuthStore } from '@/shared/stores/auth-store';
+import { toast } from 'sonner';
 
 // Status icons mapping
 const STATUS_ICONS: Record<OrderStatus, React.ElementType> = {
+  PENDING_PAYMENT: CreditCard,
   NEW: Package,
   PRINT: Printer,
   PICKING_UP: ShoppingBag,
@@ -67,6 +71,7 @@ const STATUS_ICONS: Record<OrderStatus, React.ElementType> = {
 
 // Status colors for columns
 const STATUS_COLORS: Record<OrderStatus, string> = {
+  PENDING_PAYMENT: 'border-orange-500',
   NEW: 'border-blue-500',
   PRINT: 'border-gray-500',
   PICKING_UP: 'border-yellow-500',
@@ -214,12 +219,17 @@ interface KanbanColumnProps {
 function KanbanColumn({ status, orders, onViewDetails }: KanbanColumnProps) {
   const Icon = STATUS_ICONS[status];
   const borderColor = STATUS_COLORS[status];
+  const { setNodeRef, isOver } = useDroppable({
+    id: status,
+  });
 
   return (
     <div
+      ref={setNodeRef}
       className={cn(
-        'flex flex-col min-w-[280px] max-w-[320px] bg-muted/30 rounded-lg border-t-4',
-        borderColor
+        'flex flex-col min-w-[280px] max-w-[320px] bg-muted/30 rounded-lg border-t-4 transition-colors',
+        borderColor,
+        isOver && 'bg-primary/10 ring-2 ring-primary'
       )}
     >
       <CardHeader className="py-3 px-4 flex-row items-center justify-between border-b bg-muted/50">
@@ -300,20 +310,37 @@ export function OrderKanbanBoard({
 
     if (!order) return;
 
-    // Find the target column (status) based on where the item was dropped
-    const targetOrderId = over.id as string;
-    const targetOrder = orders.find((o) => o.id === targetOrderId);
+    // The over.id can be either a status (droppable zone) or an order ID (sortable item)
+    // First, check if it's a valid status
+    let targetStatus: OrderStatus | undefined;
+    
+    if (statuses.includes(over.id as OrderStatus)) {
+      // Dropped directly on a column
+      targetStatus = over.id as OrderStatus;
+    } else {
+      // Dropped on another order, find that order's status
+      const targetOrder = orders.find((o) => o.id === over.id);
+      if (targetOrder) {
+        targetStatus = targetOrder.status;
+      }
+    }
 
-    if (targetOrder && targetOrder.status !== order.status) {
+    // Only update if we found a valid target status and it's different from current
+    if (targetStatus && targetStatus !== order.status) {
       // Check if transition is valid
       const validTransitions = ORDER_STATUS_FLOW[order.status];
-      if (validTransitions.includes(targetOrder.status)) {
+      if (validTransitions.includes(targetStatus)) {
         updateStatusMutation.mutate({
           id: orderId,
-          status: targetOrder.status,
-          note: `Status changed from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[targetOrder.status]} via drag and drop`,
+          status: targetStatus,
+          note: `Status changed from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[targetStatus]} via drag and drop`,
           changedByUserId: user?.id,
         });
+      } else {
+        // Invalid transition - show error toast
+        toast.error(
+          `Cannot move order from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[targetStatus]}. Invalid status transition.`
+        );
       }
     }
   };
