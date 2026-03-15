@@ -122,7 +122,7 @@ const convertProductToIData = (product: Product): IData => {
     productInfo: {
       image: product.imageUrl || '', // Empty string instead of hardcoded fallback
       title: product.name,
-      label: product.slug,
+      label: product.defaultVariant?.sku || product.sku,
       tooltip: product.model || product.name,
     },
     category: product.category?.name || 'Uncategorized',

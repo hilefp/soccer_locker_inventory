@@ -6,6 +6,9 @@ import type {
   AddProductsToClubDto,
   ClubProductFilters,
   ClubProductStats,
+  GroupClubProductsDto,
+  UpdateGroupDto,
+  ClubProductGroup,
 } from '../types/club-product';
 import { CustomFields } from '../types';
 
@@ -107,12 +110,63 @@ export const clubProductsService = {
     await apiClient.delete(`/admin/clubs/${clubId}/products/${clubProductId}`);
   },
 
+  // Get available tags for a club's products
+  async getClubProductTags(clubId: string): Promise<string[]> {
+    const response = await apiClient.get<string[]>(
+      `/admin/clubs/${clubId}/products/tags`
+    );
+    return response.data;
+  },
+
   // Get stats for club products
   async getClubProductStats(clubId: string): Promise<ClubProductStats> {
     const response = await apiClient.get<ClubProductStats>(
       `/shop/clubs/${clubId}/products/stats`
     );
     return response.data;
+  },
+
+  // Group club products together
+  async groupClubProducts(
+    clubId: string,
+    data: GroupClubProductsDto
+  ): Promise<ClubProductGroup> {
+    const response = await apiClient.post<ClubProductGroup>(
+      `/admin/clubs/${clubId}/products/groups`,
+      data
+    );
+    return response.data;
+  },
+
+  // Get all groups for a club
+  async getClubProductGroups(clubId: string): Promise<ClubProductGroup[]> {
+    const response = await apiClient.get<ClubProductGroup[]>(
+      `/admin/clubs/${clubId}/products/groups`
+    );
+    return response.data;
+  },
+
+  // Update a group
+  async updateGroup(
+    clubId: string,
+    groupId: string,
+    data: UpdateGroupDto
+  ): Promise<ClubProductGroup> {
+    const response = await apiClient.put<ClubProductGroup>(
+      `/admin/clubs/${clubId}/products/groups/${groupId}`,
+      data
+    );
+    return response.data;
+  },
+
+  // Dissolve a group
+  async ungroupClubProducts(
+    clubId: string,
+    groupId: string
+  ): Promise<void> {
+    await apiClient.delete(
+      `/admin/clubs/${clubId}/products/groups/${groupId}`
+    );
   },
 };
 

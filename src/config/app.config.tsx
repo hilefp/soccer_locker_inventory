@@ -158,6 +158,11 @@ export const MENU_SIDEBAR: MenuConfig = [
         title: 'All clubs',
         path: '/clubs',
       },
+      {
+        title: 'Tags',
+        path: '/tags',
+        permissions: ['tags:read'],
+      },
     ],
   },
   {

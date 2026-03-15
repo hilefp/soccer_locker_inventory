@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CloudUpload, ImageIcon, Loader2, Trash2, TriangleAlert } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import {
@@ -39,6 +39,13 @@ export function ClubImageUpload({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
+
+  // Sync preview when currentImageUrl changes (e.g., data loaded from API)
+  useEffect(() => {
+    if (currentImageUrl) {
+      setPreviewUrl(currentImageUrl);
+    }
+  }, [currentImageUrl]);
 
   const fileUpload = useFileUpload({
     entityType: 'clubs',
@@ -196,10 +203,10 @@ export function ClubImageUpload({
 
       {/* Preview Area */}
       {previewUrl && !isUploading && (
-        <div className="mb-4 relative group">
+        <div className="mb-4 relative group max-h-48">
           <div
             className={cn(
-              'rounded-md overflow-hidden border border-border bg-accent/20',
+              'rounded-md overflow-hidden border border-border bg-accent/20 max-h-48',
               getAspectRatioClass()
             )}
           >
