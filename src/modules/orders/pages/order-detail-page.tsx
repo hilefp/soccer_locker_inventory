@@ -20,7 +20,6 @@ import {
   RotateCcw,
   HelpCircle,
   AlertTriangle,
-  CreditCard,
   Info,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
@@ -604,7 +603,7 @@ export function OrderDetailPage() {
             <h2 className="text-lg font-semibold">Notes</h2>
           </CardHeader>
           <CardContent>
-            {order.notes ? (
+            {order.notes && !order.notes.startsWith('[SYSTEM] Stock reserved') ? (
               <p className="text-sm whitespace-pre-wrap">{order.notes}</p>
             ) : (
               <p className="text-sm text-muted-foreground">No notes</p>
@@ -1287,38 +1286,6 @@ export function OrderDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-5">
-          {/* Payment Info */}
-          {order.paymentStatus && (
-            <Card>
-              <CardHeader className="py-4">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="size-5 text-muted-foreground" />
-                  <h2 className="text-lg font-semibold">Payment</h2>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <span className="text-sm text-muted-foreground">Status</span>
-                  <p className="font-medium">
-                    <Badge
-                      variant={order.paymentStatus === 'COMPLETED' ? 'success' : order.paymentStatus === 'PENDING' ? 'warning' : 'secondary'}
-                      appearance="light"
-                      size="sm"
-                      className="rounded-full"
-                    >
-                      {order.paymentStatus}
-                    </Badge>
-                  </p>
-                </div>
-                {order.paymentId && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Payment ID</span>
-                    <p className="font-medium text-xs break-all">{order.paymentId}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
 
           {/* QR Code Card */}
           <OrderQRCodeCard order={order} />
