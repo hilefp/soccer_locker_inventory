@@ -20,6 +20,8 @@ export interface ClubProduct {
   // Grouping fields
   groupId?: string | null;
   isGroupPrimary?: boolean;
+  packagePrice?: number | null;
+  packageDescription?: string | null;
 
   // Timestamps
   createdAt: string;
@@ -60,6 +62,8 @@ export interface UpdateClubProductDto {
 export interface GroupClubProductsDto {
   clubProductIds: string[];
   primaryClubProductId: string;
+  packagePrice?: number;
+  packageDescription?: string;
 }
 
 // DTO for updating a group
@@ -67,6 +71,8 @@ export interface UpdateGroupDto {
   addClubProductIds?: string[];
   removeClubProductIds?: string[];
   primaryClubProductId?: string;
+  packagePrice?: number;
+  packageDescription?: string;
 }
 
 // Group response from the API
