@@ -19,7 +19,6 @@ import {
   Info,
   Search,
   Settings,
-  Star,
   Trash,
   X,
   Package,
@@ -344,31 +343,6 @@ export function ProductListTable({
         },
       },
       {
-        id: 'rating',
-        accessorFn: () => {},
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Rating" column={column} />
-        ),
-        cell: () => {
-          return (
-            <Badge
-              size="sm"
-              variant="warning"
-              appearance="outline"
-              className="rounded-full"
-            >
-              <Star className="text-[#FEC524]" fill="#FEC524" />
-              5.0
-            </Badge>
-          );
-        },
-        enableSorting: true,
-        size: 85,
-        meta: {
-          cellClassName: 'text-center',
-        },
-      },
-      {
         id: 'created',
         accessorFn: (row) => row.created,
         header: ({ column }) => (
@@ -453,11 +427,12 @@ export function ProductListTable({
       result = result.filter((item) => item.created > '2023-01-01');
     }
 
-    // Apply search filter - only search in product title
+    // Apply search filter - search in product title and SKU
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter((item) =>
-        item.productInfo.title.toLowerCase().includes(query),
+        item.productInfo.title?.toLowerCase()?.includes(query) ||
+        item.productInfo.label?.toLowerCase()?.includes(query),
       );
     }
 
