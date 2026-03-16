@@ -436,7 +436,7 @@ export function OrderListTable({
         enableSorting: false,
         cell: ({ row }) => {
           const order = row.original;
-          const validTransitions = ORDER_STATUS_FLOW[order.status];
+          const validTransitions = ORDER_STATUS_FLOW[order.status] || [];
 
           return (
             <div className="flex items-center justify-center">
