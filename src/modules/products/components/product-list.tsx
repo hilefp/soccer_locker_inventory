@@ -431,8 +431,8 @@ export function ProductListTable({
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter((item) =>
-        item.productInfo.title.toLowerCase().includes(query) ||
-        item.productInfo.label.toLowerCase().includes(query),
+        item.productInfo.title?.toLowerCase()?.includes(query) ||
+        item.productInfo.label?.toLowerCase()?.includes(query),
       );
     }
 
