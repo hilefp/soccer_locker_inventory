@@ -8,6 +8,8 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
   useDroppable,
   useSensor,
   useSensors,
@@ -99,6 +101,7 @@ function OrderCard({ order, isDragging, onViewDetails }: OrderCardProps) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isSortableDragging ? 0.5 : 1,
+    touchAction: 'none' as const,
   };
 
   const itemCount = order._count?.items || order.items?.length || 0;
@@ -279,14 +282,23 @@ export function OrderKanbanBoard({
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 6,
+      },
+    }),
+    useSensor(KeyboardSensor)
   );
 
   // Group orders by status
   const ordersByStatus = useMemo(() => {
     const grouped: Record<OrderStatus, Order[]> = {} as Record<OrderStatus, Order[]>;
     statuses.forEach((status) => {
-      grouped[status] = orders.filter((order) => order.status === status);
+      grouped[status] = orders
+        .filter((order) => order.status === status)
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     });
     return grouped;
   }, [orders, statuses]);
