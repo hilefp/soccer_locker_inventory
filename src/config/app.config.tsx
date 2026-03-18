@@ -165,6 +165,7 @@ export const MENU_SIDEBAR: MenuConfig = [
       },
     ],
   },
+  // Note: Packages are accessible per-club via /clubs/:clubId/packages
   {
     title: 'Shop',
     icon: ShoppingCart,
