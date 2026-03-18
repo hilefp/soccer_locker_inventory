@@ -8,6 +8,7 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
+  useDroppable,
   useSensor,
   useSensors,
   closestCenter,
@@ -215,11 +216,18 @@ function KanbanColumn({ status, orders, onViewDetails }: KanbanColumnProps) {
   const Icon = STATUS_ICONS[status];
   const borderColor = STATUS_COLORS[status];
 
+  const { setNodeRef, isOver } = useDroppable({
+    id: `column-${status}`,
+    data: { status },
+  });
+
   return (
     <div
+      ref={setNodeRef}
       className={cn(
         'flex flex-col h-full min-w-[280px] max-w-[320px] bg-muted/30 rounded-lg border-t-4 overflow-hidden',
-        borderColor
+        borderColor,
+        isOver && 'ring-2 ring-primary/50 bg-muted/60'
       )}
     >
       <CardHeader className="py-3 px-4 flex-row items-center justify-between border-b bg-muted/50">
@@ -300,18 +308,29 @@ export function OrderKanbanBoard({
 
     if (!order) return;
 
-    // Find the target column (status) based on where the item was dropped
-    const targetOrderId = over.id as string;
-    const targetOrder = orders.find((o) => o.id === targetOrderId);
+    // Determine the target status: either from a column droppable or from an order card
+    let targetStatus: OrderStatus | null = null;
 
-    if (targetOrder && targetOrder.status !== order.status) {
+    const overId = over.id as string;
+    if (overId.startsWith('column-')) {
+      // Dropped on a column droppable zone
+      targetStatus = overId.replace('column-', '') as OrderStatus;
+    } else {
+      // Dropped on another order card — use that order's status
+      const targetOrder = orders.find((o) => o.id === overId);
+      if (targetOrder) {
+        targetStatus = targetOrder.status;
+      }
+    }
+
+    if (targetStatus && targetStatus !== order.status) {
       // Check if transition is valid
       const validTransitions = ORDER_STATUS_FLOW[order.status];
-      if (validTransitions.includes(targetOrder.status)) {
+      if (validTransitions.includes(targetStatus)) {
         updateStatusMutation.mutate({
           id: orderId,
-          status: targetOrder.status,
-          note: `Status changed from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[targetOrder.status]} via drag and drop`,
+          status: targetStatus,
+          note: `Status changed from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[targetStatus]} via drag and drop`,
           changedByUserId: user?.id,
         });
       }

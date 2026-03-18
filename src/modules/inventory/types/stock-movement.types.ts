@@ -1,13 +1,13 @@
 // Stock Movement Types
 export enum MovementType {
-  PURCHASE = 'PURCHASE',
-  SALE = 'SALE',
+  ENTRY = 'ENTRY',
+  EXIT = 'EXIT',
   ADJUSTMENT = 'ADJUSTMENT',
   TRANSFER_IN = 'TRANSFER_IN',
   TRANSFER_OUT = 'TRANSFER_OUT',
   RETURN = 'RETURN',
-  RESERVATION = 'RESERVATION',
-  RELEASE = 'RELEASE',
+  DAMAGE = 'DAMAGE',
+  LOSS = 'LOSS',
 }
 
 // Stock Movement Item

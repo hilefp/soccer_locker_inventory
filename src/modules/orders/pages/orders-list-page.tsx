@@ -27,6 +27,10 @@ export function OrdersListPage() {
     setFilters((prev) => ({ ...prev, page }));
   };
 
+  const handlePageSizeChange = (limit: number) => {
+    setFilters((prev) => ({ ...prev, limit, page: 1 }));
+  };
+
   const handleSearchChange = (search: string) => {
     setFilters((prev) => ({ ...prev, search, page: 1 }));
   };
@@ -70,6 +74,7 @@ export function OrdersListPage() {
         isLoading={isLoading}
         error={error?.message || null}
         onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
         onSearchChange={handleSearchChange}
         onStatusFilterChange={handleStatusFilterChange}
         onClubFilterChange={handleClubFilterChange}

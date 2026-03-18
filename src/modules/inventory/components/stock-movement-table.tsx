@@ -72,13 +72,13 @@ interface StockMovementTableProps {
 // Helper function to get movement type display info
 const getMovementTypeInfo = (type: MovementType) => {
   const configs = {
-    [MovementType.PURCHASE]: {
-      label: 'Purchase',
+    [MovementType.ENTRY]: {
+      label: 'Entry',
       variant: 'success',
       icon: <ArrowDownLeft className="h-3.5 w-3.5" />,
     },
-    [MovementType.SALE]: {
-      label: 'Sale',
+    [MovementType.EXIT]: {
+      label: 'Exit',
       variant: 'destructive',
       icon: <ArrowUpRight className="h-3.5 w-3.5" />,
     },
@@ -102,13 +102,13 @@ const getMovementTypeInfo = (type: MovementType) => {
       variant: 'primary',
       icon: <ArrowDownLeft className="h-3.5 w-3.5" />,
     },
-    [MovementType.RESERVATION]: {
-      label: 'Reservation',
-      variant: 'outline',
+    [MovementType.DAMAGE]: {
+      label: 'Damage',
+      variant: 'destructive',
       icon: <FileText className="h-3.5 w-3.5" />,
     },
-    [MovementType.RELEASE]: {
-      label: 'Release',
+    [MovementType.LOSS]: {
+      label: 'Loss',
       variant: 'outline',
       icon: <FileText className="h-3.5 w-3.5" />,
     },
@@ -252,11 +252,15 @@ export function StockMovementTable({
           <DataGridColumnHeader title="Date" column={column} />
         ),
         cell: (info) => {
-          const date = new Date(info.getValue() as string);
+          const dateStr = info.getValue() as string;
+          const [datePart] = dateStr.split('T');
+          const [year, month, day] = datePart.split('-').map(Number);
+          const localDate = new Date(year, month - 1, day);
+          const date = new Date(dateStr);
           return (
             <div className="flex flex-col gap-0.5">
               <span className="text-sm font-medium">
-                {date.toLocaleDateString()}
+                {localDate.toLocaleDateString()}
               </span>
               <span className="text-xs text-muted-foreground">
                 {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -401,14 +405,15 @@ export function StockMovementTable({
         ),
         cell: (info) => {
           const notes = info.getValue() as string | null;
+          if (!notes) return <span className="text-sm text-muted-foreground">-</span>;
           return (
-            <span className="text-sm text-muted-foreground truncate max-w-[200px]">
-              {notes || '-'}
+            <span className="text-sm text-muted-foreground block truncate max-w-[250px]" title={notes}>
+              {notes}
             </span>
           );
         },
         enableSorting: false,
-        size: 200,
+        size: 250,
       },
       {
         id: 'actions',

@@ -334,7 +334,7 @@ export function CategoryListTable({
 
           return (
             <div className="flex items-center gap-1">
-              <Button
+              {/* <Button
                 variant="dim"
                 mode="icon"
                 size="sm"
@@ -342,7 +342,7 @@ export function CategoryListTable({
                 title="View category"
               >
                 <Eye />
-              </Button>
+              </Button> */}
               <Button
                 variant="dim"
                 mode="icon"
