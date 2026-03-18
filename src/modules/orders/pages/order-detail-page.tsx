@@ -100,7 +100,7 @@ export function OrderDetailPage() {
   const [isRefunding, setIsRefunding] = useState(false);
   const [refundShipping, setRefundShipping] = useState(false);
   const [refundRushFee, setRefundRushFee] = useState(false);
-  const [restockItems, setRestockItems] = useState(true);
+
   const [refundReason, setRefundReason] = useState('');
   const [refundItemStates, setRefundItemStates] = useState<Record<string, RefundItemState>>({});
 
@@ -196,7 +196,6 @@ export function OrderDetailPage() {
     setRefundItemStates(initRefundStates());
     setRefundShipping(false);
     setRefundRushFee(false);
-    setRestockItems(true);
     setRefundReason('');
     setIsRefunding(true);
   };
@@ -258,7 +257,6 @@ export function OrderDetailPage() {
           refundShipping: refundShipping || undefined,
           refundRushFee: refundRushFee || undefined,
           reason: refundReason.trim() || undefined,
-          restockItems: restockItems || undefined,
         },
       },
       { onSuccess: () => setIsRefunding(false) }
@@ -634,7 +632,7 @@ export function OrderDetailPage() {
                 </div>
               )}
 
-              <ScrollArea className="max-h-[400px]">
+              <ScrollArea>
                 <div className="divide-y">
                   {order.items?.map((item) => {
                     const rs = refundItemStates[item.id];
@@ -766,13 +764,42 @@ export function OrderDetailPage() {
                                     {item.name || item.productVariant?.product?.name || 'Unknown'}
                                   </p>
                                   {item.sku && (
-                                    <p className="text-xs text-muted-foreground">{item.sku}</p>
+                                    <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
+                                  )}
+                                  {(() => {
+                                    const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                                    return (
+                                      <>
+                                        {sizeValue && (
+                                          <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>
+                                        )}
+                                        {rest.length > 0 && (
+                                          <p className="text-xs text-muted-foreground">
+                                            {rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}
+                                          </p>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
+                                  {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {Object.entries(item.customFields).map(([key, value]) => (
+                                        <p key={key}>{key}: {value}</p>
+                                      ))}
+                                    </div>
                                   )}
                                   {item.refundedQuantity > 0 && (
                                     <p className="text-xs text-destructive font-medium">
                                       {item.refundedQuantity >= item.quantity
                                         ? 'Fully refunded'
                                         : `${item.refundedQuantity} of ${item.quantity} refunded`}
+                                    </p>
+                                  )}
+                                  {(item.missingQuantity || 0) > 0 && (
+                                    <p className="text-xs text-orange-600 font-medium">
+                                      {item.missingQuantity >= item.quantity
+                                        ? 'All missing'
+                                        : `${item.missingQuantity} of ${item.quantity} missing`}
                                     </p>
                                   )}
                                 </div>
@@ -1071,14 +1098,7 @@ export function OrderDetailPage() {
                 {isRefunding && (
                   <div className="space-y-3 pt-3">
                     <Separator />
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Restock refunded items:</span>
-                      <Checkbox
-                        checked={restockItems}
-                        onCheckedChange={(checked) => setRestockItems(checked === true)}
-                      />
-                    </div>
-                    <Separator />
+                    {/* TODO: Restock refunded items — functionality to be added later */}
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Amount already refunded:</span>
                       <span className="font-medium">-${refundTotals.amountAlreadyRefunded.toFixed(2)}</span>

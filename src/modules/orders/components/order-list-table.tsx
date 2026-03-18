@@ -108,6 +108,7 @@ interface OrderListTableProps {
   isLoading?: boolean;
   error?: string | null;
   onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   onSearchChange?: (search: string) => void;
   onStatusFilterChange?: (status: OrderStatus | undefined) => void;
   onClubFilterChange?: (clubId: string | undefined) => void;
@@ -143,6 +144,7 @@ export function OrderListTable({
   isLoading,
   error,
   onPageChange,
+  onPageSizeChange,
   onSearchChange,
   onStatusFilterChange,
   onClubFilterChange,
@@ -518,8 +520,11 @@ export function OrderListTable({
       if (typeof updater === 'function') {
         const newState = updater(pagination);
         setPagination(newState);
-        if (onPageChange) {
-          onPageChange(newState.pageIndex + 1);
+        if (newState.pageSize !== pagination.pageSize) {
+          onPageSizeChange?.(newState.pageSize);
+        }
+        if (newState.pageIndex !== pagination.pageIndex) {
+          onPageChange?.(newState.pageIndex + 1);
         }
       }
     },
