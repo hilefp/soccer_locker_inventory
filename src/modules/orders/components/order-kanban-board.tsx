@@ -218,7 +218,7 @@ function KanbanColumn({ status, orders, onViewDetails }: KanbanColumnProps) {
   return (
     <div
       className={cn(
-        'flex flex-col min-w-[280px] max-w-[320px] bg-muted/30 rounded-lg border-t-4',
+        'flex flex-col h-full min-w-[280px] max-w-[320px] bg-muted/30 rounded-lg border-t-4 overflow-hidden',
         borderColor
       )}
     >
@@ -232,7 +232,7 @@ function KanbanColumn({ status, orders, onViewDetails }: KanbanColumnProps) {
         </Badge>
       </CardHeader>
 
-      <ScrollArea className="flex-1 p-2" style={{ height: 'calc(100vh - 280px)' }}>
+      <ScrollArea className="flex-1 overflow-hidden p-2">
         <SortableContext items={orders.map((o) => o.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {orders.map((order) => (
@@ -337,7 +337,7 @@ export function OrderKanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100dvh-220px)]">
         {statuses.map((status) => (
           <KanbanColumn
             key={status}

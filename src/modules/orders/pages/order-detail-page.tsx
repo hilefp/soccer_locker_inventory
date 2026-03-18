@@ -634,7 +634,7 @@ export function OrderDetailPage() {
                 </div>
               )}
 
-              <ScrollArea className="max-h-[400px]">
+              <ScrollArea>
                 <div className="divide-y">
                   {order.items?.map((item) => {
                     const rs = refundItemStates[item.id];
