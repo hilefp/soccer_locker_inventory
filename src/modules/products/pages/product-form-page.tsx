@@ -102,7 +102,7 @@ export function ProductFormPage() {
       imageUrl: imageUrls.length > 0 ? imageUrls[0] : null,
       imageUrls: imageUrls,
       tags: tags.length > 0 ? tags : undefined,
-      variants: variants.length > 0 ? variants : undefined,
+      ...(isNewMode && variants.length > 0 ? { variants } : {}),
     };
 
     try {
