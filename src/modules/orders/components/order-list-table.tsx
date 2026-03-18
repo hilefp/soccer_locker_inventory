@@ -80,8 +80,9 @@ import {
 import { Calendar as CalendarUI } from '@/shared/components/ui/calendar';
 import { Order, OrderStatus, OrderListMeta, ORDER_STATUS_LABELS, ORDER_STATUS_FLOW, DocumentType } from '@/modules/orders/types';
 import { OrderStatusBadge } from './order-status-badge';
-import { useUpdateOrderStatus } from '@/modules/orders/hooks/use-orders';
+import { useUpdateOrderStatus, orderKeys } from '@/modules/orders/hooks/use-orders';
 import { ordersService } from '@/modules/orders/services/orders.service';
+import { useQueryClient } from '@tanstack/react-query';
 import { useClubs } from '@/modules/clubs/hooks/use-clubs';
 
 export interface IOrderData {
@@ -156,6 +157,7 @@ export function OrderListTable({
     return orders.map(convertOrderToIData);
   }, [orders]);
 
+  const queryClient = useQueryClient();
   const updateStatusMutation = useUpdateOrderStatus();
   const { data: clubs } = useClubs();
 
@@ -235,6 +237,22 @@ export function OrderListTable({
           documentType === 'PACKING_SLIP' ? 'packing slip(s)' : 'invoice(s)'
         }`
       );
+
+      // Auto-transition orders from NEW to PRINT when printing packing slips
+      if (documentType === 'PACKING_SLIP') {
+        const newOrders = fullOrders.filter((o) => o.status === 'NEW');
+        if (newOrders.length > 0) {
+          await Promise.all(
+            newOrders.map((order) =>
+              ordersService
+                .updateOrderStatus(order.id, { status: 'PRINT' })
+                .catch((err) => console.error(`Failed to update status for order ${order.orderNumber}:`, err)),
+            ),
+          );
+          // Refresh the orders list to reflect status changes
+          queryClient.invalidateQueries({ queryKey: orderKeys.all });
+        }
+      }
 
       // Clear selection after successful print
       setRowSelection({});
