@@ -89,12 +89,32 @@ export function StockMovementsTab({
                   </div>
 
                   <div className="text-base space-y-1.5">
-                    <div className="flex items-center gap-4">
-                      <span className="text-muted-foreground">Quantity:</span>
-                      <span className={`font-bold text-lg ${movement.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {movement.quantity > 0 ? '+' : ''}{movement.quantity}
-                      </span>
-                    </div>
+                    {movement.movementType === MovementType.ADJUSTMENT && movement.notes ? (() => {
+                      const reservedMatch = movement.notes.match(/Reserved\s+(\d+)\s+unit/i);
+                      const reservedQty = reservedMatch ? parseInt(reservedMatch[1], 10) : null;
+                      return reservedQty !== null ? (
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground">Reserved:</span>
+                          <span className="font-bold text-lg text-amber-600">
+                            {reservedQty}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground">Quantity:</span>
+                          <span className={`font-bold text-lg ${movement.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {movement.quantity > 0 ? '+' : ''}{movement.quantity}
+                          </span>
+                        </div>
+                      );
+                    })() : (
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground">Quantity:</span>
+                        <span className={`font-bold text-lg ${movement.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {movement.quantity > 0 ? '+' : ''}{movement.quantity}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-4">
                       <span className="text-muted-foreground">Stock:</span>
                       <span className="font-semibold text-base">

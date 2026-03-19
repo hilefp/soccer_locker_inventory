@@ -430,7 +430,7 @@ export function OrderDetailPage() {
         </div>
       </div>
 
-      {/* Stock Reservation Info Banner */}
+      {/* Stock Reservation Info Banner
       {order.status !== 'DELIVERED' && order.status !== 'REFUND' && order.status !== 'FAILED' && (
         <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30 p-4">
           <Info className="size-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
@@ -442,7 +442,7 @@ export function OrderDetailPage() {
             )}
           </div>
         </div>
-      )}
+      )} */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
