@@ -20,6 +20,7 @@ import {
   RotateCcw,
   HelpCircle,
   AlertTriangle,
+  Info,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/shared/components/ui/card';
@@ -429,6 +430,20 @@ export function OrderDetailPage() {
         </div>
       </div>
 
+      {/* Stock Reservation Info Banner
+      {order.status !== 'DELIVERED' && order.status !== 'REFUND' && order.status !== 'FAILED' && (
+        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30 p-4">
+          <Info className="size-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+          <div className="text-sm text-blue-800 dark:text-blue-300">
+            {order.status === 'PENDING_PAYMENT' ? (
+              <p>Stock is reserved for this order and is not available for other customers. It will remain reserved until payment is confirmed or the order is cancelled.</p>
+            ) : (
+              <p>Stock is reserved for this order. It will be automatically deducted from inventory when the order is marked as <strong>Delivered</strong>. If cancelled, the reserved stock will be released back to inventory.</p>
+            )}
+          </div>
+        </div>
+      )} */}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Customer Info */}
@@ -587,7 +602,7 @@ export function OrderDetailPage() {
             <h2 className="text-lg font-semibold">Notes</h2>
           </CardHeader>
           <CardContent>
-            {order.notes ? (
+            {order.notes && !order.notes.startsWith('[SYSTEM] Stock reserved') ? (
               <p className="text-sm whitespace-pre-wrap">{order.notes}</p>
             ) : (
               <p className="text-sm text-muted-foreground">No notes</p>
@@ -1300,6 +1315,7 @@ export function OrderDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-5">
+
           {/* QR Code Card */}
           <OrderQRCodeCard order={order} />
 

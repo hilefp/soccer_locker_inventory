@@ -35,7 +35,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/shared/components/ui/sheet';
-import { ProductVariant, ProductVariantRequest } from '@/modules/products/types/product.type';
+import { ProductVariant, ProductVariantRequest, ProductVariantDimensions } from '@/modules/products/types/product.type';
 import { useProductAttributes } from '@/modules/products/hooks/use-product-attributes';
 import { productService } from '@/modules/products/services/product.service';
 import { productKeys } from '@/modules/products/hooks/use-products';
@@ -163,7 +163,7 @@ export function ProductFormVariants({
         cost: editingVariant.cost,
         weight: editingVariant.weight,
         weightUnit: editingVariant.weightUnit,
-        dimensions: editingVariant.dimensions,
+        dimensions: editingVariant.dimensions as string | ProductVariantDimensions,
         dimensionUnit: editingVariant.dimensionUnit,
         imageUrl: editingVariant.imageUrl,
         imageUrls: editingVariant.imageUrls,

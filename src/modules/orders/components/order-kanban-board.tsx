@@ -28,6 +28,7 @@ import {
   Cog,
   Truck,
   CheckCircle,
+  CreditCard,
   Eye,
   User,
   Clock,
@@ -54,9 +55,11 @@ import { useUpdateOrderStatus } from '@/modules/orders/hooks/use-orders';
 import { formatDate, timeAgo } from '@/shared/lib/helpers';
 import { cn } from '@/shared/lib/utils';
 import { useAuthStore } from '@/shared/stores/auth-store';
+import { toast } from 'sonner';
 
 // Status icons mapping
 const STATUS_ICONS: Record<OrderStatus, React.ElementType> = {
+  PENDING_PAYMENT: CreditCard,
   NEW: Package,
   PRINT: Printer,
   PICKING_UP: ShoppingBag,
@@ -70,6 +73,7 @@ const STATUS_ICONS: Record<OrderStatus, React.ElementType> = {
 
 // Status colors for columns
 const STATUS_COLORS: Record<OrderStatus, string> = {
+  PENDING_PAYMENT: 'border-orange-500',
   NEW: 'border-blue-500',
   PRINT: 'border-gray-500',
   PICKING_UP: 'border-yellow-500',
@@ -218,7 +222,6 @@ interface KanbanColumnProps {
 function KanbanColumn({ status, orders, onViewDetails }: KanbanColumnProps) {
   const Icon = STATUS_ICONS[status];
   const borderColor = STATUS_COLORS[status];
-
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${status}`,
     data: { status },
@@ -228,9 +231,9 @@ function KanbanColumn({ status, orders, onViewDetails }: KanbanColumnProps) {
     <div
       ref={setNodeRef}
       className={cn(
-        'flex flex-col h-full min-w-[280px] max-w-[320px] bg-muted/30 rounded-lg border-t-4 overflow-hidden',
+        'flex flex-col min-w-[280px] max-w-[320px] bg-muted/30 rounded-lg border-t-4 transition-colors',
         borderColor,
-        isOver && 'ring-2 ring-primary/50 bg-muted/60'
+        isOver && 'bg-primary/10 ring-2 ring-primary'
       )}
     >
       <CardHeader className="py-3 px-4 flex-row items-center justify-between border-b bg-muted/50">
@@ -345,6 +348,11 @@ export function OrderKanbanBoard({
           note: `Status changed from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[targetStatus]} via drag and drop`,
           changedByUserId: user?.id,
         });
+      } else {
+        // Invalid transition - show error toast
+        toast.error(
+          `Cannot move order from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[targetStatus]}. Invalid status transition.`
+        );
       }
     }
   };
