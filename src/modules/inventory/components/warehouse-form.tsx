@@ -258,7 +258,7 @@ export function WarehouseForm({
                   <FormItem>
                     <FormLabel>City</FormLabel>
                     <FormControl>
-                      <Input placeholder="Bogotá" {...field} />
+                      <Input placeholder="Miami" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -272,7 +272,7 @@ export function WarehouseForm({
                   <FormItem>
                     <FormLabel>State/Province</FormLabel>
                     <FormControl>
-                      <Input placeholder="Cundinamarca" {...field} />
+                      <Input placeholder="Florida" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -286,7 +286,7 @@ export function WarehouseForm({
                   <FormItem>
                     <FormLabel>Country</FormLabel>
                     <FormControl>
-                      <Input placeholder="Colombia" {...field} />
+                      <Input placeholder="United States" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -301,7 +301,7 @@ export function WarehouseForm({
                 <FormItem>
                   <FormLabel>Postal Code</FormLabel>
                   <FormControl>
-                    <Input placeholder="110111" {...field} />
+                    <Input placeholder="12345" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

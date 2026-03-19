@@ -28,7 +28,7 @@ export function BrandedLayout() {
           <div className="flex flex-col p-8 lg:p-16 gap-4">
             <Link to="/">
               <img
-                src={toAbsoluteUrl('/media/app/logo.svg')}
+                src={toAbsoluteUrl('/media/app/soccerlocker-team-logo.svg')}
                 className="h-[60px] max-w-none"
                 alt=""
               />
