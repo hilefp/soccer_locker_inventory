@@ -20,7 +20,7 @@ import { VariantDetailPhysicalAttributes } from '@/modules/products/components/v
 import { VariantDetailAttributesStatus } from '@/modules/products/components/variant-detail/variant-detail-attributes-status';
 import { useProductVariant, useUpdateProductVariant, useDeleteProductVariant, useSetDefaultVariant } from '@/modules/products/hooks/use-product-variants';
 import { useProduct } from '@/modules/products/hooks/use-products';
-import { ProductVariant } from '@/modules/products/types/product.type';
+import { ProductVariant, ProductVariantDimensions } from '@/modules/products/types/product.type';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function VariantDetailPage() {
@@ -54,7 +54,7 @@ export function VariantDetailPage() {
 
     try {
       await updateMutation.mutateAsync({
-        id: variantId,
+        variantId: variantId,
         data: {
           sku: editingVariant.sku,
           barcode: editingVariant.barcode,
@@ -64,7 +64,7 @@ export function VariantDetailPage() {
           cost: editingVariant.cost,
           weight: editingVariant.weight,
           weightUnit: editingVariant.weightUnit,
-          dimensions: editingVariant.dimensions,
+          dimensions: editingVariant.dimensions as string | ProductVariantDimensions,
           dimensionUnit: editingVariant.dimensionUnit,
           imageUrl: editingVariant.imageUrl,
           imageUrls: editingVariant.imageUrls,

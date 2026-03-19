@@ -88,7 +88,7 @@ export function UserProfilePage() {
     setIsSaving(true);
     try {
       const updatedUser = await usersService.update(user.id, formData);
-      setUser(updatedUser);
+      setUser({ ...user, ...updatedUser });
       setIsEditing(false);
       toast.success('Profile updated successfully');
     } catch (error) {

@@ -46,7 +46,7 @@ export interface ProductVariantRequest {
   cost?: number | string;
   weight?: number | string;
   weightUnit?: string;
-  dimensions?: string;
+  dimensions?: string | ProductVariantDimensions;
   dimensionUnit?: string;
   imageUrl?: string;
   imageUrls?: string[];
@@ -72,12 +72,12 @@ export interface ProductRequest {
   variants?: ProductVariantRequest[];
 }
 
-export interface Product extends ProductRequest {
+export interface Product extends Omit<ProductRequest, 'variants'> {
   id?: string;
   category?: ProductCategory;
   brand?: ProductBrand;
   variants?: ProductVariant[];
-  defaultVariant: ProductVariantRequest;
+  defaultVariant: ProductVariant;
   minPrice?: number;
   maxPrice?: number;
   createdAt?: string;

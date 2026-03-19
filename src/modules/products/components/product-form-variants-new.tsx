@@ -394,7 +394,7 @@ export function ProductFormVariantsNew({ mode, variants, onVariantsChange }: Pro
                           {variant.displayAttributes || formatAttributesDisplay(variant.attributes)}
                         </TableCell>
                         <TableCell className="py-1 border-e border-border/60">
-                          ${variant.price.toFixed(2)}
+                          ${Number(variant.price).toFixed(2)}
                         </TableCell>
                         <TableCell className="py-1 border-e border-border/60">
                           <span className={`px-2 py-1 rounded-full text-xs ${variant.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
