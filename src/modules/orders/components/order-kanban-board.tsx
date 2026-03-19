@@ -8,10 +8,12 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useDroppable,
   useSensor,
   useSensors,
   closestCenter,
-  useDroppable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -103,6 +105,7 @@ function OrderCard({ order, isDragging, onViewDetails }: OrderCardProps) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isSortableDragging ? 0.5 : 1,
+    touchAction: 'none' as const,
   };
 
   const itemCount = order._count?.items || order.items?.length || 0;
@@ -220,7 +223,8 @@ function KanbanColumn({ status, orders, onViewDetails }: KanbanColumnProps) {
   const Icon = STATUS_ICONS[status];
   const borderColor = STATUS_COLORS[status];
   const { setNodeRef, isOver } = useDroppable({
-    id: status,
+    id: `column-${status}`,
+    data: { status },
   });
 
   return (
@@ -242,7 +246,7 @@ function KanbanColumn({ status, orders, onViewDetails }: KanbanColumnProps) {
         </Badge>
       </CardHeader>
 
-      <ScrollArea className="flex-1 p-2" style={{ height: 'calc(100vh - 280px)' }}>
+      <ScrollArea className="flex-1 overflow-hidden p-2">
         <SortableContext items={orders.map((o) => o.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {orders.map((order) => (
@@ -281,14 +285,23 @@ export function OrderKanbanBoard({
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 6,
+      },
+    }),
+    useSensor(KeyboardSensor)
   );
 
   // Group orders by status
   const ordersByStatus = useMemo(() => {
     const grouped: Record<OrderStatus, Order[]> = {} as Record<OrderStatus, Order[]>;
     statuses.forEach((status) => {
-      grouped[status] = orders.filter((order) => order.status === status);
+      grouped[status] = orders
+        .filter((order) => order.status === status)
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     });
     return grouped;
   }, [orders, statuses]);
@@ -310,22 +323,21 @@ export function OrderKanbanBoard({
 
     if (!order) return;
 
-    // The over.id can be either a status (droppable zone) or an order ID (sortable item)
-    // First, check if it's a valid status
-    let targetStatus: OrderStatus | undefined;
-    
-    if (statuses.includes(over.id as OrderStatus)) {
-      // Dropped directly on a column
-      targetStatus = over.id as OrderStatus;
+    // Determine the target status: either from a column droppable or from an order card
+    let targetStatus: OrderStatus | null = null;
+
+    const overId = over.id as string;
+    if (overId.startsWith('column-')) {
+      // Dropped on a column droppable zone
+      targetStatus = overId.replace('column-', '') as OrderStatus;
     } else {
-      // Dropped on another order, find that order's status
-      const targetOrder = orders.find((o) => o.id === over.id);
+      // Dropped on another order card — use that order's status
+      const targetOrder = orders.find((o) => o.id === overId);
       if (targetOrder) {
         targetStatus = targetOrder.status;
       }
     }
 
-    // Only update if we found a valid target status and it's different from current
     if (targetStatus && targetStatus !== order.status) {
       // Check if transition is valid
       const validTransitions = ORDER_STATUS_FLOW[order.status];
@@ -364,7 +376,7 @@ export function OrderKanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100dvh-220px)]">
         {statuses.map((status) => (
           <KanbanColumn
             key={status}

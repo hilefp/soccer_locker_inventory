@@ -68,8 +68,8 @@ export default function ProductsReportsPage() {
 
       {/* ── Inventory Value ───────────────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-3">
-        <SalesKpiCard title="Inventory Value (Retail)" value={data ? fmt(data.totalInventoryValue) : '$0.00'} icon={DollarSign} description="Total retail value" iconClassName="text-blue-600" loading={loading} />
-        <SalesKpiCard title="Inventory Cost" value={data ? fmt(data.totalInventoryCost) : '$0.00'} icon={DollarSign} description="Total cost" iconClassName="text-orange-600" loading={loading} />
+        <SalesKpiCard title="Inventory Value (Cost)" value={data ? fmt(data.totalInventoryValue) : '$0.00'} icon={DollarSign} description="Total retail value" iconClassName="text-blue-600" loading={loading} />
+        <SalesKpiCard title="Inventory Value (Retail)" value={data ? fmt(data.totalInventoryCost) : '$0.00'} icon={DollarSign} description="Total cost" iconClassName="text-orange-600" loading={loading} />
         <SalesKpiCard title="Potential Profit" value={data ? fmt(data.potentialProfit) : '$0.00'} icon={TrendingUp} description="Revenue - Cost" iconClassName="text-green-600" loading={loading} />
       </div>
 

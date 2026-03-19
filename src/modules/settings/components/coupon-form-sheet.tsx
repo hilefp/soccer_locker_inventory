@@ -111,8 +111,8 @@ export function CouponFormSheet({
       type,
       shippingMethod: shippingMethod.trim() || undefined,
       isActive: isActive === 'true',
-      validFrom: validFrom || undefined,
-      validTo: validTo || undefined,
+      validFrom: validFrom ? `${validFrom}T12:00:00` : undefined,
+      validTo: validTo ? `${validTo}T12:00:00` : undefined,
       maxUses: maxUses ? parseInt(maxUses, 10) : undefined,
       clubId: clubId.trim() || undefined,
     };

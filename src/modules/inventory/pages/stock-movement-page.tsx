@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StockMovementTable } from '../components/stock-movement-table';
 import { Button } from '@/shared/components/ui/button';
 import { Input, InputWrapper } from '@/shared/components/ui/input';
-import { Search, X, Calendar } from 'lucide-react';
+import { Search, X, CalendarDays } from 'lucide-react';
 import { Card, CardHeader, CardToolbar } from '@/shared/components/ui/card';
 import {
   Select,
@@ -11,6 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/components/ui/popover';
+import { Calendar } from '@/shared/components/ui/calendar';
+import { formatDate } from '@/shared/lib/helpers';
 import { MovementType } from '../types/stock-movement.types';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
@@ -18,14 +25,19 @@ export function StockMovementPage() {
   useDocumentTitle('Stock Movements');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMovementType, setSelectedMovementType] = useState<MovementType | 'ALL'>('ALL');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
 
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedMovementType('ALL');
-    setStartDate('');
-    setEndDate('');
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
+
+  const formatDateToString = (date: Date | undefined) => {
+    if (!date) return undefined;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   };
 
   const hasActiveFilters =
@@ -83,14 +95,14 @@ export function StockMovementPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">All Types</SelectItem>
-                  <SelectItem value={MovementType.PURCHASE}>Purchase</SelectItem>
-                  <SelectItem value={MovementType.SALE}>Sale</SelectItem>
+                  <SelectItem value={MovementType.ENTRY}>Entry</SelectItem>
+                  <SelectItem value={MovementType.EXIT}>Exit</SelectItem>
                   <SelectItem value={MovementType.ADJUSTMENT}>Adjustment</SelectItem>
                   <SelectItem value={MovementType.TRANSFER_IN}>Transfer In</SelectItem>
                   <SelectItem value={MovementType.TRANSFER_OUT}>Transfer Out</SelectItem>
                   <SelectItem value={MovementType.RETURN}>Return</SelectItem>
-                  <SelectItem value={MovementType.RESERVATION}>Reservation</SelectItem>
-                  <SelectItem value={MovementType.RELEASE}>Release</SelectItem>
+                  <SelectItem value={MovementType.DAMAGE}>Damage</SelectItem>
+                  <SelectItem value={MovementType.LOSS}>Loss</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -110,31 +122,61 @@ export function StockMovementPage() {
             {/* Second Row: Date Range */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <CalendarDays className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Date Range:</span>
               </div>
 
-              <InputWrapper className="w-[180px] h-10 rounded-lg">
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="text-sm h-10 rounded-lg"
-                  placeholder="Start Date"
-                />
-              </InputWrapper>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[180px] h-10 justify-start">
+                    <CalendarDays className="size-3.5" />
+                    {startDate ? formatDate(startDate) : 'Start Date'}
+                    {startDate && (
+                      <X
+                        className="size-3.5 ml-auto"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStartDate(undefined);
+                        }}
+                      />
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                  />
+                </PopoverContent>
+              </Popover>
 
               <span className="text-sm text-muted-foreground">to</span>
 
-              <InputWrapper className="w-[180px] h-10 rounded-lg">
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="text-sm h-10 rounded-lg"
-                  placeholder="End Date"
-                />
-              </InputWrapper>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[180px] h-10 justify-start">
+                    <CalendarDays className="size-3.5" />
+                    {endDate ? formatDate(endDate) : 'End Date'}
+                    {endDate && (
+                      <X
+                        className="size-3.5 ml-auto"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEndDate(undefined);
+                        }}
+                      />
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </CardToolbar>
         </CardHeader>
@@ -143,8 +185,8 @@ export function StockMovementPage() {
       {/* Stock Movement Table */}
       <StockMovementTable
         movementType={selectedMovementType !== 'ALL' ? selectedMovementType : undefined}
-        startDate={startDate || undefined}
-        endDate={endDate || undefined}
+        startDate={formatDateToString(startDate)}
+        endDate={formatDateToString(endDate)}
       />
     </div>
   );
