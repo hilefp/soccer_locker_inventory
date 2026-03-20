@@ -46,12 +46,14 @@ interface ProductFormVariantsProps {
   productId?: string | null; // Product ID for generating variations
   variants?: ProductVariant[];
   onVariantsChange?: (variants: ProductVariant[]) => void;
+  cost?: number;
 }
 
 export function ProductFormVariants({
   productId,
   variants: externalVariants = [],
-  onVariantsChange
+  onVariantsChange,
+  cost: productCost,
 }: ProductFormVariantsProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -96,6 +98,7 @@ export function ProductFormVariants({
       await productService.generateVariations({
         productId,
         attributeIds: selectedAttributeIds,
+        cost: productCost,
       });
 
       // Fetch fresh product data to get complete variants list (existing + new)
