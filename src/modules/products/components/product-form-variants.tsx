@@ -53,7 +53,6 @@ export function ProductFormVariants({
   productId,
   variants: externalVariants = [],
   onVariantsChange,
-  cost: productCost,
 }: ProductFormVariantsProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -98,7 +97,6 @@ export function ProductFormVariants({
       await productService.generateVariations({
         productId,
         attributeIds: selectedAttributeIds,
-        cost: productCost,
       });
 
       // Fetch fresh product data to get complete variants list (existing + new)
