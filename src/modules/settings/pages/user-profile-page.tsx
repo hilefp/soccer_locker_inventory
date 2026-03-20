@@ -285,15 +285,6 @@ export function UserProfilePage() {
                     placeholder="Sales"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="employeeId">Employee ID</Label>
-                  <Input
-                    id="employeeId"
-                    value={formData.employeeId}
-                    onChange={(e) => handleChange('employeeId', e.target.value)}
-                    placeholder="EMP-001"
-                  />
-                </div>
               </>
             ) : (
               <>
@@ -317,19 +308,6 @@ export function UserProfilePage() {
                       <>
                         <Building2 className="size-3" />
                         {user.department}
-                      </>
-                    ) : (
-                      'N/A'
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Employee ID</span>
-                  <span className="text-sm font-medium flex items-center gap-1">
-                    {user.employeeId ? (
-                      <>
-                        <IdCard className="size-3" />
-                        {user.employeeId}
                       </>
                     ) : (
                       'N/A'
