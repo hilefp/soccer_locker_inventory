@@ -81,13 +81,15 @@ export function useCreateOrder() {
     mutationFn: (data: CreateOrderRequest) => ordersService.createOrder(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['stock-variants'] });
+      queryClient.invalidateQueries({ queryKey: ['stock-movements'] });
       toast.custom(
         (t) => (
           <Alert variant="mono" icon="success" close={true} onClose={() => toast.dismiss(t)}>
             <AlertIcon>
               <Info />
             </AlertIcon>
-            <AlertTitle>Order created successfully.</AlertTitle>
+            <AlertTitle>Order created successfully. Stock reserved.</AlertTitle>
           </Alert>
         ),
         { duration: 5000 }
@@ -150,13 +152,22 @@ export function useUpdateOrderStatus() {
       queryClient.invalidateQueries({ queryKey: orderKeys.statusHistory(variables.id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
       queryClient.invalidateQueries({ queryKey: orderKeys.statistics() });
+      queryClient.invalidateQueries({ queryKey: ['stock-variants'] });
+      queryClient.invalidateQueries({ queryKey: ['stock-movements'] });
+
+      const statusMessages: Record<string, string> = {
+        DELIVERED: 'Order marked as delivered. Stock deducted from inventory.',
+        REFUND: 'Order cancelled. Reserved stock released.',
+      };
+      const message = statusMessages[variables.status] || 'Order status updated successfully.';
+
       toast.custom(
         (t) => (
           <Alert variant="mono" icon="success" close={true} onClose={() => toast.dismiss(t)}>
             <AlertIcon>
               <Info />
             </AlertIcon>
-            <AlertTitle>Order status updated successfully.</AlertTitle>
+            <AlertTitle>{message}</AlertTitle>
           </Alert>
         ),
         { duration: 5000 }
@@ -276,18 +287,20 @@ export function useRefundOrder() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: RefundOrderRequest }) =>
       ordersService.refundOrder(id, data),
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.statusHistory(variables.id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
       queryClient.invalidateQueries({ queryKey: orderKeys.statistics() });
+      queryClient.invalidateQueries({ queryKey: ['stock-variants'] });
+      queryClient.invalidateQueries({ queryKey: ['stock-movements'] });
       toast.custom(
         (t) => (
           <Alert variant="mono" icon="success" close={true} onClose={() => toast.dismiss(t)}>
             <AlertIcon>
               <Info />
             </AlertIcon>
-            <AlertTitle>Refund processed successfully.</AlertTitle>
+            <AlertTitle>{data?.message || 'Refund processed successfully. Stock returned to inventory.'}</AlertTitle>
           </Alert>
         ),
         { duration: 5000 }

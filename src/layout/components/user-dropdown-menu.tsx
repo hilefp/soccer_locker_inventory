@@ -50,12 +50,8 @@ export function UserDropdownMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="cursor-pointer">
-        <Avatar className="size-7">
-          <AvatarImage
-            src={toAbsoluteUrl('/media/avatars/300-2.png')}
-            alt="@reui"
-          />
-          <AvatarFallback>CH</AvatarFallback>
+        <Avatar className="size-10">
+          <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
           <AvatarIndicator className="-end-2 -top-2">
             <AvatarStatus variant="online" className="size-2.5" />
           </AvatarIndicator>
@@ -70,10 +66,6 @@ export function UserDropdownMenu() {
         {/* User Information Section */}
         <div className="flex items-center gap-3 p-3">
           <Avatar>
-            <AvatarImage
-              src={toAbsoluteUrl('/media/avatars/300-2.png')}
-              alt={user?.email || 'User'}
-            />
             <AvatarFallback>
               {user?.email?.charAt(0).toUpperCase() || 'U'}
             </AvatarFallback>
@@ -91,7 +83,7 @@ export function UserDropdownMenu() {
           </div>
         </div>
 
-        <DropdownMenuItem className="cursor-pointer py-1 rounded-md border border-border hover:bg-muted">
+        {/* <DropdownMenuItem className="cursor-pointer py-1 rounded-md border border-border hover:bg-muted">
           <Clock />
           <span>Set status</span>
         </DropdownMenuItem>
@@ -106,12 +98,12 @@ export function UserDropdownMenu() {
         <DropdownMenuItem>
           <Settings />
           <span>Settings</span>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
 
-        <DropdownMenuItem>
+        {/* <DropdownMenuItem>
           <Bell />
           <span>Notification settings</span>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
 
         <DropdownMenuSeparator />
 

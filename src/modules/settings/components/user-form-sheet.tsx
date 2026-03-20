@@ -133,7 +133,8 @@ export function UserFormSheet({
 
   // Auth store to check current user's role
   const { user: currentUser } = useAuthStore();
-  const isAdmin = currentUser?.roles?.includes('SUPER_ADMIN') || currentUser?.roles?.includes('ADMIN');
+  const isSuperAdmin = currentUser?.roles?.includes('SUPER_ADMIN');
+  const isAdmin = isSuperAdmin || currentUser?.roles?.includes('ADMIN');
 
   // React Query hooks
   const { data: user, isLoading: isFetchingUser } = useInventoryUser(
@@ -160,9 +161,9 @@ export function UserFormSheet({
       return;
     }
 
-    setEmail(user.email);
-    setFirstName(user.firstName);
-    setLastName(user.lastName);
+    setEmail(user.email || '');
+    setFirstName(user.firstName || '');
+    setLastName(user.lastName || '');
     setPhone(user.phone || '');
     setPosition(user.position || '');
     setDepartment(user.department || '');
@@ -173,10 +174,10 @@ export function UserFormSheet({
 
   // Pre-select current role when editing
   useEffect(() => {
-    if (isEditMode && userRoles.length > 0) {
+    if (isEditMode && open && userRoles.length > 0) {
       setSelectedRoleId(userRoles[0].roleId);
     }
-  }, [isEditMode, userRoles]);
+  }, [isEditMode, open, userRoles]);
 
   // Reset form when closed
   useEffect(() => {
@@ -211,6 +212,11 @@ export function UserFormSheet({
       return;
     }
 
+    if (isEditMode && isSuperAdmin && password && password.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+
     const userData = {
       email: email.trim(),
       firstName: firstName.trim(),
@@ -222,6 +228,7 @@ export function UserFormSheet({
       avatarUrl: avatarUrl || undefined,
       status,
       ...(isNewMode && { password }),
+      ...(isEditMode && isSuperAdmin && password && { password }),
     };
 
     try {
@@ -327,7 +334,7 @@ export function UserFormSheet({
                 />
               </div>
 
-              {/* Password (only for new users) */}
+              {/* Password (required for new users, optional edit for superadmin) */}
               {isNewMode && (
                 <div className="space-y-2">
                   <Label className="text-xs font-medium">Password *</Label>
@@ -340,6 +347,22 @@ export function UserFormSheet({
                   />
                   <span className="text-xs text-muted-foreground">
                     Minimum 8 characters
+                  </span>
+                </div>
+              )}
+
+              {isEditMode && isSuperAdmin && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium">Password</Label>
+                  <Input
+                    type="password"
+                    placeholder="Leave blank to keep current"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading || isFetchingUser}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    Leave blank to keep current password
                   </span>
                 </div>
               )}
@@ -396,17 +419,6 @@ export function UserFormSheet({
                   placeholder="Logistics"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
-                  disabled={isLoading || isFetchingUser}
-                />
-              </div>
-
-              {/* Employee ID */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium">Employee ID</Label>
-                <Input
-                  placeholder="EMP-001"
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
                   disabled={isLoading || isFetchingUser}
                 />
               </div>

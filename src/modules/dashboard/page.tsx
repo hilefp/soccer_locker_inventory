@@ -9,45 +9,52 @@ const cards = [
     imageUrl: '/media/misc/products_dashboard.png',
     badge: '100',
     href: '/products',
+    permission: 'products:read',
   },
   {
     title: 'Module Inventory',
     imageUrl: '/media/misc/inventory.png',
     badge: '100',
     href: '/inventory',
+    permission: 'stock:read',
   },
   {
     title: 'Module Clubs',
     imageUrl: '/media/misc/clubs.png',
     badge: '100',
     href: '/clubs',
+    permission: 'clubs:read',
   },
-
   {
     title: 'Module Reports',
     imageUrl: '/media/misc/reports.png',
     badge: '100',
     href: '/reports',
+    permission: 'reports:read',
   },
   {
     title: 'Module Shop',
     imageUrl: '/media/misc/reports.png',
     badge: '100',
     href: '/Shop',
+    permission: 'users:read',
   },
   {
     title: 'Module Orders',
     imageUrl: '/media/misc/reports.png',
     badge: '100',
     href: '/orders',
-  }
-  
+    permission: 'orders:read',
+  },
 ];
 
 export function DashboardPage() {
   useDocumentTitle('Dashboard');
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const name = user?.email || 'Guest';
+
+  const visibleCards = cards.filter((card) => hasPermission(card.permission));
+
   return (
     <div className="container-fluid space-y-5 lg:space-y-9">
       <div className="flex items-center justify-between">
@@ -58,7 +65,7 @@ export function DashboardPage() {
       </div>
 
       <Card className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-4 p-0 bg-transparent">
-        {cards.map((card) => (
+        {visibleCards.map((card) => (
           <Link
             to={card.href}
             className="group relative flex flex-col items-center justify-between rounded-2xl p-0 transition-all bg-white"

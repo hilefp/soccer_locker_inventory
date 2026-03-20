@@ -151,13 +151,6 @@ export function UserDetailsSheet({
                         <span className="font-medium text-foreground">
                           {user.email}
                         </span>
-                        <BadgeDot className="bg-muted-foreground size-1" />
-                        <span className="font-normal text-muted-foreground">
-                          Employee ID
-                        </span>
-                        <span className="font-medium text-foreground">
-                          {user.employeeId || 'N/A'}
-                        </span>
                         {user.lastLoginAt && (
                           <>
                             <BadgeDot className="bg-muted-foreground size-1" />
@@ -260,19 +253,6 @@ export function UserDetailsSheet({
                                   </span>
                                   <span className="text-sm font-medium">
                                     {user.department}
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-                            {user.employeeId && (
-                              <div className="flex items-center gap-3">
-                                <IdCard className="h-4 w-4 text-muted-foreground" />
-                                <div className="flex flex-col">
-                                  <span className="text-xs text-muted-foreground">
-                                    Employee ID
-                                  </span>
-                                  <span className="text-sm font-medium">
-                                    {user.employeeId}
                                   </span>
                                 </div>
                               </div>

@@ -80,8 +80,9 @@ import {
 import { Calendar as CalendarUI } from '@/shared/components/ui/calendar';
 import { Order, OrderStatus, OrderListMeta, ORDER_STATUS_LABELS, ORDER_STATUS_FLOW, DocumentType } from '@/modules/orders/types';
 import { OrderStatusBadge } from './order-status-badge';
-import { useUpdateOrderStatus } from '@/modules/orders/hooks/use-orders';
+import { useUpdateOrderStatus, orderKeys } from '@/modules/orders/hooks/use-orders';
 import { ordersService } from '@/modules/orders/services/orders.service';
+import { useQueryClient } from '@tanstack/react-query';
 import { useClubs } from '@/modules/clubs/hooks/use-clubs';
 
 export interface IOrderData {
@@ -108,6 +109,7 @@ interface OrderListTableProps {
   isLoading?: boolean;
   error?: string | null;
   onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   onSearchChange?: (search: string) => void;
   onStatusFilterChange?: (status: OrderStatus | undefined) => void;
   onClubFilterChange?: (clubId: string | undefined) => void;
@@ -143,6 +145,7 @@ export function OrderListTable({
   isLoading,
   error,
   onPageChange,
+  onPageSizeChange,
   onSearchChange,
   onStatusFilterChange,
   onClubFilterChange,
@@ -154,6 +157,7 @@ export function OrderListTable({
     return orders.map(convertOrderToIData);
   }, [orders]);
 
+  const queryClient = useQueryClient();
   const updateStatusMutation = useUpdateOrderStatus();
   const { data: clubs } = useClubs();
 
@@ -233,6 +237,22 @@ export function OrderListTable({
           documentType === 'PACKING_SLIP' ? 'packing slip(s)' : 'invoice(s)'
         }`
       );
+
+      // Auto-transition orders from NEW to PRINT when printing packing slips
+      if (documentType === 'PACKING_SLIP') {
+        const newOrders = fullOrders.filter((o) => o.status === 'NEW');
+        if (newOrders.length > 0) {
+          await Promise.all(
+            newOrders.map((order) =>
+              ordersService
+                .updateOrderStatus(order.id, { status: 'PRINT' })
+                .catch((err) => console.error(`Failed to update status for order ${order.orderNumber}:`, err)),
+            ),
+          );
+          // Refresh the orders list to reflect status changes
+          queryClient.invalidateQueries({ queryKey: orderKeys.all });
+        }
+      }
 
       // Clear selection after successful print
       setRowSelection({});
@@ -436,7 +456,7 @@ export function OrderListTable({
         enableSorting: false,
         cell: ({ row }) => {
           const order = row.original;
-          const validTransitions = ORDER_STATUS_FLOW[order.status];
+          const validTransitions = ORDER_STATUS_FLOW[order.status] || [];
 
           return (
             <div className="flex items-center justify-center">
@@ -518,8 +538,11 @@ export function OrderListTable({
       if (typeof updater === 'function') {
         const newState = updater(pagination);
         setPagination(newState);
-        if (onPageChange) {
-          onPageChange(newState.pageIndex + 1);
+        if (newState.pageSize !== pagination.pageSize) {
+          onPageSizeChange?.(newState.pageSize);
+        }
+        if (newState.pageIndex !== pagination.pageIndex) {
+          onPageChange?.(newState.pageIndex + 1);
         }
       }
     },

@@ -37,8 +37,8 @@ export function VariantDetailPricing({
               id="price"
               type="number"
               step="0.01"
-              value={price}
-              onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+              value={price === 0 ? '' : price}
+              onChange={(e) => setPrice(e.target.value ? parseFloat(e.target.value) : 0)}
               placeholder="0.00"
               disabled={isSaving}
             />

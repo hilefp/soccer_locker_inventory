@@ -77,3 +77,19 @@ export interface CustomerFilterParams {
   sortBy?: CustomerSortBy;
   sortOrder?: SortOrder;
 }
+
+export interface UpdateCustomerRequest {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  birthDate?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  taxId?: string;
+  companyName?: string;
+  newsletter?: boolean;
+  avatarUrl?: string;
+}

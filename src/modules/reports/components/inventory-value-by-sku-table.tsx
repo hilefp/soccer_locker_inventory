@@ -1,7 +1,15 @@
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
-import { ArrowUpDown, Search } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select';
+import { ArrowUpDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import type { InventoryValueBySku } from '../types';
 
 interface InventoryValueBySkuTableProps {
@@ -12,6 +20,8 @@ interface InventoryValueBySkuTableProps {
 type SortKey = keyof InventoryValueBySku;
 type SortDir = 'asc' | 'desc';
 
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
 const fmt = (v: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(v);
 
@@ -21,6 +31,8 @@ export function InventoryValueBySkuTable({ data, loading }: InventoryValueBySkuT
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('inventoryValueRetail');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -44,6 +56,16 @@ export function InventoryValueBySkuTable({ data, loading }: InventoryValueBySkuT
         return sortDir === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
       });
   }, [data, search, sortKey, sortDir]);
+
+  // Reset to first page when search or sort changes
+  useMemo(() => {
+    setPageIndex(0);
+  }, [search, sortKey, sortDir]);
+
+  const pageCount = Math.ceil(filtered.length / pageSize);
+  const paginatedRows = filtered.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
+  const from = filtered.length === 0 ? 0 : pageIndex * pageSize + 1;
+  const to = Math.min((pageIndex + 1) * pageSize, filtered.length);
 
   const totals = useMemo(() => {
     return filtered.reduce(
@@ -78,7 +100,10 @@ export function InventoryValueBySkuTable({ data, loading }: InventoryValueBySkuT
           <Input
             placeholder="Search by name, SKU or category..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPageIndex(0);
+            }}
             className="pl-9"
           />
         </div>
@@ -114,7 +139,7 @@ export function InventoryValueBySkuTable({ data, loading }: InventoryValueBySkuT
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((row) => (
+                {paginatedRows.map((row) => (
                   <tr key={row.variantId} className="border-b last:border-0 hover:bg-muted/50">
                     <td className="py-3 font-medium">{row.productName}</td>
                     <td className="py-3 text-muted-foreground">{row.sku}</td>
@@ -142,6 +167,106 @@ export function InventoryValueBySkuTable({ data, loading }: InventoryValueBySkuT
           </div>
         )}
       </CardContent>
+      {!loading && filtered.length > 0 && (
+        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-2.5 py-4">
+          <div className="flex items-center gap-2.5">
+            <span className="text-sm text-muted-foreground">Rows per page</span>
+            <Select
+              value={`${pageSize}`}
+              onValueChange={(value) => {
+                setPageSize(Number(value));
+                setPageIndex(0);
+              }}
+            >
+              <SelectTrigger className="w-fit" size="sm">
+                <SelectValue placeholder={`${pageSize}`} />
+              </SelectTrigger>
+              <SelectContent side="top" className="min-w-[50px]">
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <SelectItem key={size} value={`${size}`}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-sm text-muted-foreground">
+              {from} - {to} of {filtered.length}
+            </span>
+            {pageCount > 1 && (
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  mode="icon"
+                  variant="ghost"
+                  className="size-7 p-0"
+                  onClick={() => setPageIndex((p) => p - 1)}
+                  disabled={pageIndex === 0}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                {(() => {
+                  const maxVisible = 5;
+                  const groupStart = Math.floor(pageIndex / maxVisible) * maxVisible;
+                  const groupEnd = Math.min(groupStart + maxVisible, pageCount);
+                  return (
+                    <>
+                      {groupStart > 0 && (
+                        <Button
+                          size="sm"
+                          mode="icon"
+                          variant="ghost"
+                          className="size-7 p-0 text-sm"
+                          onClick={() => setPageIndex(groupStart - 1)}
+                        >
+                          ...
+                        </Button>
+                      )}
+                      {Array.from({ length: groupEnd - groupStart }, (_, i) => {
+                        const idx = groupStart + i;
+                        return (
+                          <Button
+                            key={idx}
+                            size="sm"
+                            mode="icon"
+                            variant="ghost"
+                            className={`size-7 p-0 text-sm text-muted-foreground ${pageIndex === idx ? 'bg-accent text-accent-foreground' : ''}`}
+                            onClick={() => setPageIndex(idx)}
+                          >
+                            {idx + 1}
+                          </Button>
+                        );
+                      })}
+                      {groupEnd < pageCount && (
+                        <Button
+                          size="sm"
+                          mode="icon"
+                          variant="ghost"
+                          className="size-7 p-0 text-sm"
+                          onClick={() => setPageIndex(groupEnd)}
+                        >
+                          ...
+                        </Button>
+                      )}
+                    </>
+                  );
+                })()}
+                <Button
+                  size="sm"
+                  mode="icon"
+                  variant="ghost"
+                  className="size-7 p-0"
+                  onClick={() => setPageIndex((p) => p + 1)}
+                  disabled={pageIndex >= pageCount - 1}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardFooter>
+      )}
     </Card>
   );
 }

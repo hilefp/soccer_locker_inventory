@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Separator } from '@/shared/components/ui/separator';
 import { ImageFile, ProductFormImageUpload } from '@/modules/products/components/product-form-image-upload';
 import { ProductFormVariants } from '@/modules/products/components/product-form-variants';
+import { ProductFormVariantsNew } from '@/modules/products/components/product-form-variants-new';
 import { ProductFormHeader } from '@/modules/products/components/product-form/product-form-header';
 import { ProductFormBasicInfo } from '@/modules/products/components/product-form/product-form-basic-info';
 import { ProductFormCategoryBrand } from '@/modules/products/components/product-form/product-form-category-brand';
@@ -101,6 +102,7 @@ export function ProductFormPage() {
       imageUrl: imageUrls.length > 0 ? imageUrls[0] : null,
       imageUrls: imageUrls,
       tags: tags.length > 0 ? tags : undefined,
+      ...(isNewMode && variants.length > 0 ? { variants } : {}),
     };
 
     try {
@@ -189,11 +191,17 @@ export function ProductFormPage() {
             isLoading={isLoading}
           />
 
-          {/* Variants - Only show in edit mode */}
-          {isEditMode && productId && (
+          {/* Variants */}
+          {isEditMode && productId ? (
             <ProductFormVariants
               productId={productId}
               mode="edit"
+              variants={variants}
+              onVariantsChange={setVariants}
+            />
+          ) : (
+            <ProductFormVariantsNew
+              mode="new"
               variants={variants}
               onVariantsChange={setVariants}
             />
