@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Column,
   ColumnDef,
@@ -142,6 +142,7 @@ export function ProductListTable({
   products,
 }: ProductListProps) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const data = useMemo(() => {
     if (!products || products.length === 0) return [];
     return products.map(convertProductToIData);
@@ -149,19 +150,54 @@ export function ProductListTable({
 
   // React Query hook for delete mutation
   const deleteMutation = useDeleteProduct();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+
+  // Read initial state from URL search params
+  const searchQuery = searchParams.get('q') || '';
+  const activeTab = searchParams.get('tab') || 'all';
+  const pageIndex = Number(searchParams.get('page') || '0');
+  const sortId = searchParams.get('sort') || 'created';
+  const sortDesc = searchParams.get('desc') !== 'false'; // default true
+
+  // Helper to update search params without replacing history
+  const updateParams = useCallback((updates: Record<string, string | null>) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === '') {
+          next.delete(key);
+        } else {
+          next.set(key, value);
+        }
+      }
+      // Clean up defaults to keep URL tidy
+      if (next.get('tab') === 'all') next.delete('tab');
+      if (next.get('page') === '0') next.delete('page');
+      if (next.get('sort') === 'created' && next.get('desc') !== 'false') {
+        next.delete('sort');
+        next.delete('desc');
+      }
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setSearchQuery = useCallback((q: string) => {
+    updateParams({ q: q || null, page: null }); // reset page on search
+  }, [updateParams]);
+
+  const setActiveTab = useCallback((tab: string) => {
+    updateParams({ tab, page: null }); // reset page on tab change
+  }, [updateParams]);
 
   // Search input state
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState(searchQuery);
   const inputRef = useRef<HTMLInputElement>(null);
   const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
+    pageIndex,
     pageSize: 10,
   });
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'created', desc: true },
+    { id: sortId, desc: sortDesc },
   ]);
   const [selectedLastMoved] = useState<string[]>([]);
 
@@ -484,23 +520,31 @@ export function ProductListTable({
     }
   }, [rowSelection]);
 
-  // Reset pagination when filters change
+  // Sync pagination changes to URL
   useEffect(() => {
-    table.setPageIndex(0);
-  }, [searchQuery, selectedLastMoved, activeTab]);
+    updateParams({ page: pagination.pageIndex > 0 ? String(pagination.pageIndex) : null });
+  }, [pagination.pageIndex]);
 
-  // Reset to first page when filters change
+  // Sync sorting changes to URL
   useEffect(() => {
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: 0,
-    }));
-  }, [activeTab, searchQuery, selectedLastMoved]);
+    if (sorting.length > 0) {
+      const { id, desc } = sorting[0];
+      updateParams({
+        sort: id,
+        desc: desc ? null : 'false', // only store desc=false since true is default
+      });
+    }
+  }, [sorting]);
 
-  // Sync inputValue with searchQuery when searchQuery changes externally
+  // Sync URL params back to local state when navigating back
   useEffect(() => {
     setInputValue(searchQuery);
-  }, [searchQuery]);
+    setPagination((prev) => prev.pageIndex !== pageIndex ? { ...prev, pageIndex } : prev);
+    const urlSort = [{ id: sortId, desc: sortDesc }];
+    setSorting((prev) =>
+      prev[0]?.id !== sortId || prev[0]?.desc !== sortDesc ? urlSort : prev
+    );
+  }, [searchParams]);
 
   const table = useReactTable({
     data: filteredData,
