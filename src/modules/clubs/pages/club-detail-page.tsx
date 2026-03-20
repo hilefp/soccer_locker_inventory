@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Loader2, Building2, Plus } from 'lucide-react';
+import { ArrowLeft, Edit, Loader2, Building2, Plus, Package } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -99,6 +99,10 @@ export function ClubDetailPage() {
           <Badge variant={club.isActive ? 'success' : 'secondary'}>
             {club.isActive ? 'Active' : 'Inactive'}
           </Badge>
+          <Button variant="outline" onClick={() => navigate(`/clubs/${clubId}/packages`)}>
+            <Package className="size-4 mr-2" />
+            Packages
+          </Button>
           <Button onClick={() => navigate(`/clubs/${clubId}/edit`)}>
             <Edit className="size-4 mr-2" />
             Edit Club
