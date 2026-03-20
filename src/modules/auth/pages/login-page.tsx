@@ -78,11 +78,11 @@ export function LoginPage() {
 
   const form = useForm<SigninSchemaType>({
     resolver: zodResolver(getSigninSchema()),
-    defaultValues: {
-      email: 'superadmin@soccerlocker.com',
-      password: 'Admin123456',
-      rememberMe: true,
-    },
+    // defaultValues: {
+    //   email: 'superadmin@soccerlocker.com',
+    //   password: 'Admin123456',
+    //   rememberMe: true,
+    // },
   });
 
   async function onSubmit(values: SigninSchemaType) {
@@ -207,12 +207,12 @@ export function LoginPage() {
                     Remember me
                   </FormLabel>
                 </div>
-                <Link
+                {/* <Link
                   to="/auth/reset-password"
                   className="text-sm font-semibold text-foreground hover:text-primary"
                 >
                   Forgot Password?
-                </Link>
+                </Link> */}
               </div>
             </FormItem>
           )}
