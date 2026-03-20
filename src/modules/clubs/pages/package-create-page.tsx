@@ -19,6 +19,13 @@ import { Input, InputWrapper } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select';
 import { useClub } from '../hooks/use-clubs';
 import { useClubProducts, useGroupClubProducts } from '../hooks/use-club-products';
 import { ClubProduct } from '../types/club-product';
@@ -32,7 +39,7 @@ export function PackageCreatePage() {
 
   const { data: club, isLoading: clubLoading } = useClub(clubId);
   const { data: clubProductsResponse, isLoading: productsLoading } = useClubProducts(clubId, {
-    limit: 200,
+    limit: 100,
   });
   const groupMutation = useGroupClubProducts(clubId!);
 
@@ -45,6 +52,7 @@ export function PackageCreatePage() {
 
   // Step 2 state
   const [primaryId, setPrimaryId] = useState<string>('');
+  const [packageName, setPackageName] = useState('');
   const [packagePrice, setPackagePrice] = useState<string>('');
   const [packageDescription, setPackageDescription] = useState('');
 
@@ -114,6 +122,7 @@ export function PackageCreatePage() {
       await groupMutation.mutateAsync({
         clubProductIds: Array.from(selectedIds),
         primaryClubProductId: primaryId,
+        packageName: packageName || undefined,
         packagePrice: parseFloat(packagePrice),
         packageDescription: packageDescription || undefined,
       });
@@ -221,25 +230,81 @@ export function PackageCreatePage() {
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Search */}
-              <InputWrapper className="w-full lg:w-[350px]">
-                <Search className="size-4" />
-                <Input
-                  placeholder="Search by name, SKU, or tag..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                  <Button
-                    variant="dim"
-                    size="sm"
-                    className="-me-3.5"
-                    onClick={() => setSearchQuery('')}
+              {/* Quick Add Select + Search */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <Label className="text-xs mb-1.5 block">Quick Add</Label>
+                  <Select
+                    value=""
+                    onValueChange={(value) => {
+                      if (value) toggleProduct(value);
+                    }}
                   >
-                    <X className="size-4" />
-                  </Button>
-                )}
-              </InputWrapper>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a product to add..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableProducts
+                        .filter((p) => !selectedIds.has(p.id))
+                        .map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {getProductDisplayName(product)} — {getProductPrice(product)}
+                          </SelectItem>
+                        ))}
+                      {availableProducts.filter((p) => !selectedIds.has(p.id)).length === 0 && (
+                        <SelectItem value="__empty__" disabled>
+                          No more products available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs mb-1.5 block">Search</Label>
+                  <InputWrapper className="w-full">
+                    <Search className="size-4" />
+                    <Input
+                      placeholder="Search by name, SKU, or tag..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                      <Button
+                        variant="dim"
+                        size="sm"
+                        className="-me-3.5"
+                        onClick={() => setSearchQuery('')}
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    )}
+                  </InputWrapper>
+                </div>
+              </div>
+
+              {/* Selected products summary */}
+              {selectedIds.size > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedProducts.map((product) => (
+                    <Badge
+                      key={product.id}
+                      variant="outline"
+                      className="flex items-center gap-1.5 py-1 px-2.5"
+                    >
+                      {getProductDisplayName(product)}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleProduct(product.id);
+                        }}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
               {/* Product list */}
               {filteredProducts.length === 0 ? (
@@ -396,6 +461,19 @@ export function PackageCreatePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
+                  <Label htmlFor="packageName">Package Name</Label>
+                  <Input
+                    id="packageName"
+                    value={packageName}
+                    onChange={(e) => setPackageName(e.target.value)}
+                    placeholder="e.g., Field Player Package"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    A display name for this package. If empty, the primary product's name will be used.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="packagePrice">
                     Package Price <span className="text-destructive">*</span>
                   </Label>
@@ -459,11 +537,12 @@ export function PackageCreatePage() {
                 <div>
                   <p className="text-xs text-muted-foreground">Package Name</p>
                   <p className="font-semibold">
-                    {primaryId
-                      ? getProductDisplayName(
-                          selectedProducts.find((p) => p.id === primaryId)!
-                        )
-                      : 'Select a primary product'}
+                    {packageName
+                      || (primaryId
+                        ? getProductDisplayName(
+                            selectedProducts.find((p) => p.id === primaryId)!
+                          )
+                        : 'Select a primary product')}
                   </p>
                 </div>
 

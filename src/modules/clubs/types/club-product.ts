@@ -62,6 +62,7 @@ export interface UpdateClubProductDto {
 export interface GroupClubProductsDto {
   clubProductIds: string[];
   primaryClubProductId: string;
+  packageName?: string;
   packagePrice?: number;
   packageDescription?: string;
 }
@@ -71,6 +72,7 @@ export interface UpdateGroupDto {
   addClubProductIds?: string[];
   removeClubProductIds?: string[];
   primaryClubProductId?: string;
+  packageName?: string;
   packagePrice?: number;
   packageDescription?: string;
 }
@@ -78,7 +80,11 @@ export interface UpdateGroupDto {
 // Group response from the API
 export interface ClubProductGroup {
   groupId: string;
-  primaryProduct: ClubProduct;
+  packageName?: string | null;
+  packageDescription?: string | null;
+  packagePrice?: number | null;
+  memberCount?: number;
+  primary: ClubProduct;
   members: ClubProduct[];
 }
 

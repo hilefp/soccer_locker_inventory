@@ -19,6 +19,13 @@ import { Input, InputWrapper } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select';
 import { useClub } from '../hooks/use-clubs';
 import {
   useClubProducts,
@@ -37,7 +44,7 @@ export function PackageEditPage() {
   const { data: club, isLoading: clubLoading } = useClub(clubId);
   const { data: groups = [], isLoading: groupsLoading } = useClubProductGroups(clubId);
   const { data: clubProductsResponse, isLoading: productsLoading } = useClubProducts(clubId, {
-    limit: 200,
+    limit: 100,
   });
   const updateMutation = useUpdateGroup(clubId!);
 
@@ -48,6 +55,7 @@ export function PackageEditPage() {
 
   // State
   const [primaryId, setPrimaryId] = useState<string>('');
+  const [packageName, setPackageName] = useState('');
   const [packagePrice, setPackagePrice] = useState<string>('');
   const [packageDescription, setPackageDescription] = useState('');
   const [currentMemberIds, setCurrentMemberIds] = useState<Set<string>>(new Set());
@@ -60,10 +68,11 @@ export function PackageEditPage() {
   // Initialize form from current group data
   useEffect(() => {
     if (currentGroup && !initialized) {
-      const primary = currentGroup.primaryProduct;
+      const primary = currentGroup.primary;
       setPrimaryId(primary?.id || '');
-      setPackagePrice(primary?.packagePrice?.toString() || '');
-      setPackageDescription(primary?.packageDescription || '');
+      setPackageName(currentGroup.packageName || primary?.name || primary?.product?.name || '');
+      setPackagePrice(currentGroup.packagePrice?.toString() || '');
+      setPackageDescription(currentGroup.packageDescription || '');
       setCurrentMemberIds(new Set(currentGroup.members?.map((m) => m.id) || []));
       setInitialized(true);
     }
@@ -114,17 +123,19 @@ export function PackageEditPage() {
 
   const hasChanges = useMemo(() => {
     if (!currentGroup) return false;
-    const originalPrimary = currentGroup.primaryProduct?.id;
-    const originalPrice = currentGroup.primaryProduct?.packagePrice;
-    const originalDesc = currentGroup.primaryProduct?.packageDescription || '';
+    const originalPrimary = currentGroup.primary?.id;
+    const originalName = currentGroup.packageName || '';
+    const originalPrice = currentGroup.packagePrice;
+    const originalDesc = currentGroup.packageDescription || '';
     return (
       primaryId !== originalPrimary ||
+      packageName !== originalName ||
       parseFloat(packagePrice || '0') !== (originalPrice || 0) ||
       packageDescription !== originalDesc ||
       addProductIds.size > 0 ||
       removeProductIds.size > 0
     );
-  }, [currentGroup, primaryId, packagePrice, packageDescription, addProductIds, removeProductIds]);
+  }, [currentGroup, primaryId, packageName, packagePrice, packageDescription, addProductIds, removeProductIds]);
 
   const canSubmit = priceValid && primaryValid && totalMembers >= 2 && hasChanges;
 
@@ -166,7 +177,8 @@ export function PackageEditPage() {
         data: {
           addClubProductIds: addProductIds.size > 0 ? Array.from(addProductIds) : undefined,
           removeClubProductIds: removeProductIds.size > 0 ? Array.from(removeProductIds) : undefined,
-          primaryClubProductId: primaryId !== currentGroup?.primaryProduct?.id ? primaryId : undefined,
+          primaryClubProductId: primaryId !== currentGroup?.primary?.id ? primaryId : undefined,
+          packageName: packageName || undefined,
           packagePrice: parseFloat(packagePrice),
           packageDescription: packageDescription || undefined,
         },
@@ -337,24 +349,54 @@ export function PackageEditPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <InputWrapper className="w-full lg:w-[350px]">
-                  <Search className="size-4" />
-                  <Input
-                    placeholder="Search ungrouped products..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  {searchQuery && (
-                    <Button
-                      variant="dim"
-                      size="sm"
-                      className="-me-3.5"
-                      onClick={() => setSearchQuery('')}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1">
+                    <Label className="text-xs mb-1.5 block">Quick Add</Label>
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        if (value) handleAddProduct(value);
+                      }}
                     >
-                      <X className="size-4" />
-                    </Button>
-                  )}
-                </InputWrapper>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a product to add..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableProducts.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {getProductDisplayName(product)}
+                          </SelectItem>
+                        ))}
+                        {availableProducts.length === 0 && (
+                          <SelectItem value="__empty__" disabled>
+                            No ungrouped products available
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-xs mb-1.5 block">Search</Label>
+                    <InputWrapper className="w-full">
+                      <Search className="size-4" />
+                      <Input
+                        placeholder="Search ungrouped products..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                      {searchQuery && (
+                        <Button
+                          variant="dim"
+                          size="sm"
+                          className="-me-3.5"
+                          onClick={() => setSearchQuery('')}
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      )}
+                    </InputWrapper>
+                  </div>
+                </div>
 
                 {filteredAvailable.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-6">
@@ -403,6 +445,16 @@ export function PackageEditPage() {
               <CardTitle className="text-base">Package Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="editPackageName">Package Name</Label>
+                <Input
+                  id="editPackageName"
+                  value={packageName}
+                  onChange={(e) => setPackageName(e.target.value)}
+                  placeholder="e.g., Field Player Package"
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="editPackagePrice">
                   Package Price <span className="text-destructive">*</span>
@@ -460,11 +512,7 @@ export function PackageEditPage() {
               <div>
                 <p className="text-xs text-muted-foreground">Package Name</p>
                 <p className="font-semibold">
-                  {primaryId
-                    ? getProductDisplayName(
-                        allPackageProducts.find((p) => p.id === primaryId)!
-                      )
-                    : '-'}
+                  {packageName || '-'}
                 </p>
               </div>
 
@@ -517,7 +565,7 @@ export function PackageEditPage() {
                         - {removeProductIds.size} product{removeProductIds.size > 1 ? 's' : ''} to remove
                       </p>
                     )}
-                    {primaryId !== currentGroup?.primaryProduct?.id && (
+                    {primaryId !== currentGroup?.primary?.id && (
                       <p className="text-xs text-blue-600">Primary product changed</p>
                     )}
                   </div>

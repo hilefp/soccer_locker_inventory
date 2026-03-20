@@ -127,13 +127,13 @@ export function PackageListPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {groups.map((group) => {
-            const primary = group.primaryProduct;
-            const displayName = primary?.name || primary?.product?.name || 'Unnamed Package';
+            const primary = group.primary;
+            const displayName = group.packageName || primary?.name || primary?.product?.name || 'Unnamed Package';
             const imageUrl =
               primary?.imageUrls?.[0] || primary?.product?.imageUrl || primary?.product?.imageUrls?.[0];
-            const memberCount = group.members?.length || 0;
+            const memberCount = group.memberCount ?? group.members?.length ?? 0;
             const isActive = primary?.isActive !== false;
-            const packagePrice = primary?.packagePrice;
+            const packagePrice = group.packagePrice;
 
             return (
               <Card
@@ -185,9 +185,9 @@ export function PackageListPage() {
                   </div>
 
                   {/* Description */}
-                  {primary?.packageDescription && (
+                  {group.packageDescription && (
                     <p className="text-xs text-muted-foreground line-clamp-2">
-                      {primary.packageDescription}
+                      {group.packageDescription}
                     </p>
                   )}
 
