@@ -36,6 +36,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Eye, Search, SquarePen, Trash, X, UserCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 
 interface UserListTableProps {
@@ -89,7 +90,7 @@ export function UserListTable({
   });
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'firstName', desc: false },
+    { id: 'userInfo', desc: false },
   ]);
 
   // Auth store to check current user's role
@@ -178,30 +179,18 @@ export function UserListTable({
         enableSorting: true,
         size: 120,
       },
-      {
-        id: 'department',
-        accessorFn: (row) => row.department || '-',
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Department" column={column} />
-        ),
-        cell: (info) => (
-          <span className="text-sm">{info.getValue() as string}</span>
-        ),
-        enableSorting: true,
-        size: 120,
-      },
-      {
-        id: 'employeeId',
-        accessorFn: (row) => row.employeeId || '-',
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Employee ID" column={column} />
-        ),
-        cell: (info) => (
-          <span className="text-sm font-medium">{info.getValue() as string}</span>
-        ),
-        enableSorting: true,
-        size: 100,
-      },
+      // {
+      //   id: 'department',
+      //   accessorFn: (row) => row.department || '-',
+      //   header: ({ column }) => (
+      //     <DataGridColumnHeader title="Department" column={column} />
+      //   ),
+      //   cell: (info) => (
+      //     <span className="text-sm">{info.getValue() as string}</span>
+      //   ),
+      //   enableSorting: true,
+      //   size: 120,
+      // },
       {
         id: 'status',
         accessorFn: (row) => row.status,
@@ -249,10 +238,16 @@ export function UserListTable({
           const handleDelete = async () => {
             if (!user.id) return;
 
+            if (!confirm('Are you sure you want to delete this user?')) {
+              return;
+            }
+
             try {
               await deleteMutation.mutateAsync(user.id);
+              toast.success('User deleted successfully');
             } catch (error) {
               console.error('Delete error:', error);
+              toast.error('Failed to delete user');
             }
           };
 
