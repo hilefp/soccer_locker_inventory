@@ -2,8 +2,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import { UserFormSheet } from './user-form-sheet';
 import { UserDetailsSheet } from './user-details-sheet';
-import { useDeleteInventoryUser } from '../hooks/use-inventory-users';
+import { useDeleteInventoryUser, useUserRoles } from '../hooks/use-inventory-users';
 import { InventoryUser, UserStatus } from '../types';
+import { useAuthStore } from '@/shared/stores/auth-store';
 import { Badge, BadgeProps } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -35,6 +36,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Eye, Search, SquarePen, Trash, X, UserCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 
 interface UserListTableProps {
@@ -58,6 +60,24 @@ const getStatusVariant = (status: UserStatus): 'primary' | 'destructive' | 'seco
   }
 };
 
+function UserRoleBadge({ userId }: { userId: string }) {
+  const { data: userRoles = [], isLoading } = useUserRoles(userId);
+
+  if (isLoading) {
+    return <span className="text-xs text-muted-foreground">...</span>;
+  }
+
+  if (userRoles.length === 0) {
+    return <span className="text-xs text-muted-foreground">No role</span>;
+  }
+
+  return (
+    <Badge variant="outline" appearance="light">
+      {userRoles[0].role.name}
+    </Badge>
+  );
+}
+
 export function UserListTable({
   users = [],
   isLoading = false,
@@ -70,8 +90,12 @@ export function UserListTable({
   });
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'firstName', desc: false },
+    { id: 'userInfo', desc: false },
   ]);
+
+  // Auth store to check current user's role
+  const { user: currentUser } = useAuthStore();
+  const isAdmin = currentUser?.roles?.includes('SUPER_ADMIN') || currentUser?.roles?.includes('ADMIN');
 
   // React Query hook for delete mutation
   const deleteMutation = useDeleteInventoryUser();
@@ -155,30 +179,18 @@ export function UserListTable({
         enableSorting: true,
         size: 120,
       },
-      {
-        id: 'department',
-        accessorFn: (row) => row.department || '-',
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Department" column={column} />
-        ),
-        cell: (info) => (
-          <span className="text-sm">{info.getValue() as string}</span>
-        ),
-        enableSorting: true,
-        size: 120,
-      },
-      {
-        id: 'employeeId',
-        accessorFn: (row) => row.employeeId || '-',
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Employee ID" column={column} />
-        ),
-        cell: (info) => (
-          <span className="text-sm font-medium">{info.getValue() as string}</span>
-        ),
-        enableSorting: true,
-        size: 100,
-      },
+      // {
+      //   id: 'department',
+      //   accessorFn: (row) => row.department || '-',
+      //   header: ({ column }) => (
+      //     <DataGridColumnHeader title="Department" column={column} />
+      //   ),
+      //   cell: (info) => (
+      //     <span className="text-sm">{info.getValue() as string}</span>
+      //   ),
+      //   enableSorting: true,
+      //   size: 120,
+      // },
       {
         id: 'status',
         accessorFn: (row) => row.status,
@@ -196,6 +208,15 @@ export function UserListTable({
         },
         enableSorting: true,
         size: 80,
+      },
+      {
+        id: 'role',
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Role" column={column} />
+        ),
+        cell: ({ row }) => <UserRoleBadge userId={row.original.id} />,
+        enableSorting: false,
+        size: 120,
       },
       {
         id: 'actions',
@@ -217,10 +238,16 @@ export function UserListTable({
           const handleDelete = async () => {
             if (!user.id) return;
 
+            if (!confirm('Are you sure you want to delete this user?')) {
+              return;
+            }
+
             try {
               await deleteMutation.mutateAsync(user.id);
+              toast.success('User deleted successfully');
             } catch (error) {
               console.error('Delete error:', error);
+              toast.error('Failed to delete user');
             }
           };
 
@@ -235,31 +262,35 @@ export function UserListTable({
               >
                 <Eye />
               </Button>
-              <Button
-                variant="dim"
-                mode="icon"
-                size="sm"
-                onClick={handleEdit}
-                title="Edit user"
-              >
-                <SquarePen />
-              </Button>
-              <Button
-                variant="dim"
-                mode="icon"
-                size="sm"
-                onClick={handleDelete}
-                title="Delete user"
-              >
-                <Trash />
-              </Button>
+              {isAdmin && (
+                <>
+                  <Button
+                    variant="dim"
+                    mode="icon"
+                    size="sm"
+                    onClick={handleEdit}
+                    title="Edit user"
+                  >
+                    <SquarePen />
+                  </Button>
+                  <Button
+                    variant="dim"
+                    mode="icon"
+                    size="sm"
+                    onClick={handleDelete}
+                    title="Delete user"
+                  >
+                    <Trash />
+                  </Button>
+                </>
+              )}
             </div>
           );
         },
         size: 60,
       },
     ],
-    [handleUserClick, deleteMutation.mutateAsync],
+    [handleUserClick, deleteMutation.mutateAsync, isAdmin],
   );
 
   const filteredData = useMemo(() => {

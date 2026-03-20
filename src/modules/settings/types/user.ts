@@ -84,3 +84,38 @@ export interface UserRole {
   expiresAt?: string | null;
   role: Role;
 }
+
+// ==================== PERMISSIONS ====================
+
+export interface Permission {
+  id: string;
+  section: string;
+  action: string;
+  description?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RolePermission {
+  roleId: string;
+  permissionId: string;
+  permission: Permission;
+}
+
+export interface CreatePermissionDto {
+  section: string;
+  action: string;
+  description?: string;
+}
+
+export interface UpdatePermissionDto {
+  section?: string;
+  action?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface SetRolePermissionsDto {
+  permissionIds: string[];
+}

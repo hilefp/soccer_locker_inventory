@@ -42,8 +42,8 @@ export interface CreateClubDto {
 export interface UpdateClubDto {
   name?: string;
   description?: string;
-  imageUrl?: string;
-  logoUrl?: string;
+  imageUrl?: string | null;
+  logoUrl?: string | null;
   websiteUrl?: string;
   email?: string;
   phone?: string;

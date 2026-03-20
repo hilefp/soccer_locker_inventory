@@ -4,11 +4,13 @@ import { useAuthStore } from '@/shared/stores/auth-store';
 
 interface ProtectedRouteProps {
   allowedRoles?: string[];
+  allowedPermissions?: string[];
   redirectTo?: string;
 }
 
 export function ProtectedRoute({
   allowedRoles,
+  allowedPermissions,
   redirectTo = '/auth/login',
 }: ProtectedRouteProps) {
   const { isAuthenticated, user, validateSession, _hasHydrated } = useAuthStore();
@@ -51,6 +53,17 @@ export function ProtectedRoute({
     );
 
     if (!hasRequiredRole) {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  if (allowedPermissions && allowedPermissions.length > 0) {
+    const isSuperAdmin = user?.roles?.includes('SUPER_ADMIN');
+    const hasRequiredPermission = isSuperAdmin || allowedPermissions.some((p) =>
+      user?.permissions?.includes(p)
+    );
+
+    if (!hasRequiredPermission) {
       return <Navigate to="/dashboard" replace />;
     }
   }

@@ -38,19 +38,16 @@ export interface ProductVariant {
 }
 
 export interface ProductVariantRequest {
-  sku: string;
+  sku?: string;
   barcode?: string;
-  attributes: ProductVariantAttributes;
-
-  price: number;
-  compareAtPrice?: number;
-  cost?: number;
-
-  weight?: number;
+  attributes?: Record<string, string>;
+  price?: number | string;
+  compareAtPrice?: number | string;
+  cost?: number | string;
+  weight?: number | string;
   weightUnit?: string;
-  dimensions?: ProductVariantDimensions;
+  dimensions?: string | ProductVariantDimensions;
   dimensionUnit?: string;
-
   imageUrl?: string;
   imageUrls?: string[];
   isActive?: boolean;
@@ -75,12 +72,12 @@ export interface ProductRequest {
   variants?: ProductVariantRequest[];
 }
 
-export interface Product extends ProductRequest {
+export interface Product extends Omit<ProductRequest, 'variants'> {
   id?: string;
   category?: ProductCategory;
   brand?: ProductBrand;
   variants?: ProductVariant[];
-  defaultVariant: ProductVariantRequest;
+  defaultVariant: ProductVariant;
   minPrice?: number;
   maxPrice?: number;
   createdAt?: string;

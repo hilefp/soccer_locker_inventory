@@ -11,6 +11,7 @@ import { Switch } from '@/shared/components/ui/switch';
 import { useClubProduct, useUpdateClubProduct } from '../hooks/use-club-products';
 import { useClub } from '../hooks/use-clubs';
 import { ProductFormImageUpload } from '@/modules/products/components/product-form-image-upload';
+import { TagMultiSelect } from '@/modules/tags/components/tag-multi-select';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { defaultFieldsMap } from '../services/club-products.service';
 import { CustomFields } from '../types';
@@ -30,6 +31,8 @@ export function EditClubProductPage() {
   const [isActive, setIsActive] = useState(true);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
 
+  const [tags, setTags] = useState<string[]>([]);
+
   const [playerName, setPlayerName] = useState(false);
   const [playerNumber, setPlayerNumber] = useState(false);
   const [coachName, setCoachName] = useState(false);
@@ -48,6 +51,7 @@ export function EditClubProductPage() {
       setCustomDescription(clubProduct.description || '');
       setIsActive(clubProduct.isActive);
       setImageUrls(clubProduct.imageUrls || []);
+      setTags(clubProduct.tags || []);
 
       setPlayerName(
         !!clubProduct.customFields?.some((field) => field.key === 'playerName')
@@ -105,11 +109,10 @@ export function EditClubProductPage() {
           description: customDescription || undefined,
           customFields: customFields,
           isActive,
-          imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
-
+          imageUrls,
+          tags,
         },
       });
-      navigate(`/clubs/${clubId}`);
     } catch (error) {
       console.error('Error updating club product:', error);
     }
@@ -324,6 +327,19 @@ export function EditClubProductPage() {
           </CardContent>
         </Card>
 
+        {/* Tags */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Tags</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TagMultiSelect selectedTags={tags} onTagsChange={setTags} />
+            <p className="text-xs text-muted-foreground mt-2">
+              Tags are used as filter tabs in the club shop (e.g., "FIELD PLAYERS", "GOALKEEPER")
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Active Status */}
         <Card>
           <CardHeader>
@@ -393,9 +409,9 @@ export function EditClubProductPage() {
 
             <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="isActive">Field Player Birthday</Label>
+                  <Label htmlFor="isActive">Field Player Birth Year</Label>
                   <p className="text-xs text-muted-foreground">
-                    Controls Show the field player birthday on the product
+                    Controls Show the field player birth year on the product
                   </p>
                 </div>
                 <Switch
@@ -448,16 +464,35 @@ export function EditClubProductPage() {
                   <Badge variant="outline">Custom</Badge>
                 )}
               </CardTitle>
-              {hasCustomImages && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setImageUrls(baseImageUrls)}
-                  className="h-6 text-xs"
-                >
-                  Reset to default
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {hasCustomImages && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const merged = [...imageUrls];
+                      for (const url of baseImageUrls) {
+                        if (!merged.includes(url)) merged.push(url);
+                      }
+                      setImageUrls(merged);
+                    }}
+                    className="h-6 text-xs"
+                    disabled={baseImageUrls.every((url) => imageUrls.includes(url))}
+                  >
+                    Include original images
+                  </Button>
+                )}
+                {hasCustomImages && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setImageUrls(baseImageUrls)}
+                    className="h-6 text-xs"
+                  >
+                    Reset to default
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-2">

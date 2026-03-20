@@ -39,10 +39,10 @@ export function DropdownMenu1({ trigger }: { trigger: ReactNode }) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
+          {/* <DropdownMenuSubTrigger>
             <Bell />
             <span>Notifications</span>
-          </DropdownMenuSubTrigger>
+          </DropdownMenuSubTrigger> */}
           <DropdownMenuSubContent className="w-[150px]">
             <DropdownMenuItem asChild>
               <Link to="#">

@@ -5,10 +5,12 @@ import {
   useCreateInventoryUser,
   useDeleteInventoryUser,
   useInventoryUser,
-  useInventoryUsers,
   useUpdateInventoryUser,
+  useUserRoles,
 } from '../hooks/use-inventory-users';
+import { useRoles, useAssignRole, useRemoveRole } from '../hooks/use-roles';
 import { UserStatus } from '../types';
+import { useAuthStore } from '@/shared/stores/auth-store';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
@@ -127,11 +129,21 @@ export function UserFormSheet({
   const [employeeId, setEmployeeId] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<UserStatus>(UserStatus.ACTIVE);
+  const [selectedRoleId, setSelectedRoleId] = useState<string>('');
+
+  // Auth store to check current user's role
+  const { user: currentUser } = useAuthStore();
+  const isSuperAdmin = currentUser?.roles?.includes('SUPER_ADMIN');
+  const isAdmin = isSuperAdmin || currentUser?.roles?.includes('ADMIN');
 
   // React Query hooks
   const { data: user, isLoading: isFetchingUser } = useInventoryUser(
     isEditMode ? userId : undefined,
   );
+  const { data: roles = [] } = useRoles();
+  const { data: userRoles = [] } = useUserRoles(isEditMode ? userId : undefined);
+  const assignRoleMutation = useAssignRole();
+  const removeRoleMutation = useRemoveRole();
   const createMutation = useCreateInventoryUser();
   const updateMutation = useUpdateInventoryUser();
   const deleteMutation = useDeleteInventoryUser();
@@ -139,7 +151,9 @@ export function UserFormSheet({
   const isLoading =
     createMutation.isPending ||
     updateMutation.isPending ||
-    deleteMutation.isPending;
+    deleteMutation.isPending ||
+    assignRoleMutation.isPending ||
+    removeRoleMutation.isPending;
 
   // Load user data when editing
   useEffect(() => {
@@ -147,9 +161,9 @@ export function UserFormSheet({
       return;
     }
 
-    setEmail(user.email);
-    setFirstName(user.firstName);
-    setLastName(user.lastName);
+    setEmail(user.email || '');
+    setFirstName(user.firstName || '');
+    setLastName(user.lastName || '');
     setPhone(user.phone || '');
     setPosition(user.position || '');
     setDepartment(user.department || '');
@@ -157,6 +171,13 @@ export function UserFormSheet({
     setAvatarUrl(user.avatarUrl || null);
     setStatus(user.status);
   }, [isEditMode, userId, open, user]);
+
+  // Pre-select current role when editing
+  useEffect(() => {
+    if (isEditMode && open && userRoles.length > 0) {
+      setSelectedRoleId(userRoles[0].roleId);
+    }
+  }, [isEditMode, open, userRoles]);
 
   // Reset form when closed
   useEffect(() => {
@@ -171,6 +192,7 @@ export function UserFormSheet({
       setEmployeeId('');
       setAvatarUrl(null);
       setStatus(UserStatus.ACTIVE);
+      setSelectedRoleId('');
     }
   }, [open]);
 
@@ -190,6 +212,11 @@ export function UserFormSheet({
       return;
     }
 
+    if (isEditMode && isSuperAdmin && password && password.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+
     const userData = {
       email: email.trim(),
       firstName: firstName.trim(),
@@ -201,11 +228,15 @@ export function UserFormSheet({
       avatarUrl: avatarUrl || undefined,
       status,
       ...(isNewMode && { password }),
+      ...(isEditMode && isSuperAdmin && password && { password }),
     };
 
     try {
+      let savedUserId = userId;
+
       if (isNewMode) {
-        await createMutation.mutateAsync(userData);
+        const newUser = await createMutation.mutateAsync(userData);
+        savedUserId = newUser.id;
         toast.success('User created successfully');
       } else if (userId) {
         await updateMutation.mutateAsync({
@@ -213,6 +244,29 @@ export function UserFormSheet({
           data: userData,
         });
         toast.success('User updated successfully');
+      }
+
+      // Assign role if selected and user is admin
+      if (isAdmin && selectedRoleId && savedUserId) {
+        const currentRoleId = userRoles[0]?.roleId;
+
+        if (currentRoleId && currentRoleId !== selectedRoleId) {
+          // Remove old role first, then assign new one
+          await removeRoleMutation.mutateAsync({
+            userId: savedUserId,
+            roleId: currentRoleId,
+          });
+          await assignRoleMutation.mutateAsync({
+            userId: savedUserId,
+            roleId: selectedRoleId,
+          });
+        } else if (!currentRoleId) {
+          // No existing role, just assign
+          await assignRoleMutation.mutateAsync({
+            userId: savedUserId,
+            roleId: selectedRoleId,
+          });
+        }
       }
 
       onSuccess?.();
@@ -280,7 +334,7 @@ export function UserFormSheet({
                 />
               </div>
 
-              {/* Password (only for new users) */}
+              {/* Password (required for new users, optional edit for superadmin) */}
               {isNewMode && (
                 <div className="space-y-2">
                   <Label className="text-xs font-medium">Password *</Label>
@@ -293,6 +347,22 @@ export function UserFormSheet({
                   />
                   <span className="text-xs text-muted-foreground">
                     Minimum 8 characters
+                  </span>
+                </div>
+              )}
+
+              {isEditMode && isSuperAdmin && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium">Password</Label>
+                  <Input
+                    type="password"
+                    placeholder="Leave blank to keep current"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading || isFetchingUser}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    Leave blank to keep current password
                   </span>
                 </div>
               )}
@@ -353,17 +423,6 @@ export function UserFormSheet({
                 />
               </div>
 
-              {/* Employee ID */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium">Employee ID</Label>
-                <Input
-                  placeholder="EMP-001"
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
-                  disabled={isLoading || isFetchingUser}
-                />
-              </div>
-
               {/* Status */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium">Status</Label>
@@ -387,6 +446,31 @@ export function UserFormSheet({
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Role (only visible to admins) */}
+              {isAdmin && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium">Role</Label>
+                  <Select
+                    value={selectedRoleId}
+                    onValueChange={setSelectedRoleId}
+                    disabled={isLoading || isFetchingUser}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles
+                        .filter((role) => role.isActive)
+                        .map((role) => (
+                          <SelectItem key={role.id} value={role.id}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </ScrollArea>
         </SheetBody>

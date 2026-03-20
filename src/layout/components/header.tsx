@@ -78,8 +78,8 @@ export function Header() {
 
         {/* HeaderTopbar */}
         <div className="flex items-center gap-3">
-          <SearchBar />
-          <NotificationsSheet
+          {/* <SearchBar /> */}
+          {/* <NotificationsSheet
             trigger={
               <Button
                 variant="ghost"
@@ -90,7 +90,7 @@ export function Header() {
                 <Bell className="size-4.5!" />
               </Button>
             }
-          />
+          /> */}
           
           <UserDropdownMenu />
         </div>

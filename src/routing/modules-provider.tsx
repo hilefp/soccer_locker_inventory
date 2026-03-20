@@ -37,6 +37,7 @@ import { dashboardRoutes } from '@/modules/dashboard/route';
 import { reportsRoutes } from '@/modules/reports/routes';
 import { shopRoutes } from '@/modules/shop/routes';
 import { ordersRoutes } from '@/modules/orders/routes';
+import { tagsRoutes } from '@/modules/tags/routes';
 
 export function ModulesProvider() {
   return (
@@ -53,15 +54,31 @@ export function ModulesProvider() {
               {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>
                 <Route element={<DefaultLayout />}>
-                  <Route path="products/*" element={<RenderRouteTree route={productsRoutes} />} />
-                  <Route path="inventory/*" element={<RenderRouteTree route={inventoryRoutes} />} />
-                  <Route path="settings/*" element={<RenderRouteTree route={settingsRoutes} />} />
-                  <Route path="clubs/*" element={<RenderRouteTree route={clubsRoutes} />} />
+                  <Route element={<ProtectedRoute allowedPermissions={['products:read']} />}>
+                    <Route path="products/*" element={<RenderRouteTree route={productsRoutes} />} />
+                  </Route>
+                  <Route element={<ProtectedRoute allowedPermissions={['stock:read']} />}>
+                    <Route path="inventory/*" element={<RenderRouteTree route={inventoryRoutes} />} />
+                  </Route>
+                  <Route element={<ProtectedRoute allowedPermissions={['users:manage']} />}>
+                    <Route path="settings/*" element={<RenderRouteTree route={settingsRoutes} />} />
+                  </Route>
+                  <Route element={<ProtectedRoute allowedPermissions={['clubs:read']} />}>
+                    <Route path="clubs/*" element={<RenderRouteTree route={clubsRoutes} />} />
+                  </Route>
+                  <Route element={<ProtectedRoute allowedPermissions={['tags:read']} />}>
+                    <Route path="tags/*" element={<RenderRouteTree route={tagsRoutes} />} />
+                  </Route>
                   <Route path="dashboard/*" element={<RenderRouteTree route={dashboardRoutes} />} />
-                  <Route path="reports/*" element={<RenderRouteTree route={reportsRoutes} />} />
-                  <Route path="shop/*" element={<RenderRouteTree route={shopRoutes} />} />
-                  <Route path="orders/*" element={<RenderRouteTree route={ordersRoutes} />} />
-                
+                  <Route element={<ProtectedRoute allowedPermissions={['reports:read']} />}>
+                    <Route path="reports/*" element={<RenderRouteTree route={reportsRoutes} />} />
+                  </Route>
+                  <Route element={<ProtectedRoute allowedPermissions={['users:read']} />}>
+                    <Route path="shop/*" element={<RenderRouteTree route={shopRoutes} />} />
+                  </Route>
+                  <Route element={<ProtectedRoute allowedPermissions={['orders:read']} />}>
+                    <Route path="orders/*" element={<RenderRouteTree route={ordersRoutes} />} />
+                  </Route>
                 </Route>
               </Route>
             </Routes>

@@ -12,10 +12,12 @@ import {
   SquareCode,
   UserCircle,
   Users,
+  User,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Link } from 'react-router';
 import { toAbsoluteUrl } from '@/shared/lib/helpers';
+import { useAuthStore } from '@/shared/stores/auth-store';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -62,10 +64,17 @@ const I18N_LANGUAGES = [
 export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
   const currenLanguage = I18N_LANGUAGES[0];
   const { theme, setTheme } = useTheme();
+  const { user, logout } = useAuthStore();
 
   const handleThemeToggle = (checked: boolean) => {
     setTheme(checked ? 'dark' : 'light');
   };
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const fullName = user ? `${user.firstName} ${user.lastName}`.trim() : 'User';
 
   return (
     <DropdownMenu>
@@ -74,28 +83,34 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
         {/* Header */}
         <div className="flex items-center justify-between p-3">
           <div className="flex items-center gap-2">
-            <img
-              className="size-9 rounded-full border-2 border-green-500"
-              src={toAbsoluteUrl('/media/avatars/300-2.png')}
-              alt="User avatar"
-            />
+            {user?.avatarUrl ? (
+              <img
+                className="size-9 rounded-full border-2 border-green-500"
+                src={user.avatarUrl}
+                alt={fullName}
+              />
+            ) : (
+              <div className="size-9 rounded-full border-2 border-green-500 bg-accent flex items-center justify-center">
+                <User className="size-5 text-muted-foreground" />
+              </div>
+            )}
             <div className="flex flex-col">
               <Link
-                to="#"
+                to="/settings/profile"
                 className="text-sm text-mono hover:text-primary font-semibold"
               >
-                Sean
+                {fullName}
               </Link>
               <a
-                href={`mailto:sean@kt.com`}
+                href={`mailto:${user?.email || ''}`}
                 className="text-xs text-muted-foreground hover:text-primary"
               >
-                sean@kt.com
+                {user?.email || 'N/A'}
               </a>
             </div>
           </div>
           <Badge variant="primary" appearance="light" size="sm">
-            Pro
+            {user?.status || 'N/A'}
           </Badge>
         </div>
 
@@ -109,7 +124,7 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="#" className="flex items-center gap-2">
+          <Link to="/settings/profile" className="flex items-center gap-2">
             <UserCircle />
             My Profile
           </Link>
@@ -129,7 +144,7 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="#" className="flex items-center gap-2">
+              <Link to="/settings/profile" className="flex items-center gap-2">
                 <FileText />
                 My Profile
               </Link>
@@ -228,7 +243,7 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
           </div>
         </DropdownMenuItem>
         <div className="p-2 mt-1">
-          <Button variant="outline" size="sm" className="w-full">
+          <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
             Logout
           </Button>
         </div>

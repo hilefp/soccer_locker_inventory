@@ -14,7 +14,14 @@ export interface ClubProduct {
   imageUrls?: string[]; // Override product images
 
   // Club-specific fields
+  tags?: string[];
   isActive: boolean;
+
+  // Grouping fields
+  groupId?: string | null;
+  isGroupPrimary?: boolean;
+  packagePrice?: number | null;
+  packageDescription?: string | null;
 
   // Timestamps
   createdAt: string;
@@ -33,6 +40,9 @@ export interface CreateClubProductDto {
   description?: string;
   imageUrls?: string[];
   isActive?: boolean;
+  tags?: string[];
+  groupId?: string;
+  isGroupPrimary?: boolean;
 }
 
 // DTO for updating club products
@@ -43,6 +53,39 @@ export interface UpdateClubProductDto {
   imageUrls?: string[];
   isActive?: boolean;
   customFields?: CustomFields[];
+  tags?: string[];
+  groupId?: string;
+  isGroupPrimary?: boolean;
+}
+
+// DTO for grouping club products
+export interface GroupClubProductsDto {
+  clubProductIds: string[];
+  primaryClubProductId: string;
+  packageName?: string;
+  packagePrice?: number;
+  packageDescription?: string;
+}
+
+// DTO for updating a group
+export interface UpdateGroupDto {
+  addClubProductIds?: string[];
+  removeClubProductIds?: string[];
+  primaryClubProductId?: string;
+  packageName?: string;
+  packagePrice?: number;
+  packageDescription?: string;
+}
+
+// Group response from the API
+export interface ClubProductGroup {
+  groupId: string;
+  packageName?: string | null;
+  packageDescription?: string | null;
+  packagePrice?: number | null;
+  memberCount?: number;
+  primary: ClubProduct;
+  members: ClubProduct[];
 }
 
 // DTO for bulk adding products

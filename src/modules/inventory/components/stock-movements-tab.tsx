@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
-import { TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
+import { Button } from '@/shared/components/ui/button';
+import { TrendingUp, TrendingDown, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { StockMovement, MovementType } from '../types/stock-variant-detail.types';
 
 interface StockMovementsTabProps {
@@ -9,11 +11,18 @@ interface StockMovementsTabProps {
   recentMovementsShown: number;
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export function StockMovementsTab({
   movements,
   totalMovements,
   recentMovementsShown,
 }: StockMovementsTabProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(movements.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedMovements = movements.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   const getMovementIcon = (type: MovementType) => {
     switch (type) {
       case MovementType.ENTRY:
@@ -60,7 +69,7 @@ export function StockMovementsTab({
 
   return (
     <div className="space-y-3">
-      {movements.map((movement) => (
+      {paginatedMovements.map((movement) => (
         <Card key={movement.id}>
           <CardContent className="pt-6">
             <div className="flex items-start justify-between gap-4">
@@ -80,12 +89,32 @@ export function StockMovementsTab({
                   </div>
 
                   <div className="text-base space-y-1.5">
-                    <div className="flex items-center gap-4">
-                      <span className="text-muted-foreground">Quantity:</span>
-                      <span className={`font-bold text-lg ${movement.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {movement.quantity > 0 ? '+' : ''}{movement.quantity}
-                      </span>
-                    </div>
+                    {movement.movementType === MovementType.ADJUSTMENT && movement.notes ? (() => {
+                      const reservedMatch = movement.notes.match(/Reserved\s+(\d+)\s+unit/i);
+                      const reservedQty = reservedMatch ? parseInt(reservedMatch[1], 10) : null;
+                      return reservedQty !== null ? (
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground">Reserved:</span>
+                          <span className="font-bold text-lg text-amber-600">
+                            {reservedQty}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground">Quantity:</span>
+                          <span className={`font-bold text-lg ${movement.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {movement.quantity > 0 ? '+' : ''}{movement.quantity}
+                          </span>
+                        </div>
+                      );
+                    })() : (
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground">Quantity:</span>
+                        <span className={`font-bold text-lg ${movement.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {movement.quantity > 0 ? '+' : ''}{movement.quantity}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-4">
                       <span className="text-muted-foreground">Stock:</span>
                       <span className="font-semibold text-base">
@@ -122,11 +151,39 @@ export function StockMovementsTab({
         </Card>
       ))}
 
-      {totalMovements > recentMovementsShown && (
-        <p className="text-center text-sm text-muted-foreground pt-2">
-          Showing {recentMovementsShown} of {totalMovements} total movements
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between pt-3">
+        <p className="text-sm text-muted-foreground">
+          Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, movements.length)} of{' '}
+          {movements.length} movements
+          {totalMovements > recentMovementsShown && (
+            <span> ({totalMovements} total)</span>
+          )}
         </p>
-      )}
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <span className="text-sm text-muted-foreground min-w-[80px] text-center">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

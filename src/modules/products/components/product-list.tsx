@@ -75,6 +75,7 @@ export interface IData {
     tooltip: string;
   };
   category: string;
+  brand: string;
   price: string;
   status: {
     label: string;
@@ -121,10 +122,11 @@ const convertProductToIData = (product: Product): IData => {
     productInfo: {
       image: product.imageUrl || '', // Empty string instead of hardcoded fallback
       title: product.name,
-      label: product.slug,
+      label: product.defaultVariant?.sku || product.sku,
       tooltip: product.model || product.name,
     },
     category: product.category?.name || 'Uncategorized',
+    brand: product.brand?.name || 'N/A',
     price: priceDisplay,
     status: {
       label: product.isActive ? 'Live' : 'Draft',
@@ -303,6 +305,23 @@ export function ProductListTable({
         },
       },
       {
+        id: 'brand',
+        accessorFn: (row) => row.brand,
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Brand" column={column} />
+        ),
+        cell: (info) => {
+          return (
+            <div>{info.row.original.brand}</div>
+          );
+        },
+        enableSorting: true,
+        size: 110,
+        meta: {
+          cellClassName: '',
+        },
+      },
+      {
         id: 'price',
         accessorFn: (row) => row.price,
         header: ({ column }) => (
@@ -357,21 +376,21 @@ export function ProductListTable({
           cellClassName: '',
         },
       },
-      {
-        id: 'updated',
-        accessorFn: (row) => row.updated,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Updated" column={column} />
-        ),
-        cell: (info) => {
-          return formatDate(new Date(info.row.original.updated));
-        },
-        enableSorting: true,
-        size: 120,
-        meta: {
-          cellClassName: '',
-        },
-      },
+      // {
+      //   id: 'updated',
+      //   accessorFn: (row) => row.updated,
+      //   header: ({ column }) => (
+      //     <DataGridColumnHeader title="Updated" column={column} />
+      //   ),
+      //   cell: (info) => {
+      //     return formatDate(new Date(info.row.original.updated));
+      //   },
+      //   enableSorting: true,
+      //   size: 120,
+      //   meta: {
+      //     cellClassName: '',
+      //   },
+      // },
       {
         id: 'actions',
         header: () => '',
@@ -431,8 +450,8 @@ export function ProductListTable({
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter((item) =>
-        item.productInfo.title.toLowerCase().includes(query) ||
-        item.productInfo.label.toLowerCase().includes(query),
+        item.productInfo.title?.toLowerCase()?.includes(query) ||
+        item.productInfo.label?.toLowerCase()?.includes(query),
       );
     }
 

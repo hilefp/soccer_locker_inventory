@@ -1,7 +1,19 @@
 export interface User {
   id: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string | null;
+  position?: string | null;
+  department?: string | null;
+  employeeId?: string | null;
+  avatarUrl?: string | null;
+  status?: string;
   roles: string[];
+  permissions: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  lastLoginAt?: string | null;
 }
 
 export interface LoginRequest {

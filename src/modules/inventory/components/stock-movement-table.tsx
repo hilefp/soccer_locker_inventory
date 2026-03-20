@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useStockMovements } from '@/modules/inventory/hooks/use-stock-movements';
 import { useWarehouses } from '@/modules/inventory/hooks/use-warehouses';
 import { useProducts } from '@/modules/products/hooks/use-products';
+import { useOrders } from '@/modules/orders/hooks/use-orders';
 import {
   StockMovementItem,
   MovementType,
@@ -55,6 +56,7 @@ interface IData {
   reference: {
     type: string | null;
     id: string | null;
+    orderNumber?: string;
   };
   userName: string;
   notes: string | null;
@@ -72,13 +74,13 @@ interface StockMovementTableProps {
 // Helper function to get movement type display info
 const getMovementTypeInfo = (type: MovementType) => {
   const configs = {
-    [MovementType.PURCHASE]: {
-      label: 'Purchase',
+    [MovementType.ENTRY]: {
+      label: 'Entry',
       variant: 'success',
       icon: <ArrowDownLeft className="h-3.5 w-3.5" />,
     },
-    [MovementType.SALE]: {
-      label: 'Sale',
+    [MovementType.EXIT]: {
+      label: 'Exit',
       variant: 'destructive',
       icon: <ArrowUpRight className="h-3.5 w-3.5" />,
     },
@@ -102,13 +104,13 @@ const getMovementTypeInfo = (type: MovementType) => {
       variant: 'primary',
       icon: <ArrowDownLeft className="h-3.5 w-3.5" />,
     },
-    [MovementType.RESERVATION]: {
-      label: 'Reservation',
-      variant: 'outline',
+    [MovementType.DAMAGE]: {
+      label: 'Damage',
+      variant: 'destructive',
       icon: <FileText className="h-3.5 w-3.5" />,
     },
-    [MovementType.RELEASE]: {
-      label: 'Release',
+    [MovementType.LOSS]: {
+      label: 'Loss',
       variant: 'outline',
       icon: <FileText className="h-3.5 w-3.5" />,
     },
@@ -181,6 +183,7 @@ export function StockMovementTable({
   // Fetch related data for enrichment
   const { data: warehouses } = useWarehouses();
   const { data: products } = useProducts();
+  const { data: ordersResponse } = useOrders({ limit: 1000 });
 
   // Build lookup maps for efficient data enrichment
   const warehouseMap = useMemo(() => {
@@ -212,6 +215,11 @@ export function StockMovementTable({
     return map;
   }, [products]);
 
+  const orderNumberMap = useMemo(() => {
+    if (!ordersResponse?.data) return new Map<string, string>();
+    return new Map(ordersResponse.data.map((o) => [o.id, o.orderNumber]));
+  }, [ordersResponse]);
+
   const data = useMemo(() => {
     if (!stockMovements || stockMovements.length === 0) return [];
 
@@ -226,9 +234,13 @@ export function StockMovementTable({
         warehouseName: movement.warehouseName || warehouseMap.get(movement.warehouseId),
       };
 
-      return convertStockMovementToIData(enrichedMovement);
+      const iData = convertStockMovementToIData(enrichedMovement);
+      if (enrichedMovement.referenceType === 'SALE_ORDER' && enrichedMovement.referenceId) {
+        iData.reference.orderNumber = orderNumberMap.get(enrichedMovement.referenceId);
+      }
+      return iData;
     });
-  }, [stockMovements, variantMap, warehouseMap]);
+  }, [stockMovements, variantMap, warehouseMap, orderNumberMap]);
 
   const columns = useMemo<ColumnDef<IData>[]>(
     () => [
@@ -252,11 +264,15 @@ export function StockMovementTable({
           <DataGridColumnHeader title="Date" column={column} />
         ),
         cell: (info) => {
-          const date = new Date(info.getValue() as string);
+          const dateStr = info.getValue() as string;
+          const [datePart] = dateStr.split('T');
+          const [year, month, day] = datePart.split('-').map(Number);
+          const localDate = new Date(year, month - 1, day);
+          const date = new Date(dateStr);
           return (
             <div className="flex flex-col gap-0.5">
               <span className="text-sm font-medium">
-                {date.toLocaleDateString()}
+                {localDate.toLocaleDateString()}
               </span>
               <span className="text-xs text-muted-foreground">
                 {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -368,10 +384,10 @@ export function StockMovementTable({
           return (
             <div className="flex flex-col gap-0.5">
               <span className="text-xs text-muted-foreground">
-                {reference.type}
+                {reference.type === 'SALE_ORDER' ? 'Order' : reference.type}
               </span>
               <span className="text-sm font-mono">
-                {reference.id.substring(0, 8)}...
+                {reference.orderNumber || `${reference.id!.substring(0, 8)}...`}
               </span>
             </div>
           );
@@ -386,7 +402,7 @@ export function StockMovementTable({
           <DataGridColumnHeader title="User" column={column} />
         ),
         cell: (info) => (
-          <span className="text-sm">
+          <span className="text-sm block truncate max-w-[120px]" title={info.getValue() as string}>
             {info.getValue() as string}
           </span>
         ),
@@ -401,14 +417,15 @@ export function StockMovementTable({
         ),
         cell: (info) => {
           const notes = info.getValue() as string | null;
+          if (!notes) return <span className="text-sm text-muted-foreground">-</span>;
           return (
-            <span className="text-sm text-muted-foreground truncate max-w-[200px]">
-              {notes || '-'}
+            <span className="text-sm text-muted-foreground block truncate max-w-[250px]" title={notes}>
+              {notes}
             </span>
           );
         },
         enableSorting: false,
-        size: 200,
+        size: 250,
       },
       {
         id: 'actions',
