@@ -46,12 +46,13 @@ interface ProductFormVariantsProps {
   productId?: string | null; // Product ID for generating variations
   variants?: ProductVariant[];
   onVariantsChange?: (variants: ProductVariant[]) => void;
+  cost?: number;
 }
 
 export function ProductFormVariants({
   productId,
   variants: externalVariants = [],
-  onVariantsChange
+  onVariantsChange,
 }: ProductFormVariantsProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();

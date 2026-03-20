@@ -110,6 +110,7 @@ export function ProductFormPage() {
       description: description || undefined,
       sku: sku,
       price: parseFloat(price.toString()),
+      cost: parseFloat(cost.toString()),
       categoryId: categoryId || undefined,
       brandId: brandId || undefined,
       isActive: status === 'published',
@@ -142,6 +143,7 @@ export function ProductFormPage() {
       description: description || undefined,
       sku: sku,
       price: parseFloat(price.toString()),
+      cost: parseFloat(cost.toString()),
       categoryId: categoryId || undefined,
       brandId: brandId || undefined,
       isActive: status === 'published',
@@ -351,6 +353,7 @@ export function ProductFormPage() {
               mode="edit"
               variants={variants}
               onVariantsChange={setVariants}
+              cost={cost}
             />
 
             {/* Step 2 Actions */}
@@ -426,6 +429,7 @@ export function ProductFormPage() {
               mode="edit"
               variants={variants}
               onVariantsChange={setVariants}
+              cost={cost}
             />
           )}
         </div>

@@ -69,6 +69,7 @@ export interface ProductRequest {
   isFeatured?: boolean;
   sku?: string;
   price?: number;
+  cost?: number;
   variants?: ProductVariantRequest[];
 }
 
