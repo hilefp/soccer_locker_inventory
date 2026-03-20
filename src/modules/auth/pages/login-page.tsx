@@ -94,7 +94,7 @@ export function LoginPage() {
         email: values.email,
         password: values.password,
       });
-      // Navigation is handled by useAuth hook
+      // Navigation is handled by useAuth hook 
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
       setError(errorMessage);
