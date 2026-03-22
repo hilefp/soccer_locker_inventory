@@ -40,6 +40,15 @@ export function EditClubProductSheet({
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
 
+  const [playerName, setPlayerName] = useState(false);
+  const [playerNameRequired, setPlayerNameRequired] = useState(true);
+  const [playerNumber, setPlayerNumber] = useState(false);
+  const [playerNumberRequired, setPlayerNumberRequired] = useState(true);
+  const [coachName, setCoachName] = useState(false);
+  const [coachNameRequired, setCoachNameRequired] = useState(true);
+  const [playerBirthday, setPlayerBirthday] = useState(false);
+  const [playerBirthdayRequired, setPlayerBirthdayRequired] = useState(true);
+
   const updateMutation = useUpdateClubProduct(clubId);
 
   // Reset form when clubProduct changes
@@ -51,11 +60,33 @@ export function EditClubProductSheet({
       setIsActive(clubProduct.isActive);
       setImageUrls(clubProduct.imageUrls || []);
       setTags(clubProduct.tags || []);
+
+      const pnField = clubProduct.customFields?.find((f) => f.key === 'playerName');
+      setPlayerName(!!pnField);
+      setPlayerNameRequired(pnField?.required ?? true);
+
+      const pnumField = clubProduct.customFields?.find((f) => f.key === 'playerNumber');
+      setPlayerNumber(!!pnumField);
+      setPlayerNumberRequired(pnumField?.required ?? true);
+
+      const cnField = clubProduct.customFields?.find((f) => f.key === 'coachName');
+      setCoachName(!!cnField);
+      setCoachNameRequired(cnField?.required ?? true);
+
+      const pbField = clubProduct.customFields?.find((f) => f.key === 'playerBirthday');
+      setPlayerBirthday(!!pbField);
+      setPlayerBirthdayRequired(pbField?.required ?? true);
     }
   }, [clubProduct]);
 
   const handleSave = async () => {
     if (!clubProduct) return;
+
+    const defaultFieldKeys: { key: string; required: boolean }[] = [];
+    if (playerName) defaultFieldKeys.push({ key: 'playerName', required: playerNameRequired });
+    if (playerNumber) defaultFieldKeys.push({ key: 'playerNumber', required: playerNumberRequired });
+    if (coachName) defaultFieldKeys.push({ key: 'coachName', required: coachNameRequired });
+    if (playerBirthday) defaultFieldKeys.push({ key: 'playerBirthday', required: playerBirthdayRequired });
 
     try {
       await updateMutation.mutateAsync({
@@ -64,6 +95,7 @@ export function EditClubProductSheet({
           name: customName || undefined,
           price: customPrice || undefined,
           description: customDescription || undefined,
+          defaultFieldKeys,
           isActive,
           imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
           tags,
@@ -231,18 +263,146 @@ export function EditClubProductSheet({
               </div>
 
               {/* Active Status */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="isActive">Active Status</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Controls whether this product is visible for this club
-                  </p>
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Active Status</Label>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="isActive">Visibility</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Controls whether this product is visible for this club
+                    </p>
+                  </div>
+                  <Switch
+                    id="isActive"
+                    checked={isActive}
+                    onCheckedChange={setIsActive}
+                  />
                 </div>
-                <Switch
-                  id="isActive"
-                  checked={isActive}
-                  onCheckedChange={setIsActive}
-                />
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sheetPlayerName">Field Player Name</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Controls Show the field player name on the product
+                      </p>
+                    </div>
+                    <Switch
+                      id="sheetPlayerName"
+                      checked={playerName}
+                      onCheckedChange={setPlayerName}
+                    />
+                  </div>
+                  {playerName && (
+                    <div className="flex items-center justify-between pl-4 border-l-2 border-muted">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="sheetPlayerNameReq" className="text-sm">Required</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {playerNameRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="sheetPlayerNameReq"
+                        checked={playerNameRequired}
+                        onCheckedChange={setPlayerNameRequired}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sheetPlayerNumber">Field Player Number</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Controls Show the field player number on the product
+                      </p>
+                    </div>
+                    <Switch
+                      id="sheetPlayerNumber"
+                      checked={playerNumber}
+                      onCheckedChange={setPlayerNumber}
+                    />
+                  </div>
+                  {playerNumber && (
+                    <div className="flex items-center justify-between pl-4 border-l-2 border-muted">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="sheetPlayerNumberReq" className="text-sm">Required</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {playerNumberRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="sheetPlayerNumberReq"
+                        checked={playerNumberRequired}
+                        onCheckedChange={setPlayerNumberRequired}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sheetCoachName">Field Coach Name</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Controls Show the field coach name on the product
+                      </p>
+                    </div>
+                    <Switch
+                      id="sheetCoachName"
+                      checked={coachName}
+                      onCheckedChange={setCoachName}
+                    />
+                  </div>
+                  {coachName && (
+                    <div className="flex items-center justify-between pl-4 border-l-2 border-muted">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="sheetCoachNameReq" className="text-sm">Required</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {coachNameRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="sheetCoachNameReq"
+                        checked={coachNameRequired}
+                        onCheckedChange={setCoachNameRequired}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sheetPlayerBirthday">Field Player Birth Year</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Controls Show the field player birth year on the product
+                      </p>
+                    </div>
+                    <Switch
+                      id="sheetPlayerBirthday"
+                      checked={playerBirthday}
+                      onCheckedChange={setPlayerBirthday}
+                    />
+                  </div>
+                  {playerBirthday && (
+                    <div className="flex items-center justify-between pl-4 border-l-2 border-muted">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="sheetPlayerBirthdayReq" className="text-sm">Required</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {playerBirthdayRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="sheetPlayerBirthdayReq"
+                        checked={playerBirthdayRequired}
+                        onCheckedChange={setPlayerBirthdayRequired}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Images */}
