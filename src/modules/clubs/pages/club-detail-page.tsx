@@ -24,7 +24,7 @@ export function ClubDetailPage() {
 
   // Fetch club products
   const { data: clubProductsResponse, isLoading: productsLoading } =
-    useClubProducts(clubId);
+    useClubProducts(clubId, { limit: 100 });
   const clubProducts = clubProductsResponse?.data || [];
 
   // Fetch product stats
