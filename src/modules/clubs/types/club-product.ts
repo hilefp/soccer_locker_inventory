@@ -45,6 +45,12 @@ export interface CreateClubProductDto {
   isGroupPrimary?: boolean;
 }
 
+// DTO for default field key with required flag
+export interface DefaultFieldKeyDto {
+  key: string;
+  required?: boolean;
+}
+
 // DTO for updating club products
 export interface UpdateClubProductDto {
   name?: string;
@@ -53,6 +59,7 @@ export interface UpdateClubProductDto {
   imageUrls?: string[];
   isActive?: boolean;
   customFields?: CustomFields[];
+  defaultFieldKeys?: DefaultFieldKeyDto[];
   tags?: string[];
   groupId?: string;
   isGroupPrimary?: boolean;
