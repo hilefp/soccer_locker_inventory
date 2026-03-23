@@ -37,8 +37,8 @@ export function EditClubProductPage() {
   const [playerNumberRequired, setPlayerNumberRequired] = useState(true);
   const [coachName, setCoachName] = useState(false);
   const [coachNameRequired, setCoachNameRequired] = useState(true);
-  const [playerBirthday, setPlayerBirthday] = useState(false);
-  const [playerBirthdayRequired, setPlayerBirthdayRequired] = useState(true);
+  const [playerBirthYear, setPlayerBirthday] = useState(false);
+  const [playerBirthYearRequired, setPlayerBirthdayRequired] = useState(true);
   const [locationBase, setLocationBase] = useState(false);
   const [locationBaseRequired, setLocationBaseRequired] = useState(true);
   const [locationOpaLocka, setLocationOpaLocka] = useState(false);
@@ -71,9 +71,9 @@ export function EditClubProductPage() {
       setCoachName(!!coachNameField);
       setCoachNameRequired(coachNameField?.required ?? true);
 
-      const playerBirthdayField = clubProduct.customFields?.find((field) => field.key === 'playerBirthday');
-      setPlayerBirthday(!!playerBirthdayField);
-      setPlayerBirthdayRequired(playerBirthdayField?.required ?? true);
+      const playerBirthYearField = clubProduct.customFields?.find((field) => field.key === 'playerBirthYear');
+      setPlayerBirthday(!!playerBirthYearField);
+      setPlayerBirthdayRequired(playerBirthYearField?.required ?? true);
 
       const locationBaseField = clubProduct.customFields?.find((field) => field.key === 'locationBase');
       setLocationBase(!!locationBaseField);
@@ -92,7 +92,7 @@ export function EditClubProductPage() {
     if (playerName) defaultFieldKeys.push({ key: 'playerName', required: playerNameRequired });
     if (playerNumber) defaultFieldKeys.push({ key: 'playerNumber', required: playerNumberRequired });
     if (coachName) defaultFieldKeys.push({ key: 'coachName', required: coachNameRequired });
-    if (playerBirthday) defaultFieldKeys.push({ key: 'playerBirthday', required: playerBirthdayRequired });
+    if (playerBirthYear) defaultFieldKeys.push({ key: 'playerBirthYear', required: playerBirthYearRequired });
     if (locationBase) defaultFieldKeys.push({ key: 'locationBase', required: locationBaseRequired });
     if (locationOpaLocka) defaultFieldKeys.push({ key: 'locationOpaLocka', required: locationOpaLockaRequired });
 
@@ -452,28 +452,28 @@ export function EditClubProductPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="playerBirthday">Field Player Birth Year</Label>
+                  <Label htmlFor="playerBirthYear">Field Player Birth Year</Label>
                   <p className="text-xs text-muted-foreground">
                     Controls Show the field player birth year on the product
                   </p>
                 </div>
                 <Switch
-                  id="playerBirthday"
-                  checked={playerBirthday}
+                  id="playerBirthYear"
+                  checked={playerBirthYear}
                   onCheckedChange={setPlayerBirthday}
                 />
               </div>
-              {playerBirthday && (
+              {playerBirthYear && (
                 <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
                   <div className="space-y-0.5">
-                    <Label htmlFor="playerBirthdayRequired" className="text-sm font-medium text-primary/80">Required</Label>
+                    <Label htmlFor="playerBirthYearRequired" className="text-sm font-medium text-primary/80">Required</Label>
                     <p className="text-xs text-muted-foreground">
-                      {playerBirthdayRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                      {playerBirthYearRequired ? 'Customer must fill this field' : 'Optional for the customer'}
                     </p>
                   </div>
                   <Switch
-                    id="playerBirthdayRequired"
-                    checked={playerBirthdayRequired}
+                    id="playerBirthYearRequired"
+                    checked={playerBirthYearRequired}
                     onCheckedChange={setPlayerBirthdayRequired}
                   />
                 </div>
