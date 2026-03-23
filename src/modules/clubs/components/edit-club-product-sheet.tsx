@@ -46,8 +46,8 @@ export function EditClubProductSheet({
   const [playerNumberRequired, setPlayerNumberRequired] = useState(true);
   const [coachName, setCoachName] = useState(false);
   const [coachNameRequired, setCoachNameRequired] = useState(true);
-  const [playerBirthday, setPlayerBirthday] = useState(false);
-  const [playerBirthdayRequired, setPlayerBirthdayRequired] = useState(true);
+  const [playerBirthYear, setPlayerBirthday] = useState(false);
+  const [playerBirthYearRequired, setPlayerBirthdayRequired] = useState(true);
   const [locationBase, setLocationBase] = useState(false);
   const [locationBaseRequired, setLocationBaseRequired] = useState(true);
   const [locationOpaLocka, setLocationOpaLocka] = useState(false);
@@ -77,7 +77,7 @@ export function EditClubProductSheet({
       setCoachName(!!cnField);
       setCoachNameRequired(cnField?.required ?? true);
 
-      const pbField = clubProduct.customFields?.find((f) => f.key === 'playerBirthday');
+      const pbField = clubProduct.customFields?.find((f) => f.key === 'playerBirthYear');
       setPlayerBirthday(!!pbField);
       setPlayerBirthdayRequired(pbField?.required ?? true);
 
@@ -98,7 +98,7 @@ export function EditClubProductSheet({
     if (playerName) defaultFieldKeys.push({ key: 'playerName', required: playerNameRequired });
     if (playerNumber) defaultFieldKeys.push({ key: 'playerNumber', required: playerNumberRequired });
     if (coachName) defaultFieldKeys.push({ key: 'coachName', required: coachNameRequired });
-    if (playerBirthday) defaultFieldKeys.push({ key: 'playerBirthday', required: playerBirthdayRequired });
+    if (playerBirthYear) defaultFieldKeys.push({ key: 'playerBirthYear', required: playerBirthYearRequired });
     if (locationBase) defaultFieldKeys.push({ key: 'locationBase', required: locationBaseRequired });
     if (locationOpaLocka) defaultFieldKeys.push({ key: 'locationOpaLocka', required: locationOpaLockaRequired });
 
@@ -390,28 +390,28 @@ export function EditClubProductSheet({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="sheetPlayerBirthday">Field Player Birth Year</Label>
+                      <Label htmlFor="sheetPlayerBirthYear">Field Player Birth Year</Label>
                       <p className="text-xs text-muted-foreground">
                         Controls Show the field player birth year on the product
                       </p>
                     </div>
                     <Switch
-                      id="sheetPlayerBirthday"
-                      checked={playerBirthday}
+                      id="sheetPlayerBirthYear"
+                      checked={playerBirthYear}
                       onCheckedChange={setPlayerBirthday}
                     />
                   </div>
-                  {playerBirthday && (
+                  {playerBirthYear && (
                     <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
                       <div className="space-y-0.5">
-                        <Label htmlFor="sheetPlayerBirthdayReq" className="text-sm font-medium text-primary/80">Required</Label>
+                        <Label htmlFor="sheetPlayerBirthYearReq" className="text-sm font-medium text-primary/80">Required</Label>
                         <p className="text-xs text-muted-foreground">
-                          {playerBirthdayRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                          {playerBirthYearRequired ? 'Customer must fill this field' : 'Optional for the customer'}
                         </p>
                       </div>
                       <Switch
-                        id="sheetPlayerBirthdayReq"
-                        checked={playerBirthdayRequired}
+                        id="sheetPlayerBirthYearReq"
+                        checked={playerBirthYearRequired}
                         onCheckedChange={setPlayerBirthdayRequired}
                       />
                     </div>

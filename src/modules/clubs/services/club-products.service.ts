@@ -28,10 +28,10 @@ export const defaultFields: CustomFields[] = [
     placeholder: "",
   },
   {
-    key: "playerBirthday",
+    key: "playerBirthYear",
     type: "date",
     required: true,
-    label: "Player birthday",
+    label: "Player birth year",
     placeholder: "",
   },
   {
