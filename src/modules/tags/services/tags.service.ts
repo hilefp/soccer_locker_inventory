@@ -1,5 +1,5 @@
 import { apiClient } from '@/shared/lib/api-client';
-import type { Tag, CreateTagDto, UpdateTagDto } from '../types/tag';
+import type { Tag, CreateTagDto, UpdateTagDto, ReorderTagsDto } from '../types/tag';
 
 const BASE_URL = '/inventory/tags';
 
@@ -27,5 +27,10 @@ export const tagsService = {
 
   async delete(id: string): Promise<void> {
     await apiClient.delete(`${BASE_URL}/${id}`);
+  },
+
+  async reorder(data: ReorderTagsDto): Promise<Tag[]> {
+    const response = await apiClient.patch<Tag[]>(`${BASE_URL}/reorder`, data);
+    return response.data;
   },
 };
