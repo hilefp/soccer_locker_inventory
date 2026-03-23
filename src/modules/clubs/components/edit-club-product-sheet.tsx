@@ -48,6 +48,10 @@ export function EditClubProductSheet({
   const [coachNameRequired, setCoachNameRequired] = useState(true);
   const [playerBirthday, setPlayerBirthday] = useState(false);
   const [playerBirthdayRequired, setPlayerBirthdayRequired] = useState(true);
+  const [locationBase, setLocationBase] = useState(false);
+  const [locationBaseRequired, setLocationBaseRequired] = useState(true);
+  const [locationOpaLocka, setLocationOpaLocka] = useState(false);
+  const [locationOpaLockaRequired, setLocationOpaLockaRequired] = useState(true);
 
   const updateMutation = useUpdateClubProduct(clubId);
 
@@ -76,6 +80,14 @@ export function EditClubProductSheet({
       const pbField = clubProduct.customFields?.find((f) => f.key === 'playerBirthday');
       setPlayerBirthday(!!pbField);
       setPlayerBirthdayRequired(pbField?.required ?? true);
+
+      const lbField = clubProduct.customFields?.find((f) => f.key === 'locationBase');
+      setLocationBase(!!lbField);
+      setLocationBaseRequired(lbField?.required ?? true);
+
+      const loField = clubProduct.customFields?.find((f) => f.key === 'locationOpaLocka');
+      setLocationOpaLocka(!!loField);
+      setLocationOpaLockaRequired(loField?.required ?? true);
     }
   }, [clubProduct]);
 
@@ -87,6 +99,8 @@ export function EditClubProductSheet({
     if (playerNumber) defaultFieldKeys.push({ key: 'playerNumber', required: playerNumberRequired });
     if (coachName) defaultFieldKeys.push({ key: 'coachName', required: coachNameRequired });
     if (playerBirthday) defaultFieldKeys.push({ key: 'playerBirthday', required: playerBirthdayRequired });
+    if (locationBase) defaultFieldKeys.push({ key: 'locationBase', required: locationBaseRequired });
+    if (locationOpaLocka) defaultFieldKeys.push({ key: 'locationOpaLocka', required: locationOpaLockaRequired });
 
     try {
       await updateMutation.mutateAsync({
@@ -295,9 +309,9 @@ export function EditClubProductSheet({
                     />
                   </div>
                   {playerName && (
-                    <div className="flex items-center justify-between pl-4 border-l-2 border-muted">
+                    <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
                       <div className="space-y-0.5">
-                        <Label htmlFor="sheetPlayerNameReq" className="text-sm">Required</Label>
+                        <Label htmlFor="sheetPlayerNameReq" className="text-sm font-medium text-primary/80">Required</Label>
                         <p className="text-xs text-muted-foreground">
                           {playerNameRequired ? 'Customer must fill this field' : 'Optional for the customer'}
                         </p>
@@ -326,9 +340,9 @@ export function EditClubProductSheet({
                     />
                   </div>
                   {playerNumber && (
-                    <div className="flex items-center justify-between pl-4 border-l-2 border-muted">
+                    <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
                       <div className="space-y-0.5">
-                        <Label htmlFor="sheetPlayerNumberReq" className="text-sm">Required</Label>
+                        <Label htmlFor="sheetPlayerNumberReq" className="text-sm font-medium text-primary/80">Required</Label>
                         <p className="text-xs text-muted-foreground">
                           {playerNumberRequired ? 'Customer must fill this field' : 'Optional for the customer'}
                         </p>
@@ -357,9 +371,9 @@ export function EditClubProductSheet({
                     />
                   </div>
                   {coachName && (
-                    <div className="flex items-center justify-between pl-4 border-l-2 border-muted">
+                    <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
                       <div className="space-y-0.5">
-                        <Label htmlFor="sheetCoachNameReq" className="text-sm">Required</Label>
+                        <Label htmlFor="sheetCoachNameReq" className="text-sm font-medium text-primary/80">Required</Label>
                         <p className="text-xs text-muted-foreground">
                           {coachNameRequired ? 'Customer must fill this field' : 'Optional for the customer'}
                         </p>
@@ -388,9 +402,9 @@ export function EditClubProductSheet({
                     />
                   </div>
                   {playerBirthday && (
-                    <div className="flex items-center justify-between pl-4 border-l-2 border-muted">
+                    <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
                       <div className="space-y-0.5">
-                        <Label htmlFor="sheetPlayerBirthdayReq" className="text-sm">Required</Label>
+                        <Label htmlFor="sheetPlayerBirthdayReq" className="text-sm font-medium text-primary/80">Required</Label>
                         <p className="text-xs text-muted-foreground">
                           {playerBirthdayRequired ? 'Customer must fill this field' : 'Optional for the customer'}
                         </p>
@@ -399,6 +413,68 @@ export function EditClubProductSheet({
                         id="sheetPlayerBirthdayReq"
                         checked={playerBirthdayRequired}
                         onCheckedChange={setPlayerBirthdayRequired}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sheetLocationBase">Location (Base/Miami)</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Show a location dropdown with BASE/MIAMI as default
+                      </p>
+                    </div>
+                    <Switch
+                      id="sheetLocationBase"
+                      checked={locationBase}
+                      onCheckedChange={setLocationBase}
+                    />
+                  </div>
+                  {locationBase && (
+                    <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="sheetLocationBaseReq" className="text-sm font-medium text-primary/80">Required</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {locationBaseRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="sheetLocationBaseReq"
+                        checked={locationBaseRequired}
+                        onCheckedChange={setLocationBaseRequired}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sheetLocationOpaLocka">Location (Opa-Locka)</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Show a location dropdown with OPA-LOCKA as default
+                      </p>
+                    </div>
+                    <Switch
+                      id="sheetLocationOpaLocka"
+                      checked={locationOpaLocka}
+                      onCheckedChange={setLocationOpaLocka}
+                    />
+                  </div>
+                  {locationOpaLocka && (
+                    <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="sheetLocationOpaLockaReq" className="text-sm font-medium text-primary/80">Required</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {locationOpaLockaRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="sheetLocationOpaLockaReq"
+                        checked={locationOpaLockaRequired}
+                        onCheckedChange={setLocationOpaLockaRequired}
                       />
                     </div>
                   )}

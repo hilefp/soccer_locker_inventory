@@ -41,6 +41,40 @@ export const defaultFields: CustomFields[] = [
     label: "Coach",
     placeholder: "",
   },
+  {
+    key: "locationBase",
+    type: "select",
+    required: true,
+    label: "Location (Base/Miami)",
+    placeholder: "Select a location",
+    options: [
+      "BASE/MIAMI",
+      "JACKSONVILLE",
+      "NORTH ATLANTA",
+      "ORLANDO",
+      "RALEIGH",
+      "SOUTH DADE",
+      "SYRACUSE",
+      "WESTON",
+    ],
+  },
+  {
+    key: "locationOpaLocka",
+    type: "select",
+    required: true,
+    label: "Location (Opa-Locka)",
+    placeholder: "Select a location",
+    options: [
+      "OPA-LOCKA",
+      "JACKSONVILLE",
+      "NORTH ATLANTA",
+      "ORLANDO",
+      "RALEIGH",
+      "SOUTH DADE",
+      "SYRACUSE",
+      "WESTON",
+    ],
+  },
 ];
 
 export const clubProductsService = {

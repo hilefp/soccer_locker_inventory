@@ -6,4 +6,5 @@ export interface CustomFields {
     required: boolean;
     label: string;
     placeholder: string;
+    options?: string[];
   }
