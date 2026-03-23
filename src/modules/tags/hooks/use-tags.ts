@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { tagsService } from '../services/tags.service';
-import type { CreateTagDto, UpdateTagDto } from '../types/tag';
+import type { CreateTagDto, ReorderTagsDto, Tag, UpdateTagDto } from '../types/tag';
 
 const QUERY_KEY = 'tags';
 
@@ -49,6 +49,46 @@ export function useDeleteTag() {
   return useMutation({
     mutationFn: (id: string) => tagsService.delete(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
+export function useReorderTags() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: ReorderTagsDto) => tagsService.reorder(data),
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEY] });
+
+      const previousTags = queryClient.getQueryData<Tag[]>([
+        QUERY_KEY,
+        { includeInactive: true },
+      ]);
+
+      if (previousTags) {
+        const reordered = data.ids.map((id, index) => {
+          const tag = previousTags.find((t) => t.id === id)!;
+          return { ...tag, sortPosition: index };
+        });
+        queryClient.setQueryData(
+          [QUERY_KEY, { includeInactive: true }],
+          reordered,
+        );
+      }
+
+      return { previousTags };
+    },
+    onError: (_err, _data, context) => {
+      if (context?.previousTags) {
+        queryClient.setQueryData(
+          [QUERY_KEY, { includeInactive: true }],
+          context.previousTags,
+        );
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });

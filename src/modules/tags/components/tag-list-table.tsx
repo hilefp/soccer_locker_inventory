@@ -1,8 +1,10 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import { arrayMove } from '@dnd-kit/sortable';
+import { type DragEndEvent } from '@dnd-kit/core';
 import { TagFormSheet } from './tag-form-sheet';
-import { useDeleteTag } from '../hooks/use-tags';
+import { useDeleteTag, useReorderTags } from '../hooks/use-tags';
 import { Tag } from '../types/tag';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -17,10 +19,13 @@ import { DataGrid } from '@/shared/components/ui/data-grid';
 import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
 import { DataGridPagination } from '@/shared/components/ui/data-grid-pagination';
 import {
-  DataGridTable,
   DataGridTableRowSelect,
   DataGridTableRowSelectAll,
 } from '@/shared/components/ui/data-grid-table';
+import {
+  DataGridTableDndRowHandle,
+  DataGridTableDndRows,
+} from '@/shared/components/ui/data-grid-table-dnd-rows';
 import { Input, InputWrapper } from '@/shared/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 import {
@@ -53,11 +58,10 @@ export function TagListTable({
     pageSize: 10,
   });
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'name', desc: false },
-  ]);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const deleteMutation = useDeleteTag();
+  const reorderMutation = useReorderTags();
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedTagId, setSelectedTagId] = useState<string | undefined>(
@@ -72,15 +76,24 @@ export function TagListTable({
   const columns = useMemo<ColumnDef<Tag>[]>(
     () => [
       {
-        accessorKey: 'id',
-        accessorFn: (row) => row.id,
-        header: () => <DataGridTableRowSelectAll />,
-        cell: ({ row }) => <DataGridTableRowSelect row={row} />,
+        id: 'drag',
+        header: () => '',
+        cell: ({ row }) => <DataGridTableDndRowHandle rowId={row.id} />,
         enableSorting: false,
         enableHiding: false,
         enableResizing: false,
-        size: 23,
+        size: 40,
       },
+      // {
+      //   accessorKey: 'id',
+      //   accessorFn: (row) => row.id,
+      //   header: () => <DataGridTableRowSelectAll />,
+      //   cell: ({ row }) => <DataGridTableRowSelect row={row} />,
+      //   enableSorting: false,
+      //   enableHiding: false,
+      //   enableResizing: false,
+      //   size: 23,
+      // },
       {
         id: 'name',
         accessorFn: (row) => row.name,
@@ -165,9 +178,15 @@ export function TagListTable({
     return tags.filter((tag) => tag.name.toLowerCase().includes(query));
   }, [tags, searchQuery]);
 
+  const dataIds = useMemo(
+    () => filteredData.map((_, index) => index.toString()),
+    [filteredData],
+  );
+
   const table = useReactTable({
     data: filteredData,
     columns,
+    getRowId: (_, index) => index.toString(),
     state: {
       pagination,
       sorting,
@@ -180,6 +199,22 @@ export function TagListTable({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const oldIndex = parseInt(active.id as string, 10);
+      const newIndex = parseInt(over.id as string, 10);
+
+      const reordered = arrayMove(filteredData, oldIndex, newIndex);
+      const ids = reordered.map((tag) => tag.id);
+
+      reorderMutation.mutate({ ids });
+    },
+    [filteredData, reorderMutation],
+  );
 
   return (
     <>
@@ -236,7 +271,10 @@ export function TagListTable({
               </div>
             ) : (
               <ScrollArea>
-                <DataGridTable />
+                <DataGridTableDndRows
+                  handleDragEnd={handleDragEnd}
+                  dataIds={dataIds}
+                />
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
             )}
