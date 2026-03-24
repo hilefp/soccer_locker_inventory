@@ -43,6 +43,8 @@ export function EditClubProductPage() {
   const [locationBaseRequired, setLocationBaseRequired] = useState(true);
   const [locationOpaLocka, setLocationOpaLocka] = useState(false);
   const [locationOpaLockaRequired, setLocationOpaLockaRequired] = useState(true);
+  const [initials, setInitials] = useState(false);
+  const [initialsRequired, setInitialsRequired] = useState(true);
 
   // Fetch data
   const { data: club } = useClub(clubId);
@@ -82,6 +84,10 @@ export function EditClubProductPage() {
       const locationOpaLockaField = clubProduct.customFields?.find((field) => field.key === 'locationOpaLocka');
       setLocationOpaLocka(!!locationOpaLockaField);
       setLocationOpaLockaRequired(locationOpaLockaField?.required ?? true);
+
+      const initialsField = clubProduct.customFields?.find((field) => field.key === 'initials');
+      setInitials(!!initialsField);
+      setInitialsRequired(initialsField?.required ?? true);
     }
   }, [clubProduct]);
 
@@ -95,6 +101,7 @@ export function EditClubProductPage() {
     if (playerBirthYear) defaultFieldKeys.push({ key: 'playerBirthYear', required: playerBirthYearRequired });
     if (locationBase) defaultFieldKeys.push({ key: 'locationBase', required: locationBaseRequired });
     if (locationOpaLocka) defaultFieldKeys.push({ key: 'locationOpaLocka', required: locationOpaLockaRequired });
+    if (initials) defaultFieldKeys.push({ key: 'initials', required: initialsRequired });
 
     try {
       await updateMutation.mutateAsync({
@@ -537,6 +544,37 @@ export function EditClubProductPage() {
                     id="locationOpaLockaRequired"
                     checked={locationOpaLockaRequired}
                     onCheckedChange={setLocationOpaLockaRequired}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="initials">Initials</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Controls Show the initials input on the product
+                  </p>
+                </div>
+                <Switch
+                  id="initials"
+                  checked={initials}
+                  onCheckedChange={setInitials}
+                />
+              </div>
+              {initials && (
+                <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="initialsRequired" className="text-sm font-medium text-primary/80">Required</Label>
+                    <p className="text-xs text-muted-foreground">
+                      {initialsRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                    </p>
+                  </div>
+                  <Switch
+                    id="initialsRequired"
+                    checked={initialsRequired}
+                    onCheckedChange={setInitialsRequired}
                   />
                 </div>
               )}

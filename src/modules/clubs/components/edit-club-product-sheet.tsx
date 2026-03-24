@@ -52,6 +52,8 @@ export function EditClubProductSheet({
   const [locationBaseRequired, setLocationBaseRequired] = useState(true);
   const [locationOpaLocka, setLocationOpaLocka] = useState(false);
   const [locationOpaLockaRequired, setLocationOpaLockaRequired] = useState(true);
+  const [initials, setInitials] = useState(false);
+  const [initialsRequired, setInitialsRequired] = useState(true);
 
   const updateMutation = useUpdateClubProduct(clubId);
 
@@ -88,6 +90,10 @@ export function EditClubProductSheet({
       const loField = clubProduct.customFields?.find((f) => f.key === 'locationOpaLocka');
       setLocationOpaLocka(!!loField);
       setLocationOpaLockaRequired(loField?.required ?? true);
+
+      const initField = clubProduct.customFields?.find((f) => f.key === 'initials');
+      setInitials(!!initField);
+      setInitialsRequired(initField?.required ?? true);
     }
   }, [clubProduct]);
 
@@ -101,6 +107,7 @@ export function EditClubProductSheet({
     if (playerBirthYear) defaultFieldKeys.push({ key: 'playerBirthYear', required: playerBirthYearRequired });
     if (locationBase) defaultFieldKeys.push({ key: 'locationBase', required: locationBaseRequired });
     if (locationOpaLocka) defaultFieldKeys.push({ key: 'locationOpaLocka', required: locationOpaLockaRequired });
+    if (initials) defaultFieldKeys.push({ key: 'initials', required: initialsRequired });
 
     try {
       await updateMutation.mutateAsync({
@@ -475,6 +482,37 @@ export function EditClubProductSheet({
                         id="sheetLocationOpaLockaReq"
                         checked={locationOpaLockaRequired}
                         onCheckedChange={setLocationOpaLockaRequired}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sheetInitials">Initials</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Controls Show the initials input on the product
+                      </p>
+                    </div>
+                    <Switch
+                      id="sheetInitials"
+                      checked={initials}
+                      onCheckedChange={setInitials}
+                    />
+                  </div>
+                  {initials && (
+                    <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="sheetInitialsReq" className="text-sm font-medium text-primary/80">Required</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {initialsRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="sheetInitialsReq"
+                        checked={initialsRequired}
+                        onCheckedChange={setInitialsRequired}
                       />
                     </div>
                   )}
