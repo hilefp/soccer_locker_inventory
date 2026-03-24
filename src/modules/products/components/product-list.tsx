@@ -283,30 +283,12 @@ export function ProductListTable({
                 )}
               </Card>
               <div className="flex flex-col gap-1">
-                {productInfo.title.length > 20 ? (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span
-                          className="text-sm font-medium text-foreground leading-3.5 truncate max-w-[180px] cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => handleViewDetails(info.row.original)}
-                        >
-                          {productInfo.title}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{productInfo.title}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ) : (
-                  <span
-                    className="text-sm font-medium text-foreground leading-3.5 cursor-pointer hover:text-primary transition-colors"
-                    onClick={() => handleViewDetails(info.row.original)}
-                  >
-                    {productInfo.title}
-                  </span>
-                )}
+                <span
+                  className="text-sm font-medium text-foreground leading-3.5 cursor-pointer hover:text-primary transition-colors"
+                  onClick={() => handleViewDetails(info.row.original)}
+                >
+                  {productInfo.title}
+                </span>
                 <span className="text-xs text-muted-foreground uppercase">
                   sku:{' '}
                   <span className="text-xs font-medium text-secondary-foreground">
