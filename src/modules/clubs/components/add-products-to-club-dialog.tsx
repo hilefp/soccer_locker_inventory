@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useProducts } from '@/modules/products/hooks/use-products';
 import { Product } from '@/modules/products/types/product.type';
-import { ClubProduct } from '../types/club-product';
 import { useAddProductsToClub } from '../hooks/use-club-products';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -46,7 +45,6 @@ interface AddProductsToClubDialogProps {
   clubId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  existingClubProducts?: ClubProduct[];
 }
 
 // Helper to format price
@@ -59,7 +57,6 @@ export function AddProductsToClubDialog({
   clubId,
   open,
   onOpenChange,
-  existingClubProducts = [],
 }: AddProductsToClubDialogProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
@@ -75,15 +72,9 @@ export function AddProductsToClubDialog({
   const { data: allProducts = [], isLoading } = useProducts();
   const addProductsMutation = useAddProductsToClub(clubId);
 
-  // Filter out already added products
-  const existingProductIds = useMemo(
-    () => new Set(existingClubProducts.map((cp) => cp.productId)),
-    [existingClubProducts]
-  );
-
   const availableProducts = useMemo(
-    () => allProducts.filter((p) => p.id && !existingProductIds.has(p.id)),
-    [allProducts, existingProductIds]
+    () => allProducts.filter((p) => p.id),
+    [allProducts]
   );
 
   const columns = useMemo<ColumnDef<Product>[]>(

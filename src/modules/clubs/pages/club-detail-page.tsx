@@ -328,7 +328,6 @@ export function ClubDetailPage() {
         clubId={clubId!}
         open={isAddProductsOpen}
         onOpenChange={setIsAddProductsOpen}
-        existingClubProducts={clubProducts}
       />
 
       {/* Group Products Dialog */}
