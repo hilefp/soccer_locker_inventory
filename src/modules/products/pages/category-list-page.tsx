@@ -4,9 +4,10 @@ import { PlusIcon } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { CategoryListTable } from '@/modules/products/components/category-list';
 import { CategoryFormSheet } from '@/modules/products/components/category-form-sheet';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ProductNavigationTabs } from '@/modules/products/components/product-navigation-tabs';
 import { useProductCategories } from '@/modules/products/hooks/use-product-categories';
+import { useStockInventoryValue } from '@/modules/reports/hooks/use-stock-inventory-value';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
 export function CategoryList() {
@@ -15,6 +16,17 @@ export function CategoryList() {
 
   // Use React Query hook for data fetching
   const { data: categories = [], isLoading, error } = useProductCategories();
+  const { data: inventoryValue } = useStockInventoryValue();
+
+  const productCountMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    if (inventoryValue?.inventoryValueByCategory) {
+      for (const cat of inventoryValue.inventoryValueByCategory) {
+        map[cat.categoryId] = cat.productCount;
+      }
+    }
+    return map;
+  }, [inventoryValue]);
 
   const activeCategories = categories.filter(cat => cat.isActive);
   const totalCategories = categories.length;
@@ -47,6 +59,7 @@ export function CategoryList() {
       </div>
       <CategoryListTable
         categories={categories}
+        productCountMap={productCountMap}
         isLoading={isLoading}
         error={error?.message || null}
       />

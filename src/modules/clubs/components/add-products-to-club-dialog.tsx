@@ -228,9 +228,12 @@ export function AddProductsToClubDialog({
   });
 
   const handleAddSelected = async () => {
-    const selectedProducts = table
-      .getSelectedRowModel()
-      .rows.map((row) => row.original);
+    // Use rowSelection keys to find products from the full list,
+    // not table.getSelectedRowModel() which only returns rows in the current filtered view
+    const selectedIds = Object.keys(rowSelection);
+    const selectedProducts = availableProducts.filter((p) =>
+      selectedIds.includes(p.id || '')
+    );
 
     if (selectedProducts.length === 0) {
       return;
