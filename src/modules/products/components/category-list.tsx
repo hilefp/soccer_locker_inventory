@@ -63,12 +63,13 @@ export interface IData {
 interface CategoryListProps {
   displaySheet?: 'categoryDetails' | 'createCategory' | 'editCategory';
   categories?: ProductCategory[];
+  productCountMap?: Record<string, number>;
   isLoading?: boolean;
   error?: string | null;
 }
 
 // Helper function to convert ProductCategory to IData format
-const convertCategoryToIData = (category: ProductCategory): IData => {
+const convertCategoryToIData = (category: ProductCategory, productCountMap: Record<string, number>): IData => {
   return {
     id: category.id || '',
     productInfo: {
@@ -76,7 +77,7 @@ const convertCategoryToIData = (category: ProductCategory): IData => {
       title: category.name,
       label: category.slug,
     },
-    productsQty: '0',
+    productsQty: String(category.id ? (productCountMap[category.id] ?? 0) : 0),
     status: {
       label: category.isActive ? 'Active' : 'Inactive',
       variant: category.isActive ? 'success' : 'destructive',
@@ -89,13 +90,14 @@ const convertCategoryToIData = (category: ProductCategory): IData => {
 export function CategoryListTable({
   displaySheet,
   categories,
+  productCountMap = {},
   isLoading = false,
   error = null,
 }: CategoryListProps) {
   const data = useMemo(() => {
     if (!categories || categories.length === 0) return [];
-    return categories.map(convertCategoryToIData);
-  }, [categories]);
+    return categories.map((cat) => convertCategoryToIData(cat, productCountMap));
+  }, [categories, productCountMap]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({

@@ -18,10 +18,13 @@ import {
 import { Badge } from '@/shared/components/ui/badge';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { useAuthStore } from '@/shared/stores/auth-store';
+import { useOrderStatistics } from '@/modules/orders/hooks/use-orders';
 
 export function SidebarMenu() {
   const { pathname } = useLocation();
   const user = useAuthStore((state) => state.user);
+  const { data: orderStats } = useOrderStatistics();
+  const newOrderCount = orderStats?.statusCounts?.NEW ?? 0;
 
   // Collect all menu paths for smarter matching
   const allMenuPaths = useMemo(() => {
@@ -259,7 +262,18 @@ export function SidebarMenu() {
           value={item.path || ''}
           className="text-[13px]"
         >
-          <Link to={item.path || '#'}>{item.title}</Link>
+          <Link to={item.path || '#'} className="flex items-center justify-between grow">
+            {item.title}
+            {item.path === '/orders' && newOrderCount > 0 && (
+              <Badge
+                variant="primary"
+                size="sm"
+                shape="circle"
+              >
+                {newOrderCount}
+              </Badge>
+            )}
+          </Link>
         </AccordionMenuItem>
       );
     }
