@@ -677,7 +677,7 @@ export function OrderDetailPage() {
                                         <img
                                           src={item.productVariant.product.imageUrl}
                                           alt={item.name || 'Product'}
-                                          className="h-12 w-12 rounded-lg object-cover"
+                                          className="h-[30px] w-full object-contain"
                                         />
                                       ) : (
                                         <Package className="size-5 text-muted-foreground" />
@@ -768,7 +768,7 @@ export function OrderDetailPage() {
                                     <img
                                       src={item.productVariant.product.imageUrl}
                                       alt={item.name || 'Product'}
-                                      className="h-12 w-12 rounded-lg object-cover"
+                                      className="h-[30px] w-full object-contain"
                                     />
                                   ) : (
                                     <Package className="size-5 text-muted-foreground" />
@@ -877,7 +877,7 @@ export function OrderDetailPage() {
                                 <img
                                   src={item.productVariant.product.imageUrl}
                                   alt={item.name || 'Product'}
-                                  className="h-16 w-16 rounded-lg object-cover"
+                                  className="h-10 w-full object-contain"
                                 />
                               ) : (
                                 <Package className="size-6 text-muted-foreground" />
