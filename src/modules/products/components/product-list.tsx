@@ -532,10 +532,7 @@ export function ProductListTable({
     data: filteredData,
     columns,
     state: {
-      pagination: {
-        pageIndex: pagination.pageIndex,
-        pageSize: 10, // Fixed 10 items per page
-      },
+      pagination,
       sorting,
       rowSelection,
     },

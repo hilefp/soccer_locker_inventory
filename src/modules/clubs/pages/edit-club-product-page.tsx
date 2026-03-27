@@ -45,6 +45,8 @@ export function EditClubProductPage() {
   const [locationOpaLockaRequired, setLocationOpaLockaRequired] = useState(true);
   const [initials, setInitials] = useState(false);
   const [initialsRequired, setInitialsRequired] = useState(true);
+  const [gauchito, setGauchito] = useState(false);
+  const [gauchitoRequired, setGauchitoRequired] = useState(true);
 
   // Fetch data
   const { data: club } = useClub(clubId);
@@ -88,6 +90,10 @@ export function EditClubProductPage() {
       const initialsField = clubProduct.customFields?.find((field) => field.key === 'initials');
       setInitials(!!initialsField);
       setInitialsRequired(initialsField?.required ?? true);
+
+      const gauchitoField = clubProduct.customFields?.find((field) => field.key === 'gauchito');
+      setGauchito(!!gauchitoField);
+      setGauchitoRequired(gauchitoField?.required ?? true);
     }
   }, [clubProduct]);
 
@@ -102,6 +108,7 @@ export function EditClubProductPage() {
     if (locationBase) defaultFieldKeys.push({ key: 'locationBase', required: locationBaseRequired });
     if (locationOpaLocka) defaultFieldKeys.push({ key: 'locationOpaLocka', required: locationOpaLockaRequired });
     if (initials) defaultFieldKeys.push({ key: 'initials', required: initialsRequired });
+    if (gauchito) defaultFieldKeys.push({ key: 'gauchito', required: gauchitoRequired });
 
     try {
       await updateMutation.mutateAsync({
@@ -575,6 +582,37 @@ export function EditClubProductPage() {
                     id="initialsRequired"
                     checked={initialsRequired}
                     onCheckedChange={setInitialsRequired}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="gauchito">Gauchito</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Show a dropdown to select Gauchito or Gauchita
+                  </p>
+                </div>
+                <Switch
+                  id="gauchito"
+                  checked={gauchito}
+                  onCheckedChange={setGauchito}
+                />
+              </div>
+              {gauchito && (
+                <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="gauchitoRequired" className="text-sm font-medium text-primary/80">Required</Label>
+                    <p className="text-xs text-muted-foreground">
+                      {gauchitoRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                    </p>
+                  </div>
+                  <Switch
+                    id="gauchitoRequired"
+                    checked={gauchitoRequired}
+                    onCheckedChange={setGauchitoRequired}
                   />
                 </div>
               )}
