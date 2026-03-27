@@ -56,6 +56,7 @@ export const defaultFields: CustomFields[] = [
       "SOUTH DADE",
       "SYRACUSE",
       "WESTON",
+      "NAPA",
     ],
   },
   {
@@ -73,6 +74,18 @@ export const defaultFields: CustomFields[] = [
       "SOUTH DADE",
       "SYRACUSE",
       "WESTON",
+      "NAPA",
+    ],
+  },
+  {
+    key: "gauchito",
+    type: "select",
+    required: true,
+    label: "Gauchito",
+    placeholder: "Select an option",
+    options: [
+      "GAUCHITO",
+      "GAUCHITA",
     ],
   },
 ];

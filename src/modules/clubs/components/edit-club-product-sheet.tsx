@@ -54,6 +54,8 @@ export function EditClubProductSheet({
   const [locationOpaLockaRequired, setLocationOpaLockaRequired] = useState(true);
   const [initials, setInitials] = useState(false);
   const [initialsRequired, setInitialsRequired] = useState(true);
+  const [gauchito, setGauchito] = useState(false);
+  const [gauchitoRequired, setGauchitoRequired] = useState(true);
 
   const updateMutation = useUpdateClubProduct(clubId);
 
@@ -94,6 +96,10 @@ export function EditClubProductSheet({
       const initField = clubProduct.customFields?.find((f) => f.key === 'initials');
       setInitials(!!initField);
       setInitialsRequired(initField?.required ?? true);
+
+      const gauchitoField = clubProduct.customFields?.find((f) => f.key === 'gauchito');
+      setGauchito(!!gauchitoField);
+      setGauchitoRequired(gauchitoField?.required ?? true);
     }
   }, [clubProduct]);
 
@@ -108,6 +114,7 @@ export function EditClubProductSheet({
     if (locationBase) defaultFieldKeys.push({ key: 'locationBase', required: locationBaseRequired });
     if (locationOpaLocka) defaultFieldKeys.push({ key: 'locationOpaLocka', required: locationOpaLockaRequired });
     if (initials) defaultFieldKeys.push({ key: 'initials', required: initialsRequired });
+    if (gauchito) defaultFieldKeys.push({ key: 'gauchito', required: gauchitoRequired });
 
     try {
       await updateMutation.mutateAsync({
@@ -513,6 +520,37 @@ export function EditClubProductSheet({
                         id="sheetInitialsReq"
                         checked={initialsRequired}
                         onCheckedChange={setInitialsRequired}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sheetGauchito">Gauchito</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Show a dropdown to select Gauchito or Gauchita
+                      </p>
+                    </div>
+                    <Switch
+                      id="sheetGauchito"
+                      checked={gauchito}
+                      onCheckedChange={setGauchito}
+                    />
+                  </div>
+                  {gauchito && (
+                    <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="sheetGauchitoReq" className="text-sm font-medium text-primary/80">Required</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {gauchitoRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="sheetGauchitoReq"
+                        checked={gauchitoRequired}
+                        onCheckedChange={setGauchitoRequired}
                       />
                     </div>
                   )}

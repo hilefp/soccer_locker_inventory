@@ -170,7 +170,7 @@ const getCommonStyles = () => `
   .product-image {
     width: 40px;
     height: 40px;
-    object-fit: cover;
+    object-fit: contain;
     border-radius: 4px;
     margin-right: 8px;
   }
