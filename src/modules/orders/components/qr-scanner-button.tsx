@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/components/ui/dialog';
-import { useIsMobile } from '@/shared/hooks/use-mobile';
 import { toast } from 'sonner';
 
 interface QrScannerButtonProps {
@@ -31,7 +30,6 @@ function extractOrderNumber(decodedText: string): string {
 export function QrScannerButton({ onScan }: QrScannerButtonProps) {
   const [open, setOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const isMobile = useIsMobile();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -99,8 +97,6 @@ export function QrScannerButton({ onScan }: QrScannerButtonProps) {
       stopScanner();
     };
   }, [stopScanner]);
-
-  if (!isMobile) return null;
 
   return (
     <>

@@ -101,7 +101,6 @@ export function CurrentOrdersPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <QrScannerButton onScan={handleSearchChange} />
           <Button
             variant="outline"
             size="sm"
@@ -123,6 +122,7 @@ export function CurrentOrdersPage() {
           showDateFilter={false}
           placeholder="Search by order number, customer, tracking..."
         />
+        <QrScannerButton onScan={handleSearchChange} />
 
         {/* Status Summary */}
         <div className="hidden md:flex items-center gap-2 ml-auto">
