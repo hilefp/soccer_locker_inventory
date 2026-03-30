@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { RefreshCw, LayoutGrid } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
-import { OrderKanbanBoard, OrderSearchComplex } from '@/modules/orders/components';
+import { OrderKanbanBoard, OrderSearchComplex, QrScannerButton } from '@/modules/orders/components';
 import { useOrders, useOrderStatistics } from '@/modules/orders/hooks/use-orders';
 import { OrderFilterParams, OrderStatus, KANBAN_STATUS_ORDER } from '@/modules/orders/types';
 import { Badge } from '@/shared/components/ui/badge';
@@ -101,6 +101,7 @@ export function CurrentOrdersPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <QrScannerButton onScan={handleSearchChange} />
           <Button
             variant="outline"
             size="sm"
