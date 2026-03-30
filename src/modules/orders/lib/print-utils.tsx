@@ -284,7 +284,7 @@ export const generateInvoiceHTML = (order: Order): string => {
         return `
     <tr>
       <td>
-        <div class="product-name">${escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
+        <div class="product-name">${escapeHtml(item.clubProduct?.name) || escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
         ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
         ${sizeValue ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(sizeValue)}</div>` : ''}
         ${rest.length > 0 ? rest.map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('') : ''}
@@ -409,7 +409,7 @@ export const generatePackingSlipHTML = (order: Order): string => {
 
   const itemsHTML = order.items
     ?.map((item) => {
-      const imageUrl = item.productVariant?.product?.imageUrl;
+      const imageUrl = item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl;
       const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
 
       return `
@@ -422,7 +422,7 @@ export const generatePackingSlipHTML = (order: Order): string => {
                   : '<div style="width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; margin-right: 8px;"></div>'
               }
               <div style="flex: 1;">
-                <div class="product-name">${escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
+                <div class="product-name">${escapeHtml(item.clubProduct?.name) || escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
                 ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
                 ${sizeValue ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(sizeValue)}</div>` : ''}
                 ${rest.length > 0 ? rest.map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('') : ''}

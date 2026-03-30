@@ -75,6 +75,11 @@ export interface OrderItem {
       imageUrl?: string;
     };
   };
+  clubProduct?: {
+    id: string;
+    name: string;
+    imageUrls: string[];
+  };
 }
 
 // Order Status History Interface

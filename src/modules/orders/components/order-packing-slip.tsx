@@ -112,9 +112,18 @@ export function OrderPackingSlip({ order, open, onOpenChange }: OrderPackingSlip
                   className="flex items-start gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors"
                 >
                   <div className="flex items-center justify-center h-5 w-5 border-2 border-foreground rounded mt-0.5 shrink-0" />
+                  {(item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl) && (
+                    <div className="flex items-center justify-center rounded bg-accent/50 h-12 w-12 shrink-0">
+                      <img
+                        src={item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl}
+                        alt={item.name || 'Product'}
+                        className="h-10 w-full object-contain"
+                      />
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold">
-                      {item.name || item.productVariant?.product?.name || 'Unknown Product'}
+                      {item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown Product'}
                     </p>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                       {item.sku && (
