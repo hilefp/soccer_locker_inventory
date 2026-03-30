@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
 import { Camera } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -9,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/components/ui/dialog';
+import { useIsMobile } from '@/shared/hooks/use-mobile';
 import { toast } from 'sonner';
 
 interface QrScannerButtonProps {
@@ -29,86 +31,76 @@ function extractOrderNumber(decodedText: string): string {
 export function QrScannerButton({ onScan }: QrScannerButtonProps) {
   const [open, setOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [isSupported, setIsSupported] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const rafRef = useRef<number>(0);
+  const isMobile = useIsMobile();
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const hasTouchScreen =
-      'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    const hasBarcodeDetector = 'BarcodeDetector' in window;
-    setIsSupported(hasTouchScreen && hasBarcodeDetector);
-  }, []);
-
-  const stopCamera = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
+  const stopScanner = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
+        }
+        scannerRef.current.clear();
+      } catch {
+        // Scanner may already be stopped
+      }
+      scannerRef.current = null;
     }
     setIsScanning(false);
   }, []);
 
-  const startScanning = useCallback(async () => {
-    if (!videoRef.current) return;
+  const startScanner = useCallback(async () => {
+    if (!containerRef.current) return;
+
+    // Ensure clean state
+    await stopScanner();
+
+    const scannerId = 'qr-scanner-reader';
+    containerRef.current.id = scannerId;
+
+    const html5QrCode = new Html5Qrcode(scannerId);
+    scannerRef.current = html5QrCode;
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
-      streamRef.current = stream;
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play();
-      setIsScanning(true);
-
-      const detector = new BarcodeDetector({ formats: ['qr_code'] });
-
-      const scan = async () => {
-        if (!videoRef.current || !streamRef.current) return;
-
-        try {
-          const barcodes = await detector.detect(videoRef.current);
-          if (barcodes.length > 0) {
-            const orderNumber = extractOrderNumber(barcodes[0].rawValue);
-            toast.success(`Scanned order: ${orderNumber}`);
-            onScan(orderNumber);
-            stopCamera();
-            setOpen(false);
-            return;
-          }
-        } catch {
-          // Frame not ready yet — continue
+      await html5QrCode.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          const orderNumber = extractOrderNumber(decodedText);
+          toast.success(`Scanned order: ${orderNumber}`);
+          onScan(orderNumber);
+          stopScanner();
+          setOpen(false);
+        },
+        () => {
+          // No QR found in frame — keep scanning
         }
-
-        rafRef.current = requestAnimationFrame(scan);
-      };
-
-      rafRef.current = requestAnimationFrame(scan);
+      );
+      setIsScanning(true);
     } catch {
       toast.error('Unable to access camera. Please check permissions.');
-      stopCamera();
+      stopScanner();
       setOpen(false);
     }
-  }, [onScan, stopCamera]);
+  }, [onScan, stopScanner]);
 
   useEffect(() => {
     if (open) {
-      const timer = setTimeout(startScanning, 300);
+      const timer = setTimeout(startScanner, 400);
       return () => clearTimeout(timer);
     } else {
-      stopCamera();
+      stopScanner();
     }
-  }, [open, startScanning, stopCamera]);
+  }, [open, startScanner, stopScanner]);
 
   useEffect(() => {
-    return () => stopCamera();
-  }, [stopCamera]);
+    return () => {
+      stopScanner();
+    };
+  }, [stopScanner]);
 
-  if (!isSupported) return null;
+  if (!isMobile) return null;
 
   return (
     <>
@@ -128,19 +120,10 @@ export function QrScannerButton({ onScan }: QrScannerButtonProps) {
             <DialogTitle>Scan Order QR Code</DialogTitle>
           </DialogHeader>
 
-          <div className="relative rounded-lg overflow-hidden bg-black">
-            <video
-              ref={videoRef}
-              className="w-full h-auto"
-              playsInline
-              muted
-            />
-            {/* Scan overlay guide */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-56 h-56 border-2 border-white/60 rounded-lg" />
-            </div>
+          <div className="relative rounded-lg overflow-hidden bg-black min-h-[300px]">
+            <div ref={containerRef} className="w-full" />
             {!isScanning && (
-              <div className="absolute inset-0 flex items-center justify-center text-white text-sm min-h-[300px]">
+              <div className="absolute inset-0 flex items-center justify-center text-white text-sm">
                 Starting camera...
               </div>
             )}
