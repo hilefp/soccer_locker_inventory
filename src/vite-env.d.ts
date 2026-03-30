@@ -1,6 +1,23 @@
 /// <reference types="vite/client" />
 /// <reference types="vite-plugin-pwa/client" />
 
+interface BarcodeDetectorOptions {
+  formats?: string[];
+}
+
+interface DetectedBarcode {
+  rawValue: string;
+  format: string;
+  boundingBox: DOMRectReadOnly;
+  cornerPoints: { x: number; y: number }[];
+}
+
+declare class BarcodeDetector {
+  constructor(options?: BarcodeDetectorOptions);
+  static getSupportedFormats(): Promise<string[]>;
+  detect(source: ImageBitmapSource): Promise<DetectedBarcode[]>;
+}
+
 declare module 'virtual:pwa-register/react' {
   import type { Ref } from 'react';
 
