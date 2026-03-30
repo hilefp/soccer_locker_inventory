@@ -673,9 +673,9 @@ export function OrderDetailPage() {
                                   />
                                   <div className="flex items-center gap-3 min-w-0">
                                     <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
-                                      {item.productVariant?.product?.imageUrl ? (
+                                      {(item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl) ? (
                                         <img
-                                          src={item.productVariant.product.imageUrl}
+                                          src={item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl}
                                           alt={item.name || 'Product'}
                                           className="h-[30px] w-full object-contain"
                                         />
@@ -685,7 +685,7 @@ export function OrderDetailPage() {
                                     </div>
                                     <div className="min-w-0">
                                       <p className="text-sm font-medium truncate">
-                                        {item.name || item.productVariant?.product?.name || 'Unknown'}
+                                        {item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}
                                       </p>
                                       {item.sku && (
                                         <p className="text-xs text-muted-foreground">
@@ -764,9 +764,9 @@ export function OrderDetailPage() {
                               />
                               <div className="flex items-center gap-3 min-w-0">
                                 <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
-                                  {item.productVariant?.product?.imageUrl ? (
+                                  {(item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl) ? (
                                     <img
-                                      src={item.productVariant.product.imageUrl}
+                                      src={item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl}
                                       alt={item.name || 'Product'}
                                       className="h-[30px] w-full object-contain"
                                     />
@@ -776,7 +776,7 @@ export function OrderDetailPage() {
                                 </div>
                                 <div className="min-w-0">
                                   <p className="text-sm font-medium truncate">
-                                    {item.name || item.productVariant?.product?.name || 'Unknown'}
+                                    {item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}
                                   </p>
                                   {item.sku && (
                                     <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
@@ -873,9 +873,9 @@ export function OrderDetailPage() {
                           /* Normal display mode */
                           <div className={`flex items-center gap-4 ${item.refundedQuantity >= item.quantity ? 'opacity-60' : ''}`}>
                             <div className="flex items-center justify-center rounded-lg bg-accent/50 h-16 w-16 shrink-0">
-                              {item.productVariant?.product?.imageUrl ? (
+                              {(item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl) ? (
                                 <img
-                                  src={item.productVariant.product.imageUrl}
+                                  src={item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl}
                                   alt={item.name || 'Product'}
                                   className="h-10 w-full object-contain"
                                 />
@@ -886,7 +886,7 @@ export function OrderDetailPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="font-medium text-foreground truncate">
-                                  {item.name || item.productVariant?.product?.name || 'Unknown Product'}
+                                  {item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown Product'}
                                 </span>
                               </div>
                               {item.sku && (
