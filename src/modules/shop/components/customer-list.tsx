@@ -75,6 +75,7 @@ import { Customer, CustomerStatus, CustomerListMeta } from '@/modules/shop/types
 import {
   useActivateCustomer,
   useDeactivateCustomer,
+  useResendVerificationEmail,
   useSuspendCustomer,
 } from '@/modules/shop/hooks/use-customers';
 
@@ -184,6 +185,7 @@ export function CustomerListTable({
   const activateMutation = useActivateCustomer();
   const deactivateMutation = useDeactivateCustomer();
   const suspendMutation = useSuspendCustomer();
+  const resendVerificationMutation = useResendVerificationEmail();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<CustomerStatus | 'all'>('all');
@@ -212,6 +214,10 @@ export function CustomerListTable({
 
   const handleSuspend = (customer: ICustomerData) => {
     suspendMutation.mutate(customer.id);
+  };
+
+  const handleResendVerification = (customer: ICustomerData) => {
+    resendVerificationMutation.mutate(customer.id);
   };
 
   const ColumnInputFilter = <TData, TValue>({
@@ -437,6 +443,12 @@ export function CustomerListTable({
                     <Eye className="size-4" />
                     View Details
                   </DropdownMenuItem>
+                  {!customer.emailVerified && (
+                    <DropdownMenuItem onClick={() => handleResendVerification(customer)}>
+                      <Mail className="size-4" />
+                      Resend Verification
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   {customer.status !== 'ACTIVE' && (
                     <DropdownMenuItem onClick={() => handleActivate(customer)}>

@@ -63,4 +63,8 @@ export const customerService = {
     const response = await apiClient.put<Customer>(`/inventory/customers/${id}`, data);
     return response.data;
   },
+
+  async resendVerificationEmail(id: string): Promise<void> {
+    await apiClient.post(`/inventory/customers/${id}/resend-verification`);
+  },
 };
