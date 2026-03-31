@@ -176,6 +176,37 @@ export function useSuspendCustomer() {
   });
 }
 
+// Hook to resend verification email
+export function useResendVerificationEmail() {
+  return useMutation({
+    mutationFn: (id: string) => customerService.resendVerificationEmail(id),
+    onSuccess: () => {
+      toast.custom(
+        (t) => (
+          <Alert
+            variant="mono"
+            icon="success"
+            close={true}
+            onClose={() => toast.dismiss(t)}
+          >
+            <AlertIcon>
+              <Info />
+            </AlertIcon>
+            <AlertTitle>Verification email sent successfully.</AlertTitle>
+          </Alert>
+        ),
+        {
+          duration: 5000,
+        },
+      );
+    },
+    onError: (error) => {
+      console.error('Error resending verification email:', error);
+      toast.error('Failed to resend verification email');
+    },
+  });
+}
+
 // Hook to update customer information
 export function useUpdateCustomer() {
   const queryClient = useQueryClient();
