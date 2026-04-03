@@ -80,6 +80,11 @@ export interface OrderItem {
     name: string;
     imageUrls: string[];
   };
+  // Package fields (when item is part of a package purchase)
+  packageInstanceId?: string | null;
+  clubPackageId?: string | null;
+  packageName?: string | null;
+  packagePrice?: number | null;
 }
 
 // Order Status History Interface

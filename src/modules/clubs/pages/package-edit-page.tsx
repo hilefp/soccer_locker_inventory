@@ -4,10 +4,10 @@ import {
   ArrowLeft,
   Check,
   Loader2,
+  Minus,
   Package,
   Plus,
   Search,
-  Star,
   Trash2,
   X,
   Building2,
@@ -18,7 +18,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Input, InputWrapper } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -27,81 +26,78 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select';
 import { useClub } from '../hooks/use-clubs';
-import {
-  useClubProducts,
-  useClubProductGroups,
-  useUpdateGroup,
-} from '../hooks/use-club-products';
+import { useClubProducts } from '../hooks/use-club-products';
+import { useClubPackage, useUpdateClubPackage } from '../hooks/use-club-packages';
 import { ClubProduct } from '../types/club-product';
+import { PackageItemDto } from '../types/club-package';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
-import { toast } from 'sonner';
+
+interface SelectedItem {
+  clubProduct: ClubProduct;
+  quantity: number;
+}
 
 export function PackageEditPage() {
   useDocumentTitle('Edit Package');
-  const { clubId, groupId } = useParams<{ clubId: string; groupId: string }>();
+  const { clubId, packageId } = useParams<{ clubId: string; packageId: string }>();
   const navigate = useNavigate();
 
   const { data: club, isLoading: clubLoading } = useClub(clubId);
-  const { data: groups = [], isLoading: groupsLoading } = useClubProductGroups(clubId);
+  const { data: pkg, isLoading: packageLoading } = useClubPackage(clubId, packageId);
   const { data: clubProductsResponse, isLoading: productsLoading } = useClubProducts(clubId, {
     limit: 100,
   });
-  const updateMutation = useUpdateGroup(clubId!);
-
-  // Find the current group
-  const currentGroup = useMemo(() => {
-    return groups.find((g) => g.groupId === groupId);
-  }, [groups, groupId]);
+  const updateMutation = useUpdateClubPackage(clubId!);
 
   // State
-  const [primaryId, setPrimaryId] = useState<string>('');
   const [packageName, setPackageName] = useState('');
   const [packagePrice, setPackagePrice] = useState<string>('');
   const [packageDescription, setPackageDescription] = useState('');
-  const [currentMemberIds, setCurrentMemberIds] = useState<Set<string>>(new Set());
-  const [addProductIds, setAddProductIds] = useState<Set<string>>(new Set());
-  const [removeProductIds, setRemoveProductIds] = useState<Set<string>>(new Set());
+  const [packageTags, setPackageTags] = useState<string>('');
+  const [isActive, setIsActive] = useState(true);
+  const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
   const [showAddProducts, setShowAddProducts] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [initialized, setInitialized] = useState(false);
 
-  // Initialize form from current group data
+  const allProducts = useMemo(() => {
+    return clubProductsResponse?.data || [];
+  }, [clubProductsResponse]);
+
+  // Initialize form from package data
   useEffect(() => {
-    if (currentGroup && !initialized) {
-      const primary = currentGroup.primary;
-      setPrimaryId(primary?.id || '');
-      setPackageName(currentGroup.packageName || primary?.name || primary?.product?.name || '');
-      setPackagePrice(currentGroup.packagePrice?.toString() || '');
-      setPackageDescription(currentGroup.packageDescription || '');
-      setCurrentMemberIds(new Set(currentGroup.members?.map((m) => m.id) || []));
+    if (pkg && allProducts.length > 0 && !initialized) {
+      setPackageName(pkg.name || '');
+      setPackagePrice(pkg.price?.toString() || '');
+      setPackageDescription(pkg.description || '');
+      setPackageTags(pkg.tags?.join(', ') || '');
+      setIsActive(pkg.isActive);
+
+      const items = new Map<string, SelectedItem>();
+      for (const item of pkg.items || []) {
+        const clubProduct =
+          item.clubProduct || allProducts.find((p) => p.id === item.clubProductId);
+        if (clubProduct) {
+          items.set(item.clubProductId, {
+            clubProduct,
+            quantity: item.quantity,
+          });
+        }
+      }
+      setSelectedItems(items);
       setInitialized(true);
     }
-  }, [currentGroup, initialized]);
+  }, [pkg, allProducts, initialized]);
 
-  // Current members (original minus removed)
-  const currentMembers = useMemo(() => {
-    if (!currentGroup) return [];
-    return (currentGroup.members || []).filter((m) => !removeProductIds.has(m.id));
-  }, [currentGroup, removeProductIds]);
+  const selectedItemsList = useMemo(() => {
+    return Array.from(selectedItems.values());
+  }, [selectedItems]);
 
-  // Products to add (selected from available)
-  const productsToAdd = useMemo(() => {
-    const all = clubProductsResponse?.data || [];
-    return all.filter((p) => addProductIds.has(p.id));
-  }, [clubProductsResponse, addProductIds]);
-
-  // All products in the package after edits
-  const allPackageProducts = useMemo(() => {
-    return [...currentMembers, ...productsToAdd];
-  }, [currentMembers, productsToAdd]);
-
-  // Available ungrouped products (for the add dialog)
+  // Available products for adding (not already in package)
   const availableProducts = useMemo(() => {
-    const all = clubProductsResponse?.data || [];
-    return all.filter((p) => !p.groupId && !addProductIds.has(p.id));
-  }, [clubProductsResponse, addProductIds]);
+    return allProducts.filter((p) => !selectedItems.has(p.id));
+  }, [allProducts, selectedItems]);
 
-  // Filtered available products
   const filteredAvailable = useMemo(() => {
     if (!searchQuery) return availableProducts;
     const query = searchQuery.toLowerCase();
@@ -113,74 +109,65 @@ export function PackageEditPage() {
     );
   }, [availableProducts, searchQuery]);
 
-  const isLoading = clubLoading || groupsLoading || productsLoading;
+  const isLoading = clubLoading || packageLoading || productsLoading;
 
-  // Validation
-  const totalMembers = allPackageProducts.length;
-  const canRemoveMember = totalMembers > 2;
-  const priceValid = packagePrice && parseFloat(packagePrice) > 0;
-  const primaryValid = primaryId && allPackageProducts.some((p) => p.id === primaryId);
-
-  const hasChanges = useMemo(() => {
-    if (!currentGroup) return false;
-    const originalPrimary = currentGroup.primary?.id;
-    const originalName = currentGroup.packageName || '';
-    const originalPrice = currentGroup.packagePrice;
-    const originalDesc = currentGroup.packageDescription || '';
-    return (
-      primaryId !== originalPrimary ||
-      packageName !== originalName ||
-      parseFloat(packagePrice || '0') !== (originalPrice || 0) ||
-      packageDescription !== originalDesc ||
-      addProductIds.size > 0 ||
-      removeProductIds.size > 0
-    );
-  }, [currentGroup, primaryId, packageName, packagePrice, packageDescription, addProductIds, removeProductIds]);
-
-  const canSubmit = priceValid && primaryValid && totalMembers >= 2 && hasChanges;
-
-  const handleRemoveMember = (id: string) => {
-    if (!canRemoveMember) {
-      toast.error('A package must have at least 2 products');
-      return;
-    }
-
-    // If it's an original member, mark for removal
-    if (currentMemberIds.has(id)) {
-      setRemoveProductIds((prev) => new Set(prev).add(id));
-    } else {
-      // If it's a newly added product, just remove from add list
-      setAddProductIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }
-
-    // If removing the primary, reset primary
-    if (primaryId === id) {
-      const remaining = allPackageProducts.filter((p) => p.id !== id);
-      setPrimaryId(remaining[0]?.id || '');
-    }
+  const updateQuantity = (productId: string, delta: number) => {
+    setSelectedItems((prev) => {
+      const next = new Map(prev);
+      const item = next.get(productId);
+      if (!item) return prev;
+      const newQty = Math.max(1, item.quantity + delta);
+      next.set(productId, { ...item, quantity: newQty });
+      return next;
+    });
   };
 
-  const handleAddProduct = (id: string) => {
-    setAddProductIds((prev) => new Set(prev).add(id));
+  const removeItem = (productId: string) => {
+    setSelectedItems((prev) => {
+      const next = new Map(prev);
+      next.delete(productId);
+      return next;
+    });
   };
+
+  const addProduct = (product: ClubProduct) => {
+    setSelectedItems((prev) => {
+      const next = new Map(prev);
+      next.set(product.id, { clubProduct: product, quantity: 1 });
+      return next;
+    });
+  };
+
+  const canSubmit =
+    packageName.trim() &&
+    selectedItems.size >= 1 &&
+    packagePrice &&
+    parseFloat(packagePrice) > 0;
 
   const handleSubmit = async () => {
-    if (!canSubmit || !clubId || !groupId) return;
+    if (!canSubmit || !clubId || !packageId) return;
+
+    const items: PackageItemDto[] = selectedItemsList.map((item, index) => ({
+      clubProductId: item.clubProduct.id,
+      quantity: item.quantity,
+      sortOrder: index,
+    }));
+
+    const tags = packageTags
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
 
     try {
       await updateMutation.mutateAsync({
-        groupId,
+        packageId,
         data: {
-          addClubProductIds: addProductIds.size > 0 ? Array.from(addProductIds) : undefined,
-          removeClubProductIds: removeProductIds.size > 0 ? Array.from(removeProductIds) : undefined,
-          primaryClubProductId: primaryId !== currentGroup?.primary?.id ? primaryId : undefined,
-          packageName: packageName || undefined,
-          packagePrice: parseFloat(packagePrice),
-          packageDescription: packageDescription || undefined,
+          name: packageName.trim(),
+          description: packageDescription || undefined,
+          price: parseFloat(packagePrice),
+          tags: tags.length > 0 ? tags : undefined,
+          isActive,
+          items,
         },
       });
       navigate(`/clubs/${clubId}/packages`);
@@ -208,7 +195,7 @@ export function PackageEditPage() {
     );
   }
 
-  if (!club || !currentGroup) {
+  if (!club || !pkg) {
     return (
       <div className="container mx-auto p-6">
         <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -247,198 +234,6 @@ export function PackageEditPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Configuration */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Current Members */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">
-                  Products in Package ({totalMembers})
-                </CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowAddProducts(!showAddProducts)}
-                >
-                  <Plus className="size-4 mr-1.5" />
-                  Add Products
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <RadioGroup value={primaryId} onValueChange={setPrimaryId}>
-                <div className="space-y-2">
-                  {allPackageProducts.map((product) => {
-                    const displayName = getProductDisplayName(product);
-                    const imageUrl = getProductImage(product);
-                    const sku = getProductSku(product);
-                    const isPrimary = primaryId === product.id;
-                    const isNew = addProductIds.has(product.id);
-
-                    return (
-                      <div
-                        key={product.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                          isPrimary
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border'
-                        }`}
-                      >
-                        <RadioGroupItem value={product.id} id={`edit-primary-${product.id}`} />
-                        <div className="flex items-center justify-center rounded-md bg-accent/50 h-[36px] w-[44px] shrink-0">
-                          {imageUrl ? (
-                            <img
-                              src={imageUrl}
-                              className="h-[28px] w-full object-contain"
-                              alt={displayName}
-                            />
-                          ) : (
-                            <Package className="size-4 text-muted-foreground" />
-                          )}
-                        </div>
-                        <Label
-                          htmlFor={`edit-primary-${product.id}`}
-                          className="flex-1 cursor-pointer min-w-0"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium truncate">{displayName}</span>
-                            {isPrimary && (
-                              <Badge variant="primary" className="text-xs shrink-0">
-                                <Star className="size-3 mr-1" />
-                                Primary
-                              </Badge>
-                            )}
-                            {isNew && (
-                              <Badge variant="success" appearance="light" className="text-xs shrink-0">
-                                New
-                              </Badge>
-                            )}
-                          </div>
-                          <span className="text-xs text-muted-foreground">SKU: {sku}</span>
-                        </Label>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveMember(product.id)}
-                          disabled={!canRemoveMember}
-                          title={
-                            canRemoveMember
-                              ? 'Remove from package'
-                              : 'A package must have at least 2 products'
-                          }
-                          className="shrink-0"
-                        >
-                          <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </RadioGroup>
-            </CardContent>
-          </Card>
-
-          {/* Add Products Panel */}
-          {showAddProducts && (
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Add Products</CardTitle>
-                  <Button variant="ghost" size="sm" onClick={() => setShowAddProducts(false)}>
-                    <X className="size-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1">
-                    <Label className="text-xs mb-1.5 block">Quick Add</Label>
-                    <Select
-                      value=""
-                      onValueChange={(value) => {
-                        if (value) handleAddProduct(value);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a product to add..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableProducts.map((product) => (
-                          <SelectItem key={product.id} value={product.id}>
-                            {getProductDisplayName(product)}
-                          </SelectItem>
-                        ))}
-                        {availableProducts.length === 0 && (
-                          <SelectItem value="__empty__" disabled>
-                            No ungrouped products available
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex-1">
-                    <Label className="text-xs mb-1.5 block">Search</Label>
-                    <InputWrapper className="w-full">
-                      <Search className="size-4" />
-                      <Input
-                        placeholder="Search ungrouped products..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                      {searchQuery && (
-                        <Button
-                          variant="dim"
-                          size="sm"
-                          className="-me-3.5"
-                          onClick={() => setSearchQuery('')}
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      )}
-                    </InputWrapper>
-                  </div>
-                </div>
-
-                {filteredAvailable.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">
-                    No ungrouped products available to add.
-                  </p>
-                ) : (
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                    {filteredAvailable.map((product) => {
-                      const displayName = getProductDisplayName(product);
-                      const imageUrl = getProductImage(product);
-
-                      return (
-                        <div
-                          key={product.id}
-                          className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-accent/50 cursor-pointer transition-colors"
-                          onClick={() => handleAddProduct(product.id)}
-                        >
-                          <div className="flex items-center justify-center rounded-md bg-accent/50 h-[32px] w-[40px] shrink-0">
-                            {imageUrl ? (
-                              <img
-                                src={imageUrl}
-                                className="h-[24px] w-full object-contain"
-                                alt={displayName}
-                              />
-                            ) : (
-                              <Package className="size-4 text-muted-foreground" />
-                            )}
-                          </div>
-                          <span className="text-sm font-medium flex-1 truncate">{displayName}</span>
-                          <Button variant="outline" size="sm">
-                            <Plus className="size-3.5 mr-1" />
-                            Add
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
           {/* Package Details */}
           <Card>
             <CardHeader className="pb-3">
@@ -446,12 +241,14 @@ export function PackageEditPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="editPackageName">Package Name</Label>
+                <Label htmlFor="editPackageName">
+                  Package Name <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="editPackageName"
                   value={packageName}
                   onChange={(e) => setPackageName(e.target.value)}
-                  placeholder="e.g., Field Player Package"
+                  placeholder="e.g., Field Player Kit"
                 />
               </div>
 
@@ -483,8 +280,224 @@ export function PackageEditPage() {
                   rows={4}
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="editPackageTags">Tags</Label>
+                <Input
+                  id="editPackageTags"
+                  value={packageTags}
+                  onChange={(e) => setPackageTags(e.target.value)}
+                  placeholder="e.g., field-player, 2025-season (comma separated)"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Label htmlFor="editPackageActive">Status</Label>
+                <Select
+                  value={isActive ? 'active' : 'inactive'}
+                  onValueChange={(v) => setIsActive(v === 'active')}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardContent>
           </Card>
+
+          {/* Items in Package */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">
+                  Items in Package ({selectedItemsList.length})
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddProducts(!showAddProducts)}
+                >
+                  <Plus className="size-4 mr-1.5" />
+                  Add Products
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {selectedItemsList.map(({ clubProduct, quantity }) => {
+                  const displayName = getProductDisplayName(clubProduct);
+                  const imageUrl = getProductImage(clubProduct);
+                  const sku = getProductSku(clubProduct);
+
+                  return (
+                    <div
+                      key={clubProduct.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border"
+                    >
+                      <div className="flex items-center justify-center rounded-md bg-accent/50 h-9 w-11 shrink-0">
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            className="h-7 w-full object-contain"
+                            alt={displayName}
+                          />
+                        ) : (
+                          <Package className="size-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{displayName}</p>
+                        <p className="text-xs text-muted-foreground">SKU: {sku}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          mode="icon"
+                          className="size-7"
+                          onClick={() => updateQuantity(clubProduct.id, -1)}
+                          disabled={quantity <= 1}
+                        >
+                          <Minus className="size-3" />
+                        </Button>
+                        <span className="text-sm font-semibold w-6 text-center">{quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          mode="icon"
+                          className="size-7"
+                          onClick={() => updateQuantity(clubProduct.id, 1)}
+                        >
+                          <Plus className="size-3" />
+                        </Button>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItem(clubProduct.id)}
+                        disabled={selectedItems.size <= 1}
+                        title={
+                          selectedItems.size > 1
+                            ? 'Remove from package'
+                            : 'A package must have at least 1 product'
+                        }
+                        className="shrink-0"
+                      >
+                        <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Add Products Panel */}
+          {showAddProducts && (
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">Add Products</CardTitle>
+                  <Button variant="ghost" size="sm" onClick={() => setShowAddProducts(false)}>
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1">
+                    <Label className="text-xs mb-1.5 block">Quick Add</Label>
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        const product = availableProducts.find((p) => p.id === value);
+                        if (product) addProduct(product);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a product to add..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableProducts.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {getProductDisplayName(product)}
+                          </SelectItem>
+                        ))}
+                        {availableProducts.length === 0 && (
+                          <SelectItem value="__empty__" disabled>
+                            No products available
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-xs mb-1.5 block">Search</Label>
+                    <InputWrapper className="w-full">
+                      <Search className="size-4" />
+                      <Input
+                        placeholder="Search products..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                      {searchQuery && (
+                        <Button
+                          variant="dim"
+                          size="sm"
+                          className="-me-3.5"
+                          onClick={() => setSearchQuery('')}
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      )}
+                    </InputWrapper>
+                  </div>
+                </div>
+
+                {filteredAvailable.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    No products available to add.
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                    {filteredAvailable.map((product) => {
+                      const displayName = getProductDisplayName(product);
+                      const imageUrl = getProductImage(product);
+
+                      return (
+                        <div
+                          key={product.id}
+                          className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-accent/50 cursor-pointer transition-colors"
+                          onClick={() => addProduct(product)}
+                        >
+                          <div className="flex items-center justify-center rounded-md bg-accent/50 h-8 w-10 shrink-0">
+                            {imageUrl ? (
+                              <img
+                                src={imageUrl}
+                                className="h-6 w-full object-contain"
+                                alt={displayName}
+                              />
+                            ) : (
+                              <Package className="size-4 text-muted-foreground" />
+                            )}
+                          </div>
+                          <span className="text-sm font-medium flex-1 truncate">{displayName}</span>
+                          <Button variant="outline" size="sm">
+                            <Plus className="size-3.5 mr-1" />
+                            Add
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Right: Preview */}
@@ -494,21 +507,6 @@ export function PackageEditPage() {
               <CardTitle className="text-base">Package Preview</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Primary image */}
-              {primaryId && (
-                <div className="flex items-center justify-center bg-accent/30 rounded-lg h-[140px]">
-                  {(() => {
-                    const primary = allPackageProducts.find((p) => p.id === primaryId);
-                    const img = primary ? getProductImage(primary) : null;
-                    return img ? (
-                      <img src={img} alt="Package" className="h-full object-contain p-3" />
-                    ) : (
-                      <Package className="size-10 text-muted-foreground" />
-                    );
-                  })()}
-                </div>
-              )}
-
               <div>
                 <p className="text-xs text-muted-foreground">Package Name</p>
                 <p className="font-semibold">
@@ -524,16 +522,27 @@ export function PackageEditPage() {
               </div>
 
               <div>
+                <p className="text-xs text-muted-foreground">Status</p>
+                <Badge
+                  variant={isActive ? 'success' : 'secondary'}
+                  appearance="light"
+                  className="text-xs mt-1"
+                >
+                  {isActive ? 'Active' : 'Inactive'}
+                </Badge>
+              </div>
+
+              <div>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Products ({totalMembers})
+                  Items ({selectedItemsList.reduce((sum, i) => sum + i.quantity, 0)} total)
                 </p>
                 <div className="space-y-2">
-                  {allPackageProducts.map((product) => (
-                    <div key={product.id} className="flex items-center gap-2 text-sm">
-                      <div className="flex items-center justify-center rounded bg-accent/50 h-[24px] w-[30px] shrink-0">
-                        {getProductImage(product) ? (
+                  {selectedItemsList.map(({ clubProduct, quantity }) => (
+                    <div key={clubProduct.id} className="flex items-center gap-2 text-sm">
+                      <div className="flex items-center justify-center rounded bg-accent/50 h-6 w-[30px] shrink-0">
+                        {getProductImage(clubProduct) ? (
                           <img
-                            src={getProductImage(product)!}
+                            src={getProductImage(clubProduct)!}
                             className="h-[18px] w-full object-contain"
                             alt=""
                           />
@@ -541,36 +550,14 @@ export function PackageEditPage() {
                           <Package className="size-3 text-muted-foreground" />
                         )}
                       </div>
-                      <span className="truncate">{getProductDisplayName(product)}</span>
-                      {product.id === primaryId && (
-                        <Star className="size-3 text-primary shrink-0" />
-                      )}
+                      <span className="truncate">{getProductDisplayName(clubProduct)}</span>
+                      <Badge variant="outline" className="text-xs shrink-0">
+                        x{quantity}
+                      </Badge>
                     </div>
                   ))}
                 </div>
               </div>
-
-              {/* Changes summary */}
-              {hasChanges && (
-                <div className="pt-3 border-t">
-                  <p className="text-xs font-medium text-muted-foreground mb-1.5">Pending Changes</p>
-                  <div className="space-y-1">
-                    {addProductIds.size > 0 && (
-                      <p className="text-xs text-green-600">
-                        + {addProductIds.size} product{addProductIds.size > 1 ? 's' : ''} to add
-                      </p>
-                    )}
-                    {removeProductIds.size > 0 && (
-                      <p className="text-xs text-red-600">
-                        - {removeProductIds.size} product{removeProductIds.size > 1 ? 's' : ''} to remove
-                      </p>
-                    )}
-                    {primaryId !== currentGroup?.primary?.id && (
-                      <p className="text-xs text-blue-600">Primary product changed</p>
-                    )}
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>

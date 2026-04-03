@@ -1,4 +1,4 @@
-import { useDeleteClubPackage } from '../hooks/use-club-packages';
+import { useUngroupClubProducts } from '../hooks/use-club-products';
 import { Button } from '@/shared/components/ui/button';
 import {
   Dialog,
@@ -10,34 +10,34 @@ import {
 } from '@/shared/components/ui/dialog';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
-interface DeletePackageDialogProps {
+interface DeleteGroupDialogProps {
   clubId: string;
-  packageId: string | null;
-  packageName: string;
+  groupId: string | null;
+  groupName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
 
-export function DeletePackageDialog({
+export function DeleteGroupDialog({
   clubId,
-  packageId,
-  packageName,
+  groupId,
+  groupName,
   open,
   onOpenChange,
   onSuccess,
-}: DeletePackageDialogProps) {
-  const deleteMutation = useDeleteClubPackage(clubId);
+}: DeleteGroupDialogProps) {
+  const ungroupMutation = useUngroupClubProducts(clubId);
 
   const handleDelete = async () => {
-    if (!packageId) return;
+    if (!groupId) return;
 
     try {
-      await deleteMutation.mutateAsync(packageId);
+      await ungroupMutation.mutateAsync(groupId);
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
-      console.error('Error deleting package:', error);
+      console.error('Error dissolving group:', error);
     }
   };
 
@@ -50,7 +50,7 @@ export function DeletePackageDialog({
               <AlertTriangle className="size-5 text-destructive" />
             </div>
             <div>
-              <DialogTitle>Delete Package</DialogTitle>
+              <DialogTitle>Dissolve Group</DialogTitle>
               <DialogDescription className="mt-1">
                 This action cannot be undone.
               </DialogDescription>
@@ -60,12 +60,12 @@ export function DeletePackageDialog({
 
         <div className="py-4">
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete the package{' '}
-            <span className="font-semibold text-foreground">"{packageName}"</span>?
+            Are you sure you want to dissolve the group{' '}
+            <span className="font-semibold text-foreground">"{groupName}"</span>?
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            The individual products will remain in the club catalog but this package
-            will no longer be available in the shop.
+            The individual products will remain in the club catalog but will no longer
+            be grouped together. They will appear separately in the shop.
           </p>
         </div>
 
@@ -73,22 +73,22 @@ export function DeletePackageDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={deleteMutation.isPending}
+            disabled={ungroupMutation.isPending}
           >
             Cancel
           </Button>
           <Button
             variant="destructive"
             onClick={handleDelete}
-            disabled={deleteMutation.isPending}
+            disabled={ungroupMutation.isPending}
           >
-            {deleteMutation.isPending ? (
+            {ungroupMutation.isPending ? (
               <>
                 <Loader2 className="size-4 mr-2 animate-spin" />
-                Deleting...
+                Dissolving...
               </>
             ) : (
-              'Delete Package'
+              'Dissolve Group'
             )}
           </Button>
         </DialogFooter>
