@@ -99,10 +99,10 @@ export function ClubDetailPage() {
           <Badge variant={club.isActive ? 'success' : 'secondary'}>
             {club.isActive ? 'Active' : 'Inactive'}
           </Badge>
-          <Button variant="outline" onClick={() => navigate(`/clubs/${clubId}/groups`)}>
+          {/* <Button variant="outline" onClick={() => navigate(`/clubs/${clubId}/groups`)}>
             <Group className="size-4 mr-2" />
             Group Products
-          </Button>
+          </Button> */}
           <Button variant="outline" onClick={() => navigate(`/clubs/${clubId}/packages`)}>
             <Package className="size-4 mr-2" />
             Packages

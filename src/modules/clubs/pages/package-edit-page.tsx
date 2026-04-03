@@ -31,6 +31,8 @@ import { useClubPackage, useUpdateClubPackage } from '../hooks/use-club-packages
 import { ClubProduct } from '../types/club-product';
 import { PackageItemDto } from '../types/club-package';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
+import { TagMultiSelect } from '@/modules/tags/components/tag-multi-select';
+import { ProductFormImageUpload } from '@/modules/products/components/product-form-image-upload';
 
 interface SelectedItem {
   clubProduct: ClubProduct;
@@ -53,7 +55,8 @@ export function PackageEditPage() {
   const [packageName, setPackageName] = useState('');
   const [packagePrice, setPackagePrice] = useState<string>('');
   const [packageDescription, setPackageDescription] = useState('');
-  const [packageTags, setPackageTags] = useState<string>('');
+  const [packageTags, setPackageTags] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
   const [showAddProducts, setShowAddProducts] = useState(false);
@@ -70,7 +73,8 @@ export function PackageEditPage() {
       setPackageName(pkg.name || '');
       setPackagePrice(pkg.price?.toString() || '');
       setPackageDescription(pkg.description || '');
-      setPackageTags(pkg.tags?.join(', ') || '');
+      setPackageTags(pkg.tags || []);
+      setImageUrls(pkg.imageUrls || []);
       setIsActive(pkg.isActive);
 
       const items = new Map<string, SelectedItem>();
@@ -153,11 +157,6 @@ export function PackageEditPage() {
       sortOrder: index,
     }));
 
-    const tags = packageTags
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
-
     try {
       await updateMutation.mutateAsync({
         packageId,
@@ -165,7 +164,8 @@ export function PackageEditPage() {
           name: packageName.trim(),
           description: packageDescription || undefined,
           price: parseFloat(packagePrice),
-          tags: tags.length > 0 ? tags : undefined,
+          tags: packageTags.length > 0 ? packageTags : undefined,
+          imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
           isActive,
           items,
         },
@@ -282,12 +282,10 @@ export function PackageEditPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="editPackageTags">Tags</Label>
-                <Input
-                  id="editPackageTags"
-                  value={packageTags}
-                  onChange={(e) => setPackageTags(e.target.value)}
-                  placeholder="e.g., field-player, 2025-season (comma separated)"
+                <Label>Tags</Label>
+                <TagMultiSelect
+                  selectedTags={packageTags}
+                  onTagsChange={setPackageTags}
                 />
               </div>
 
@@ -309,10 +307,25 @@ export function PackageEditPage() {
             </CardContent>
           </Card>
 
+          {/* Package Images */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Package Images</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ProductFormImageUpload
+                mode="edit"
+                initialImages={imageUrls}
+                maxFiles={5}
+                onAllImagesChange={(urls) => setImageUrls(urls)}
+              />
+            </CardContent>
+          </Card>
+
           {/* Items in Package */}
           <Card>
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <CardTitle className="text-base">
                   Items in Package ({selectedItemsList.length})
                 </CardTitle>
