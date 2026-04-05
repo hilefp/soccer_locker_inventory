@@ -243,6 +243,20 @@ export function OrderDetailPage() {
       ...prev,
       [packageInstanceId]: { ...prev[packageInstanceId], selected: checked, amount: checked ? packagePrice : '' },
     }));
+    // Auto-select / deselect all items belonging to this package
+    const pkgItems = order?.items?.filter((i) => i.packageInstanceId === packageInstanceId) ?? [];
+    setRefundItemStates((prev) => {
+      const next = { ...prev };
+      pkgItems.forEach((item) => {
+        if (checked) {
+          const remaining = item.quantity - (item.refundedQuantity || 0);
+          next[item.id] = { selected: remaining > 0, quantity: remaining, refundTotal: 0, refundTax: 0 };
+        } else {
+          next[item.id] = { selected: false, quantity: 0, refundTotal: 0, refundTax: 0 };
+        }
+      });
+      return next;
+    });
   };
 
   const handleRefundPackageAmountChange = (packageInstanceId: string, value: string) => {
@@ -320,22 +334,17 @@ export function OrderDetailPage() {
       .filter(([, s]) => s.selected && s.quantity > 0)
       .map(([orderItemId, s]) => ({ orderItemId, quantity: s.quantity }));
 
-    // Collect package items to mark as refunded, and sum custom amounts
-    const packageItems: { orderItemId: string; quantity: number }[] = [];
-    let packageCustomAmount = 0;
-    Object.entries(refundPackageStates).forEach(([packageInstanceId, ps]) => {
-      if (!ps.selected) return;
-      packageCustomAmount += ps.amount === '' ? 0 : ps.amount;
-      order?.items
-        ?.filter((i) => i.packageInstanceId === packageInstanceId)
-        .forEach((i) => {
-          const remaining = i.quantity - (i.refundedQuantity || 0);
-          if (remaining > 0) packageItems.push({ orderItemId: i.id, quantity: remaining });
-        });
-    });
+    // Collect individually-selected package items (user controls which ones get refundedQuantity++)
+    const packageItems = Object.entries(refundItemStates)
+      .filter(([itemId, s]) => {
+        if (!s.selected || s.quantity <= 0) return false;
+        const orderItem = order?.items?.find((i) => i.id === itemId);
+        return orderItem?.packageInstanceId != null;
+      })
+      .map(([orderItemId, s]) => ({ orderItemId, quantity: s.quantity }));
 
+    const hasPackageRefund = Object.values(refundPackageStates).some((ps) => ps.selected);
     const items = [...standaloneItems, ...packageItems];
-    const hasPackageRefund = packageItems.length > 0;
 
     refundMutation.mutate(
       {
@@ -1056,42 +1065,56 @@ export function OrderDetailPage() {
                                   );
                                 })()
                               ) : isRefunding ? (
-                                <div className={`flex items-center gap-3 ${item.refundedQuantity >= item.quantity ? 'opacity-50' : ''}`}>
-                                  <div className="flex items-center justify-center rounded-lg bg-accent/50 h-10 w-10 shrink-0">
-                                    {(item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl) ? (
-                                      <img src={item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl} alt={item.name || 'Product'} className="h-6 w-full object-contain" />
-                                    ) : (
-                                      <Package className="size-4 text-muted-foreground" />
-                                    )}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <p className="text-sm font-medium truncate">{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}</p>
-                                      <span className="text-xs text-muted-foreground shrink-0">×{item.quantity}</span>
-                                    </div>
-                                    {item.sku && <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>}
-                                    {(() => {
-                                      const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
-                                      return (
-                                        <>
-                                          {sizeValue && <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>}
-                                          {rest.length > 0 && <p className="text-xs text-muted-foreground">{rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}</p>}
-                                        </>
-                                      );
-                                    })()}
-                                    {item.customFields && Object.keys(item.customFields).length > 0 && (
-                                      <div className="text-xs text-muted-foreground">
-                                        {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
+                                (() => {
+                                  const rs = refundItemStates[item.id];
+                                  const pkgSelected = refundPackageStates[packageInstanceId]?.selected ?? false;
+                                  const isFullyRefunded = item.refundedQuantity >= item.quantity;
+                                  return (
+                                    <div className={`grid grid-cols-[auto_1fr] gap-2 items-center ${isFullyRefunded ? 'opacity-50' : ''}`}>
+                                      <Checkbox
+                                        checked={rs?.selected ?? false}
+                                        disabled={!pkgSelected || isFullyRefunded}
+                                        onCheckedChange={(checked) => handleToggleRefundItem(item.id, checked === true)}
+                                      />
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <div className="flex items-center justify-center rounded-lg bg-accent/50 h-10 w-10 shrink-0">
+                                          {(item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl) ? (
+                                            <img src={item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl} alt={item.name || 'Product'} className="h-6 w-full object-contain" />
+                                          ) : (
+                                            <Package className="size-4 text-muted-foreground" />
+                                          )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-2">
+                                            <p className="text-sm font-medium truncate">{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}</p>
+                                            <span className="text-xs text-muted-foreground shrink-0">×{item.quantity}</span>
+                                          </div>
+                                          {item.sku && <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>}
+                                          {(() => {
+                                            const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                                            return (
+                                              <>
+                                                {sizeValue && <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>}
+                                                {rest.length > 0 && <p className="text-xs text-muted-foreground">{rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}</p>}
+                                              </>
+                                            );
+                                          })()}
+                                          {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                            <div className="text-xs text-muted-foreground">
+                                              {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
+                                            </div>
+                                          )}
+                                          {item.refundedQuantity > 0 && (
+                                            <p className="text-xs text-destructive font-medium">{isFullyRefunded ? 'Fully refunded' : `${item.refundedQuantity} of ${item.quantity} refunded`}</p>
+                                          )}
+                                          {(item.missingQuantity || 0) > 0 && (
+                                            <p className="text-xs text-orange-600 font-medium">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
+                                          )}
+                                        </div>
                                       </div>
-                                    )}
-                                    {item.refundedQuantity > 0 && (
-                                      <p className="text-xs text-destructive font-medium">{item.refundedQuantity >= item.quantity ? 'Fully refunded' : `${item.refundedQuantity} of ${item.quantity} refunded`}</p>
-                                    )}
-                                    {(item.missingQuantity || 0) > 0 && (
-                                      <p className="text-xs text-orange-600 font-medium">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
-                                    )}
-                                  </div>
-                                </div>
+                                    </div>
+                                  );
+                                })()
                               ) : (
                                 <div className={`flex items-center gap-3 ${item.refundedQuantity >= item.quantity ? 'opacity-60' : ''}`}>
                                   <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
