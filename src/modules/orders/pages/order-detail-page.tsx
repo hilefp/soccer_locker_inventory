@@ -918,6 +918,8 @@ export function OrderDetailPage() {
 
                     // Package group
                     const { packageInstanceId, packageName, packagePrice, packageImageUrl, items: pkgItems } = group;
+                    const pkgQty = pkgItems[0]?.quantity ?? 1;
+                    const pkgTotalPrice = packagePrice * pkgQty;
                     const allPkgRefunded = pkgItems.every((i) => i.refundedQuantity >= i.quantity);
 
                     return (
@@ -961,7 +963,7 @@ export function OrderDetailPage() {
                               </div>
                               <span />
                               <span />
-                              <div className="text-right text-sm font-semibold">${packagePrice.toFixed(2)}</div>
+                              <div className="text-right text-sm font-semibold">${pkgTotalPrice.toFixed(2)}</div>
                               <span />
                             </div>
                             {refundPackageStates[packageInstanceId]?.selected && (
@@ -973,7 +975,7 @@ export function OrderDetailPage() {
                                 <Input
                                   type="number"
                                   min={0}
-                                  max={packagePrice}
+                                  max={pkgTotalPrice}
                                   step={0.01}
                                   value={refundPackageStates[packageInstanceId]?.amount ?? ''}
                                   onChange={(e) => handleRefundPackageAmountChange(packageInstanceId, e.target.value)}
@@ -997,7 +999,8 @@ export function OrderDetailPage() {
                               <p className="text-xs text-muted-foreground">{pkgItems.length} items</p>
                             </div>
                             <div className="text-right">
-                              <div className="font-medium">${packagePrice.toFixed(2)}</div>
+                              <div className="font-medium">${pkgTotalPrice.toFixed(2)}</div>
+                              {pkgQty > 1 && <div className="text-sm text-muted-foreground">${packagePrice.toFixed(2)} x {pkgQty}</div>}
                             </div>
                           </div>
                         )}
