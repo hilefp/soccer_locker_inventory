@@ -79,7 +79,20 @@ export interface OrderItem {
     id: string;
     name: string;
     imageUrls: string[];
+    product?: {
+      imageUrl?: string;
+      imageUrls?: string[];
+    };
   };
+  // Package fields (when item is part of a package purchase)
+  packageInstanceId?: string | null;
+  clubPackageId?: string | null;
+  packageName?: string | null;
+  packagePrice?: number | null;
+  clubPackage?: {
+    id: string;
+    imageUrls?: string[];
+  } | null;
 }
 
 // Order Status History Interface
@@ -372,6 +385,7 @@ export interface RefundOrderRequest {
   refundShipping?: boolean;
   refundRushFee?: boolean;
   reason?: string;
+  customAmount?: number;
 }
 
 export interface RefundOrderResponse {

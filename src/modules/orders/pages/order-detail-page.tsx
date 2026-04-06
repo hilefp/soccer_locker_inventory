@@ -73,6 +73,11 @@ interface RefundItemState {
   refundTax: number;
 }
 
+interface RefundPackageState {
+  selected: boolean;
+  amount: number | '';
+}
+
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
@@ -104,6 +109,7 @@ export function OrderDetailPage() {
 
   const [refundReason, setRefundReason] = useState('');
   const [refundItemStates, setRefundItemStates] = useState<Record<string, RefundItemState>>({});
+  const [refundPackageStates, setRefundPackageStates] = useState<Record<string, RefundPackageState>>({});
 
   const { data: order, isLoading, error } = useOrder(orderId || '');
   const { data: statusHistory } = useOrderStatusHistory(orderId || '');
@@ -174,9 +180,14 @@ export function OrderDetailPage() {
   // Refund helpers
   const initRefundStates = () => {
     const states: Record<string, RefundItemState> = {};
+    const pkgStates: Record<string, RefundPackageState> = {};
     order?.items?.forEach((item) => {
       states[item.id] = { selected: false, quantity: 0, refundTotal: 0, refundTax: 0 };
+      if (item.packageInstanceId && !pkgStates[item.packageInstanceId]) {
+        pkgStates[item.packageInstanceId] = { selected: false, amount: '' };
+      }
     });
+    setRefundPackageStates(pkgStates);
     return states;
   };
 
@@ -227,6 +238,75 @@ export function OrderDetailPage() {
     });
   };
 
+  const handleToggleRefundPackage = (packageInstanceId: string, checked: boolean, packagePrice: number) => {
+    setRefundPackageStates((prev) => ({
+      ...prev,
+      [packageInstanceId]: { ...prev[packageInstanceId], selected: checked, amount: checked ? packagePrice : '' },
+    }));
+    // Auto-select / deselect all items belonging to this package
+    const pkgItems = order?.items?.filter((i) => i.packageInstanceId === packageInstanceId) ?? [];
+    setRefundItemStates((prev) => {
+      const next = { ...prev };
+      pkgItems.forEach((item) => {
+        if (checked) {
+          const remaining = item.quantity - (item.refundedQuantity || 0);
+          next[item.id] = { selected: remaining > 0, quantity: remaining, refundTotal: 0, refundTax: 0 };
+        } else {
+          next[item.id] = { selected: false, quantity: 0, refundTotal: 0, refundTax: 0 };
+        }
+      });
+      return next;
+    });
+  };
+
+  const handleRefundPackageAmountChange = (packageInstanceId: string, value: string) => {
+    const amount: number | '' = value === '' ? '' : Math.max(0, parseFloat(value) || 0);
+    setRefundPackageStates((prev) => ({
+      ...prev,
+      [packageInstanceId]: { ...prev[packageInstanceId], amount },
+    }));
+  };
+
+  type GroupedItem =
+    | { type: 'standalone'; item: OrderItem }
+    | {
+        type: 'package';
+        packageInstanceId: string;
+        packageName: string;
+        packagePrice: number;
+        packageImageUrl?: string;
+        items: OrderItem[];
+      };
+
+  const groupedOrderItems = useMemo<GroupedItem[]>(() => {
+    if (!order?.items) return [];
+    const result: GroupedItem[] = [];
+    const packageIndexMap = new Map<string, number>();
+
+    order.items.forEach((item) => {
+      if (item.packageInstanceId) {
+        const idx = packageIndexMap.get(item.packageInstanceId);
+        if (idx !== undefined) {
+          (result[idx] as Extract<GroupedItem, { type: 'package' }>).items.push(item);
+        } else {
+          packageIndexMap.set(item.packageInstanceId, result.length);
+          result.push({
+            type: 'package',
+            packageInstanceId: item.packageInstanceId,
+            packageName: item.packageName || 'Package',
+            packagePrice: Number(item.packagePrice || 0),
+            packageImageUrl: item.clubPackage?.imageUrls?.[0],
+            items: [item],
+          });
+        }
+      } else {
+        result.push({ type: 'standalone', item });
+      }
+    });
+
+    return result;
+  }, [order?.items]);
+
   const refundTotals = useMemo(() => {
     let totalItemRefund = 0;
     let totalTaxRefund = 0;
@@ -236,25 +316,42 @@ export function OrderDetailPage() {
         totalTaxRefund += s.refundTax;
       }
     });
+    let packageRefund = 0;
+    Object.values(refundPackageStates).forEach((s) => {
+      if (s.selected) packageRefund += s.amount === '' ? 0 : s.amount;
+    });
     const shippingRefund = refundShipping ? Number(order?.shippingTotal ?? 0) : 0;
     const rushFeeRefund = refundRushFee ? Number(order?.rushFee ?? 0) : 0;
     const amountAlreadyRefunded = Number(order?.totalRefunded ?? 0);
     const totalAvailable = Number(order?.total ?? 0) - amountAlreadyRefunded;
-    const totalRefund = totalItemRefund + totalTaxRefund + shippingRefund + rushFeeRefund;
-    return { totalItemRefund, totalTaxRefund, shippingRefund, rushFeeRefund, totalRefund, amountAlreadyRefunded, totalAvailable };
-  }, [refundItemStates, refundShipping, refundRushFee, order?.shippingTotal, order?.rushFee, order?.total, order?.totalRefunded]);
+    const totalRefund = totalItemRefund + totalTaxRefund + packageRefund + shippingRefund + rushFeeRefund;
+    return { totalItemRefund, totalTaxRefund, packageRefund, shippingRefund, rushFeeRefund, totalRefund, amountAlreadyRefunded, totalAvailable };
+  }, [refundItemStates, refundPackageStates, refundShipping, refundRushFee, order?.shippingTotal, order?.rushFee, order?.total, order?.totalRefunded]);
 
   const handleSubmitRefund = () => {
     if (!orderId || refundTotals.totalRefund <= 0) return;
-    const items = Object.entries(refundItemStates)
+    const standaloneItems = Object.entries(refundItemStates)
       .filter(([, s]) => s.selected && s.quantity > 0)
       .map(([orderItemId, s]) => ({ orderItemId, quantity: s.quantity }));
+
+    // Collect individually-selected package items (user controls which ones get refundedQuantity++)
+    const packageItems = Object.entries(refundItemStates)
+      .filter(([itemId, s]) => {
+        if (!s.selected || s.quantity <= 0) return false;
+        const orderItem = order?.items?.find((i) => i.id === itemId);
+        return orderItem?.packageInstanceId != null;
+      })
+      .map(([orderItemId, s]) => ({ orderItemId, quantity: s.quantity }));
+
+    const hasPackageRefund = Object.values(refundPackageStates).some((ps) => ps.selected);
+    const items = [...standaloneItems, ...packageItems];
 
     refundMutation.mutate(
       {
         id: orderId,
         data: {
           items: items.length > 0 ? items : undefined,
+          customAmount: hasPackageRefund ? refundTotals.totalRefund : undefined,
           refundShipping: refundShipping || undefined,
           refundRushFee: refundRushFee || undefined,
           reason: refundReason.trim() || undefined,
@@ -649,301 +746,419 @@ export function OrderDetailPage() {
 
               <ScrollArea>
                 <div className="divide-y">
-                  {order.items?.map((item) => {
-                    const rs = refundItemStates[item.id];
+                  {groupedOrderItems.map((group) => {
+                    if (group.type === 'standalone') {
+                      const item = group.item;
+                      const rs = refundItemStates[item.id];
 
-                    return (
-                      <div key={item.id} className="p-4">
-                        {isMissingMode ? (
-                          (() => {
-                            const ms = missingItemStates[item.id];
-                            const maxQty = isResolvingMode
-                              ? (item.missingQuantity || 0)
-                              : item.quantity - (item.missingQuantity || 0);
-                            const isFullyMissing = !isResolvingMode && (item.missingQuantity || 0) >= item.quantity;
-                            return (
-                              <>
+                      return (
+                        <div key={item.id} className="p-4">
+                          {isMissingMode ? (
+                            (() => {
+                              const ms = missingItemStates[item.id];
+                              const maxQty = isResolvingMode
+                                ? (item.missingQuantity || 0)
+                                : item.quantity - (item.missingQuantity || 0);
+                              const isFullyMissing = !isResolvingMode && (item.missingQuantity || 0) >= item.quantity;
+                              return (
                                 <div className={`grid grid-cols-[auto_1fr_80px_100px] gap-2 items-center ${isFullyMissing ? 'opacity-50' : ''}`}>
                                   <Checkbox
                                     checked={ms?.selected ?? false}
                                     disabled={isFullyMissing || maxQty <= 0}
-                                    onCheckedChange={(checked) =>
-                                      handleToggleMissingItem(item.id, checked === true)
-                                    }
+                                    onCheckedChange={(checked) => handleToggleMissingItem(item.id, checked === true)}
                                   />
                                   <div className="flex items-center gap-3 min-w-0">
                                     <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
-                                      {(item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl) ? (
-                                        <img
-                                          src={item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl}
-                                          alt={item.name || 'Product'}
-                                          className="h-[30px] w-full object-contain"
-                                        />
+                                      {(item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl) ? (
+                                        <img src={item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl} alt={item.name || 'Product'} className="h-[30px] w-full object-contain" />
                                       ) : (
                                         <Package className="size-5 text-muted-foreground" />
                                       )}
                                     </div>
                                     <div className="min-w-0">
-                                      <p className="text-sm font-medium truncate">
-                                        {item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}
-                                      </p>
-                                      {item.sku && (
-                                        <p className="text-xs text-muted-foreground">
-                                          SKU: {item.sku}
-                                        </p>
-                                      )}
+                                      <p className="text-sm font-medium truncate">{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}</p>
+                                      {item.sku && <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>}
                                       {(() => {
                                         const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
                                         return (
                                           <>
-                                            {sizeValue && (
-                                              <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>
-                                            )}
-                                            {rest.length > 0 && (
-                                              <p className="text-xs text-muted-foreground">
-                                                {rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}
-                                              </p>
-                                            )}
+                                            {sizeValue && <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>}
+                                            {rest.length > 0 && <p className="text-xs text-muted-foreground">{rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}</p>}
                                           </>
                                         );
                                       })()}
                                       {item.customFields && Object.keys(item.customFields).length > 0 && (
                                         <div className="text-xs text-muted-foreground">
-                                          {Object.entries(item.customFields).map(([key, value]) => (
-                                            <p key={key}>{key}: {value}</p>
-                                          ))}
+                                          {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
                                         </div>
                                       )}
                                       {(item.missingQuantity || 0) > 0 && !isResolvingMode && (
-                                        <p className="text-xs text-orange-600 font-medium">
-                                          {isFullyMissing
-                                            ? 'All missing'
-                                            : `${item.missingQuantity} of ${item.quantity} missing`}
-                                        </p>
+                                        <p className="text-xs text-orange-600 font-medium">{isFullyMissing ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
                                       )}
                                       {isResolvingMode && (item.missingQuantity || 0) > 0 && (
-                                        <p className="text-xs text-orange-600 font-medium">
-                                          {item.missingQuantity} currently missing
-                                        </p>
+                                        <p className="text-xs text-orange-600 font-medium">{item.missingQuantity} currently missing</p>
                                       )}
                                     </div>
                                   </div>
-                                  <div className="text-center text-sm text-muted-foreground">
-                                    &times; {item.quantity}
-                                  </div>
+                                  <div className="text-center text-sm text-muted-foreground">&times; {item.quantity}</div>
                                   <div className="text-center">
                                     {ms?.selected ? (
-                                      <Input
-                                        type="number"
-                                        min={1}
-                                        max={maxQty}
-                                        value={ms.quantity}
-                                        onChange={(e) =>
-                                          handleMissingQtyChange(item.id, parseInt(e.target.value) || 0)
-                                        }
-                                        className="h-8 text-sm text-center"
-                                      />
+                                      <Input type="number" min={1} max={maxQty} value={ms.quantity} onChange={(e) => handleMissingQtyChange(item.id, parseInt(e.target.value) || 0)} className="h-8 text-sm text-center" />
                                     ) : (
                                       <span className="text-sm text-muted-foreground">&ndash;</span>
                                     )}
                                   </div>
                                 </div>
-                              </>
-                            );
-                          })()
-                        ) : isRefunding ? (
-                          <>
-                            {/* Refund mode row */}
-                            <div className={`grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center ${item.refundedQuantity >= item.quantity ? 'opacity-50' : ''}`}>
-                              <Checkbox
-                                checked={rs?.selected ?? false}
-                                disabled={item.refundedQuantity >= item.quantity}
-                                onCheckedChange={(checked) =>
-                                  handleToggleRefundItem(item.id, checked === true)
-                                }
-                              />
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
-                                  {(item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl) ? (
-                                    <img
-                                      src={item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl}
-                                      alt={item.name || 'Product'}
-                                      className="h-[30px] w-full object-contain"
-                                    />
-                                  ) : (
-                                    <Package className="size-5 text-muted-foreground" />
-                                  )}
+                              );
+                            })()
+                          ) : isRefunding ? (
+                            <>
+                              <div className={`grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center ${item.refundedQuantity >= item.quantity ? 'opacity-50' : ''}`}>
+                                <Checkbox
+                                  checked={rs?.selected ?? false}
+                                  disabled={item.refundedQuantity >= item.quantity}
+                                  onCheckedChange={(checked) => handleToggleRefundItem(item.id, checked === true)}
+                                />
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
+                                    {(item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl) ? (
+                                      <img src={item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl} alt={item.name || 'Product'} className="h-[30px] w-full object-contain" />
+                                    ) : (
+                                      <Package className="size-5 text-muted-foreground" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium truncate">{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}</p>
+                                    {item.sku && <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>}
+                                    {(() => {
+                                      const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                                      return (
+                                        <>
+                                          {sizeValue && <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>}
+                                          {rest.length > 0 && <p className="text-xs text-muted-foreground">{rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}</p>}
+                                        </>
+                                      );
+                                    })()}
+                                    {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                      <div className="text-xs text-muted-foreground">
+                                        {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
+                                      </div>
+                                    )}
+                                    {item.refundedQuantity > 0 && (
+                                      <p className="text-xs text-destructive font-medium">{item.refundedQuantity >= item.quantity ? 'Fully refunded' : `${item.refundedQuantity} of ${item.quantity} refunded`}</p>
+                                    )}
+                                    {(item.missingQuantity || 0) > 0 && (
+                                      <p className="text-xs text-orange-600 font-medium">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="min-w-0">
-                                  <p className="text-sm font-medium truncate">
-                                    {item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}
-                                  </p>
-                                  {item.sku && (
-                                    <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
-                                  )}
-                                  {(() => {
-                                    const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
-                                    return (
-                                      <>
-                                        {sizeValue && (
-                                          <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>
-                                        )}
-                                        {rest.length > 0 && (
-                                          <p className="text-xs text-muted-foreground">
-                                            {rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}
-                                          </p>
-                                        )}
-                                      </>
-                                    );
-                                  })()}
-                                  {item.customFields && Object.keys(item.customFields).length > 0 && (
-                                    <div className="text-xs text-muted-foreground">
-                                      {Object.entries(item.customFields).map(([key, value]) => (
-                                        <p key={key}>{key}: {value}</p>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {item.refundedQuantity > 0 && (
-                                    <p className="text-xs text-destructive font-medium">
-                                      {item.refundedQuantity >= item.quantity
-                                        ? 'Fully refunded'
-                                        : `${item.refundedQuantity} of ${item.quantity} refunded`}
-                                    </p>
-                                  )}
-                                  {(item.missingQuantity || 0) > 0 && (
-                                    <p className="text-xs text-orange-600 font-medium">
-                                      {item.missingQuantity >= item.quantity
-                                        ? 'All missing'
-                                        : `${item.missingQuantity} of ${item.quantity} missing`}
-                                    </p>
-                                  )}
+                                <div className="text-center text-sm text-muted-foreground">&times; {item.quantity}</div>
+                                <div className="text-right text-sm">${Number(item.unitPrice).toFixed(2)}</div>
+                                <div className="text-right text-sm font-medium">${Number(item.totalPrice).toFixed(2)}</div>
+                                <div className="text-right text-sm text-muted-foreground">
+                                  ${(Number(order.subtotal) > 0 ? (Number(item.totalPrice) / Number(order.subtotal)) * Number(order.taxTotal) : 0).toFixed(2)}
                                 </div>
                               </div>
-                              <div className="text-center text-sm text-muted-foreground">
-                                &times; {item.quantity}
+                              {rs?.selected && (
+                                <div className="grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center mt-2">
+                                  <span className="w-5" />
+                                  <span />
+                                  <Input type="number" min={0} max={item.quantity - (item.refundedQuantity || 0)} value={rs.quantity} onChange={(e) => handleRefundQtyChange(item.id, parseInt(e.target.value) || 0)} className="h-8 text-sm text-center" />
+                                  <span />
+                                  <Input type="text" value={rs.refundTotal.toFixed(2)} readOnly className="h-8 text-sm text-right bg-muted/30" tabIndex={-1} />
+                                  <Input type="text" value={rs.refundTax.toFixed(4)} readOnly className="h-8 text-sm text-right bg-muted/30" tabIndex={-1} />
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className={`flex items-center gap-4 ${item.refundedQuantity >= item.quantity ? 'opacity-60' : ''}`}>
+                              <div className="flex items-center justify-center rounded-lg bg-accent/50 h-16 w-16 shrink-0">
+                                {(item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl) ? (
+                                  <img src={item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl} alt={item.name || 'Product'} className="h-10 w-full object-contain" />
+                                ) : (
+                                  <Package className="size-6 text-muted-foreground" />
+                                )}
                               </div>
-                              <div className="text-right text-sm">
-                                ${Number(item.unitPrice).toFixed(2)}
+                              <div className="flex-1 min-w-0">
+                                <span className="font-medium text-foreground truncate">{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown Product'}</span>
+                                {item.sku && <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>}
+                                {(() => {
+                                  const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                                  return (
+                                    <>
+                                      {sizeValue && <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>}
+                                      {rest.length > 0 && <p className="text-xs text-muted-foreground">{rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}</p>}
+                                    </>
+                                  );
+                                })()}
+                                {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
+                                  </div>
+                                )}
+                                {item.refundedQuantity > 0 && (
+                                  <p className="text-xs text-destructive font-medium mt-0.5">{item.refundedQuantity >= item.quantity ? 'Fully refunded' : `${item.refundedQuantity} of ${item.quantity} refunded`}</p>
+                                )}
+                                {(item.missingQuantity || 0) > 0 && (
+                                  <p className="text-xs text-orange-600 font-medium mt-0.5">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
+                                )}
                               </div>
-                              <div className="text-right text-sm font-medium">
-                                ${Number(item.totalPrice).toFixed(2)}
-                              </div>
-                              <div className="text-right text-sm text-muted-foreground">
-                                ${(Number(order.subtotal) > 0
-                                  ? (Number(item.totalPrice) / Number(order.subtotal)) * Number(order.taxTotal)
-                                  : 0
-                                ).toFixed(2)}
+                              <div className="text-right">
+                                <div className="font-medium">${Number(item.totalPrice).toFixed(2)}</div>
+                                <div className="text-sm text-muted-foreground">${Number(item.unitPrice).toFixed(2)} x {item.quantity}</div>
+                                {item.refundedQuantity > 0 && (
+                                  <div className="text-sm text-destructive font-medium">-{item.refundedQuantity} (-${(item.refundedQuantity * Number(item.unitPrice)).toFixed(2)})</div>
+                                )}
                               </div>
                             </div>
+                          )}
+                        </div>
+                      );
+                    }
 
-                            {/* Editable refund row when checked */}
-                            {rs?.selected && (
+                    // Package group
+                    const { packageInstanceId, packageName, packagePrice, packageImageUrl, items: pkgItems } = group;
+                    const pkgQty = pkgItems[0]?.quantity ?? 1;
+                    const pkgTotalPrice = packagePrice * pkgQty;
+                    const allPkgRefunded = pkgItems.every((i) => i.refundedQuantity >= i.quantity);
+
+                    return (
+                      <div key={packageInstanceId}>
+                        {/* Package header */}
+                        {isMissingMode ? (
+                          <div className="p-4 pb-2 flex items-center gap-3">
+                            <span className="w-5 shrink-0" />
+                            <div className="flex items-center justify-center rounded-lg bg-primary/10 h-12 w-12 shrink-0 overflow-hidden">
+                              {packageImageUrl ? (
+                                <img src={packageImageUrl} alt={packageName} className="h-full w-full object-cover" />
+                              ) : (
+                                <Package className="size-5 text-primary" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold">{packageName}</p>
+                              <p className="text-xs text-muted-foreground">{pkgItems.length} items</p>
+                            </div>
+                          </div>
+                        ) : isRefunding ? (
+                          <div className="p-4 pb-2">
+                            <div className={`grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center ${refundTotals.totalAvailable <= 0 ? 'opacity-50' : ''}`}>
+                              <Checkbox
+                                checked={refundPackageStates[packageInstanceId]?.selected ?? false}
+                                disabled={refundTotals.totalAvailable <= 0}
+                                onCheckedChange={(checked) => handleToggleRefundPackage(packageInstanceId, checked === true, packagePrice)}
+                              />
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center rounded-lg bg-primary/10 h-12 w-12 shrink-0 overflow-hidden">
+                                  {packageImageUrl ? (
+                                    <img src={packageImageUrl} alt={packageName} className="h-full w-full object-cover" />
+                                  ) : (
+                                    <Package className="size-5 text-primary" />
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold">{packageName}</p>
+                                  <p className="text-xs text-muted-foreground">{pkgItems.length} items</p>
+                                </div>
+                              </div>
+                              <span />
+                              <span />
+                              <div className="text-right text-sm font-semibold">${pkgTotalPrice.toFixed(2)}</div>
+                              <span />
+                            </div>
+                            {refundPackageStates[packageInstanceId]?.selected && (
                               <div className="grid grid-cols-[auto_1fr_80px_80px_90px_90px] gap-2 items-center mt-2">
                                 <span className="w-5" />
+                                <span className="text-xs text-muted-foreground pl-1">Refund amount:</span>
+                                <span />
                                 <span />
                                 <Input
                                   type="number"
                                   min={0}
-                                  max={item.quantity - (item.refundedQuantity || 0)}
-                                  value={rs.quantity}
-                                  onChange={(e) =>
-                                    handleRefundQtyChange(item.id, parseInt(e.target.value) || 0)
-                                  }
-                                  className="h-8 text-sm text-center"
+                                  max={pkgTotalPrice}
+                                  step={0.01}
+                                  value={refundPackageStates[packageInstanceId]?.amount ?? ''}
+                                  onChange={(e) => handleRefundPackageAmountChange(packageInstanceId, e.target.value)}
+                                  className="h-8 text-sm text-right"
                                 />
                                 <span />
-                                <Input
-                                  type="text"
-                                  value={rs.refundTotal.toFixed(2)}
-                                  readOnly
-                                  className="h-8 text-sm text-right bg-muted/30"
-                                  tabIndex={-1}
-                                />
-                                <Input
-                                  type="text"
-                                  value={rs.refundTax.toFixed(4)}
-                                  readOnly
-                                  className="h-8 text-sm text-right bg-muted/30"
-                                  tabIndex={-1}
-                                />
                               </div>
                             )}
-                          </>
+                          </div>
                         ) : (
-                          /* Normal display mode */
-                          <div className={`flex items-center gap-4 ${item.refundedQuantity >= item.quantity ? 'opacity-60' : ''}`}>
-                            <div className="flex items-center justify-center rounded-lg bg-accent/50 h-16 w-16 shrink-0">
-                              {(item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl) ? (
-                                <img
-                                  src={item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl}
-                                  alt={item.name || 'Product'}
-                                  className="h-10 w-full object-contain"
-                                />
+                          <div className={`p-4 pb-2 flex items-center gap-4 ${allPkgRefunded ? 'opacity-60' : ''}`}>
+                            <div className="flex items-center justify-center rounded-lg bg-primary/10 h-16 w-16 shrink-0 overflow-hidden">
+                              {packageImageUrl ? (
+                                <img src={packageImageUrl} alt={packageName} className="h-full w-full object-cover" />
                               ) : (
-                                <Package className="size-6 text-muted-foreground" />
+                                <Package className="size-6 text-primary" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-foreground truncate">
-                                  {item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown Product'}
-                                </span>
-                              </div>
-                              {item.sku && (
-                                <p className="text-xs text-muted-foreground">
-                                  SKU: {item.sku}
-                                </p>
-                              )}
-                              {(() => {
-                                const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
-                                return (
-                                  <>
-                                    {sizeValue && (
-                                      <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>
-                                    )}
-                                    {rest.length > 0 && (
-                                      <p className="text-xs text-muted-foreground">
-                                        {rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}
-                                      </p>
-                                    )}
-                                  </>
-                                );
-                              })()}
-                              {item.customFields && Object.keys(item.customFields).length > 0 && (
-                                <div className="text-xs text-muted-foreground">
-                                  {Object.entries(item.customFields).map(([key, value]) => (
-                                    <p key={key}>{key}: {value}</p>
-                                  ))}
-                                </div>
-                              )}
-                              {item.refundedQuantity > 0 && (
-                                <p className="text-xs text-destructive font-medium mt-0.5">
-                                  {item.refundedQuantity >= item.quantity
-                                    ? 'Fully refunded'
-                                    : `${item.refundedQuantity} of ${item.quantity} refunded`}
-                                </p>
-                              )}
-                              {(item.missingQuantity || 0) > 0 && (
-                                <p className="text-xs text-orange-600 font-medium mt-0.5">
-                                  {item.missingQuantity >= item.quantity
-                                    ? 'All missing'
-                                    : `${item.missingQuantity} of ${item.quantity} missing`}
-                                </p>
-                              )}
+                              <span className="font-semibold text-foreground">{packageName}</span>
+                              <p className="text-xs text-muted-foreground">{pkgItems.length} items</p>
                             </div>
                             <div className="text-right">
-                              <div className="font-medium">${Number(item.totalPrice).toFixed(2)}</div>
-                              <div className="text-sm text-muted-foreground">
-                                ${Number(item.unitPrice).toFixed(2)} x {item.quantity}
-                              </div>
-                              {item.refundedQuantity > 0 && (
-                                <div className="text-sm text-destructive font-medium">
-                                  -{item.refundedQuantity} (-${(item.refundedQuantity * Number(item.unitPrice)).toFixed(2)})
-                                </div>
-                              )}
+                              <div className="font-medium">${pkgTotalPrice.toFixed(2)}</div>
+                              {pkgQty > 1 && <div className="text-sm text-muted-foreground">${packagePrice.toFixed(2)} x {pkgQty}</div>}
                             </div>
                           </div>
                         )}
+
+                        {/* Package items (indented, no price) */}
+                        {pkgItems.map((item) => {
+                          return (
+                            <div key={item.id} className="pl-8 pr-4 py-2 border-t border-dashed border-border/50">
+                              {isMissingMode ? (
+                                (() => {
+                                  const ms = missingItemStates[item.id];
+                                  const maxQty = isResolvingMode
+                                    ? (item.missingQuantity || 0)
+                                    : item.quantity - (item.missingQuantity || 0);
+                                  const isFullyMissing = !isResolvingMode && (item.missingQuantity || 0) >= item.quantity;
+                                  return (
+                                    <div className={`grid grid-cols-[auto_1fr_80px_100px] gap-2 items-center ${isFullyMissing ? 'opacity-50' : ''}`}>
+                                      <Checkbox
+                                        checked={ms?.selected ?? false}
+                                        disabled={isFullyMissing || maxQty <= 0}
+                                        onCheckedChange={(checked) => handleToggleMissingItem(item.id, checked === true)}
+                                      />
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <div className="flex items-center justify-center rounded-lg bg-accent/50 h-10 w-10 shrink-0">
+                                          {(item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl) ? (
+                                            <img src={item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl} alt={item.name || 'Product'} className="h-6 w-full object-contain" />
+                                          ) : (
+                                            <Package className="size-4 text-muted-foreground" />
+                                          )}
+                                        </div>
+                                        <div className="min-w-0">
+                                          <p className="text-sm font-medium truncate">{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}</p>
+                                          {item.sku && <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>}
+                                          {(() => {
+                                            const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                                            return (
+                                              <>
+                                                {sizeValue && <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>}
+                                                {rest.length > 0 && <p className="text-xs text-muted-foreground">{rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}</p>}
+                                              </>
+                                            );
+                                          })()}
+                                          {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                            <div className="text-xs text-muted-foreground">
+                                              {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
+                                            </div>
+                                          )}
+                                          {(item.missingQuantity || 0) > 0 && !isResolvingMode && (
+                                            <p className="text-xs text-orange-600 font-medium">{isFullyMissing ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
+                                          )}
+                                          {isResolvingMode && (item.missingQuantity || 0) > 0 && (
+                                            <p className="text-xs text-orange-600 font-medium">{item.missingQuantity} currently missing</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="text-center text-sm text-muted-foreground">&times; {item.quantity}</div>
+                                      <div className="text-center">
+                                        {ms?.selected ? (
+                                          <Input type="number" min={1} max={maxQty} value={ms.quantity} onChange={(e) => handleMissingQtyChange(item.id, parseInt(e.target.value) || 0)} className="h-8 text-sm text-center" />
+                                        ) : (
+                                          <span className="text-sm text-muted-foreground">&ndash;</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })()
+                              ) : isRefunding ? (
+                                (() => {
+                                  const rs = refundItemStates[item.id];
+                                  const pkgSelected = refundPackageStates[packageInstanceId]?.selected ?? false;
+                                  const isFullyRefunded = item.refundedQuantity >= item.quantity;
+                                  return (
+                                    <div className={`grid grid-cols-[auto_1fr] gap-2 items-center ${isFullyRefunded ? 'opacity-50' : ''}`}>
+                                      <Checkbox
+                                        checked={rs?.selected ?? false}
+                                        disabled={!pkgSelected || isFullyRefunded}
+                                        onCheckedChange={(checked) => handleToggleRefundItem(item.id, checked === true)}
+                                      />
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <div className="flex items-center justify-center rounded-lg bg-accent/50 h-10 w-10 shrink-0">
+                                          {(item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl) ? (
+                                            <img src={item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl} alt={item.name || 'Product'} className="h-6 w-full object-contain" />
+                                          ) : (
+                                            <Package className="size-4 text-muted-foreground" />
+                                          )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-2">
+                                            <p className="text-sm font-medium truncate">{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}</p>
+                                            <span className="text-xs text-muted-foreground shrink-0">×{item.quantity}</span>
+                                          </div>
+                                          {item.sku && <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>}
+                                          {(() => {
+                                            const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                                            return (
+                                              <>
+                                                {sizeValue && <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>}
+                                                {rest.length > 0 && <p className="text-xs text-muted-foreground">{rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}</p>}
+                                              </>
+                                            );
+                                          })()}
+                                          {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                            <div className="text-xs text-muted-foreground">
+                                              {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
+                                            </div>
+                                          )}
+                                          {item.refundedQuantity > 0 && (
+                                            <p className="text-xs text-destructive font-medium">{isFullyRefunded ? 'Fully refunded' : `${item.refundedQuantity} of ${item.quantity} refunded`}</p>
+                                          )}
+                                          {(item.missingQuantity || 0) > 0 && (
+                                            <p className="text-xs text-orange-600 font-medium">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })()
+                              ) : (
+                                <div className={`flex items-center gap-3 ${item.refundedQuantity >= item.quantity ? 'opacity-60' : ''}`}>
+                                  <div className="flex items-center justify-center rounded-lg bg-accent/50 h-12 w-12 shrink-0">
+                                    {(item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl) ? (
+                                      <img src={item.clubProduct?.imageUrls[0] || item.clubProduct?.product?.imageUrl || item.productVariant?.product?.imageUrl} alt={item.name || 'Product'} className="h-8 w-full object-contain" />
+                                    ) : (
+                                      <Package className="size-5 text-muted-foreground" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium text-sm text-foreground truncate">{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown Product'}</span>
+                                      <span className="text-xs text-muted-foreground shrink-0">×{item.quantity}</span>
+                                    </div>
+                                    {item.sku && <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>}
+                                    {(() => {
+                                      const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+                                      return (
+                                        <>
+                                          {sizeValue && <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>}
+                                          {rest.length > 0 && <p className="text-xs text-muted-foreground">{rest.map(([key, value]) => `${key}: ${value}`).join(' | ')}</p>}
+                                        </>
+                                      );
+                                    })()}
+                                    {item.customFields && Object.keys(item.customFields).length > 0 && (
+                                      <div className="text-xs text-muted-foreground">
+                                        {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
+                                      </div>
+                                    )}
+                                    {item.refundedQuantity > 0 && (
+                                      <p className="text-xs text-destructive font-medium mt-0.5">{item.refundedQuantity >= item.quantity ? 'Fully refunded' : `${item.refundedQuantity} of ${item.quantity} refunded`}</p>
+                                    )}
+                                    {(item.missingQuantity || 0) > 0 && (
+                                      <p className="text-xs text-orange-600 font-medium mt-0.5">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   })}

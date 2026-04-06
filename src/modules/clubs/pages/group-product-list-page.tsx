@@ -7,33 +7,34 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Star,
   Building2,
-  Tag,
+  Group,
 } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { useClub } from '../hooks/use-clubs';
-import { useClubPackages } from '../hooks/use-club-packages';
-import { DeletePackageDialog } from '../components/delete-package-dialog';
+import { useClubProductGroups } from '../hooks/use-club-products';
+import { DeleteGroupDialog } from '../components/delete-group-dialog';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 
-export function PackageListPage() {
-  useDocumentTitle('Packages');
+export function GroupProductListPage() {
+  useDocumentTitle('Group Products');
   const { clubId } = useParams<{ clubId: string }>();
   const navigate = useNavigate();
 
   const { data: club, isLoading: clubLoading } = useClub(clubId);
-  const { data: packages = [], isLoading: packagesLoading } = useClubPackages(clubId);
+  const { data: groups = [], isLoading: groupsLoading } = useClubProductGroups(clubId);
 
-  const [deletePackageId, setDeletePackageId] = useState<string | null>(null);
-  const [deletePackageName, setDeletePackageName] = useState('');
+  const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null);
+  const [deleteGroupName, setDeleteGroupName] = useState('');
 
-  const isLoading = clubLoading || packagesLoading;
+  const isLoading = clubLoading || groupsLoading;
 
-  const handleDelete = (packageId: string, name: string) => {
-    setDeletePackageId(packageId);
-    setDeletePackageName(name);
+  const handleDelete = (groupId: string, name: string) => {
+    setDeleteGroupId(groupId);
+    setDeleteGroupName(name);
   };
 
   const formatCurrency = (value: number | null | undefined) => {
@@ -90,50 +91,54 @@ export function PackageListPage() {
               </div>
             )}
             <div>
-              <h1 className="text-2xl font-bold">Packages</h1>
+              <h1 className="text-2xl font-bold">Group Products</h1>
               <p className="text-sm text-muted-foreground">{club.name}</p>
             </div>
           </div>
         </div>
         <Button
           variant="mono"
-          onClick={() => navigate(`/clubs/${clubId}/packages/create`)}
+          onClick={() => navigate(`/clubs/${clubId}/groups/create`)}
         >
           <Plus className="size-4 mr-2" />
-          Create Package
+          Create Group
         </Button>
       </div>
 
-      {/* Package List */}
-      {packages.length === 0 ? (
+      {/* Group List */}
+      {groups.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
-            <Package className="size-12 text-muted-foreground" />
+            <Group className="size-12 text-muted-foreground" />
             <div className="text-center">
-              <h3 className="text-lg font-semibold">No packages yet</h3>
+              <h3 className="text-lg font-semibold">No group products yet</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Create a package to bundle multiple different products together as a single purchasable unit.
+                Group multiple product variants together so they appear as a single listing in the shop.
               </p>
             </div>
             <Button
               variant="mono"
-              onClick={() => navigate(`/clubs/${clubId}/packages/create`)}
+              onClick={() => navigate(`/clubs/${clubId}/groups/create`)}
             >
               <Plus className="size-4 mr-2" />
-              Create Your First Package
+              Create Your First Group
             </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {packages.map((pkg) => {
-            const imageUrl = pkg.imageUrls?.[0];
-            const itemCount = pkg.items?.length ?? 0;
-            const totalQuantity = pkg.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+          {groups.map((group) => {
+            const primary = group.primary;
+            const displayName = group.packageName || primary?.name || primary?.product?.name || 'Unnamed Group';
+            const imageUrl =
+              primary?.imageUrls?.[0] || primary?.product?.imageUrl || primary?.product?.imageUrls?.[0];
+            const memberCount = group.memberCount ?? group.members?.length ?? 0;
+            const isActive = primary?.isActive !== false;
+            const groupPrice = group.packagePrice;
 
             return (
               <Card
-                key={pkg.id}
+                key={group.groupId}
                 className="overflow-hidden hover:shadow-md transition-shadow"
               >
                 <div className="relative">
@@ -142,7 +147,7 @@ export function PackageListPage() {
                     {imageUrl ? (
                       <img
                         src={imageUrl}
-                        alt={pkg.name}
+                        alt={displayName}
                         className="h-full w-full object-contain p-4"
                       />
                     ) : (
@@ -152,86 +157,73 @@ export function PackageListPage() {
                   {/* Status badge */}
                   <div className="absolute top-3 right-3">
                     <Badge
-                      variant={pkg.isActive ? 'success' : 'secondary'}
+                      variant={isActive ? 'success' : 'secondary'}
                       appearance="light"
                       className="text-xs"
                     >
-                      {pkg.isActive ? 'Active' : 'Inactive'}
+                      {isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                 </div>
 
                 <CardContent className="p-4 space-y-3">
-                  {/* Package name */}
+                  {/* Group name */}
                   <div>
-                    <h3 className="font-semibold text-base line-clamp-1">{pkg.name}</h3>
+                    <h3 className="font-semibold text-base line-clamp-1">{displayName}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {itemCount} product{itemCount !== 1 ? 's' : ''} ({totalQuantity} item{totalQuantity !== 1 ? 's' : ''} total)
+                      {memberCount} product{memberCount !== 1 ? 's' : ''} in group
                     </p>
                   </div>
 
                   {/* Price */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-xs text-muted-foreground">Package Price</span>
+                      <span className="text-xs text-muted-foreground">Group Price</span>
                       <p className="text-lg font-bold text-foreground">
-                        {formatCurrency(pkg.price)}
+                        {formatCurrency(groupPrice)}
                       </p>
                     </div>
                   </div>
 
                   {/* Description */}
-                  {pkg.description && (
+                  {group.packageDescription && (
                     <p className="text-xs text-muted-foreground line-clamp-2">
-                      {pkg.description}
+                      {group.packageDescription}
                     </p>
                   )}
 
-                  {/* Tags */}
-                  {pkg.tags && pkg.tags.length > 0 && (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <Tag className="size-3 text-muted-foreground" />
-                      {pkg.tags.slice(0, 3).map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-[10px] px-1.5">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {pkg.tags.length > 3 && (
-                        <span className="text-xs text-muted-foreground">
-                          +{pkg.tags.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Item thumbnails */}
+                  {/* Member thumbnails */}
                   <div className="flex items-center gap-1.5 pt-1">
-                    {pkg.items?.slice(0, 5).map((item) => {
-                      const itemImg =
-                        item.clubProduct?.imageUrls?.[0] ||
-                        item.clubProduct?.product?.imageUrl ||
-                        item.clubProduct?.product?.imageUrls?.[0];
+                    {group.members?.slice(0, 5).map((member) => {
+                      const memberImg =
+                        member.imageUrls?.[0] || member.product?.imageUrl || member.product?.imageUrls?.[0];
+                      const isPrimary = member.isGroupPrimary;
                       return (
                         <div
-                          key={item.id}
-                          className="flex items-center justify-center rounded-md bg-accent/50 h-[32px] w-[38px] shrink-0"
-                          title={`${item.clubProduct?.name || item.clubProduct?.product?.name || 'Product'} x${item.quantity}`}
+                          key={member.id}
+                          className={`flex items-center justify-center rounded-md bg-accent/50 h-[32px] w-[38px] shrink-0 ${
+                            isPrimary ? 'ring-2 ring-primary ring-offset-1' : ''
+                          }`}
+                          title={member.name || member.product?.name}
                         >
-                          {itemImg ? (
+                          {memberImg ? (
                             <img
-                              src={itemImg}
+                              src={memberImg}
                               className="h-[24px] w-full object-contain"
-                              alt=""
+                              alt={member.name || member.product?.name}
                             />
                           ) : (
                             <Package className="size-3.5 text-muted-foreground" />
                           )}
+                          {isPrimary && (
+                            <Star className="size-2.5 text-primary absolute -top-1 -right-1" />
+                          )}
                         </div>
                       );
                     })}
-                    {itemCount > 5 && (
+                    {memberCount > 5 && (
                       <span className="text-xs text-muted-foreground">
-                        +{itemCount - 5} more
+                        +{memberCount - 5} more
                       </span>
                     )}
                   </div>
@@ -242,7 +234,7 @@ export function PackageListPage() {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => navigate(`/clubs/${clubId}/packages/${pkg.id}/edit`)}
+                      onClick={() => navigate(`/clubs/${clubId}/groups/${group.groupId}/edit`)}
                     >
                       <Pencil className="size-3.5 mr-1.5" />
                       Edit
@@ -251,10 +243,10 @@ export function PackageListPage() {
                       variant="outline"
                       size="sm"
                       className="flex-1 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(pkg.id, pkg.name)}
+                      onClick={() => handleDelete(group.groupId, displayName)}
                     >
                       <Trash2 className="size-3.5 mr-1.5" />
-                      Delete
+                      Dissolve
                     </Button>
                   </div>
                 </CardContent>
@@ -265,13 +257,13 @@ export function PackageListPage() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <DeletePackageDialog
+      <DeleteGroupDialog
         clubId={clubId!}
-        packageId={deletePackageId}
-        packageName={deletePackageName}
-        open={!!deletePackageId}
+        groupId={deleteGroupId}
+        groupName={deleteGroupName}
+        open={!!deleteGroupId}
         onOpenChange={(open) => {
-          if (!open) setDeletePackageId(null);
+          if (!open) setDeleteGroupId(null);
         }}
       />
     </div>

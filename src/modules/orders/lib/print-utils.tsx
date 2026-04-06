@@ -170,7 +170,7 @@ const getCommonStyles = () => `
   .product-image {
     width: 40px;
     height: 40px;
-    object-fit: contain;
+    object-fit: cover;
     border-radius: 4px;
     margin-right: 8px;
   }
@@ -245,16 +245,24 @@ const getCommonStyles = () => `
     font-style: italic;
   }
 
+  .product-table tbody tr {
+    page-break-inside: avoid;
+  }
+
+  .product-table thead {
+    display: table-header-group;
+  }
+
   @media print {
     @page {
-      margin: 0;
+      margin: 15mm;
       size: letter portrait;
     }
 
     .page {
-      padding: 10mm;
+      padding: 0;
       page-break-after: always;
-      min-height: 100vh;
+      min-height: auto;
     }
 
     .page:last-child {
@@ -277,30 +285,67 @@ export const generateInvoiceHTML = (order: Order): string => {
     .filter(Boolean)
     .join('<br/>');
 
-  const itemsHTML = order.items
-    ?.map(
-      (item) => {
-        const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
-        return `
+  const renderItemMeta = (item: NonNullable<typeof order.items>[0]) => {
+    const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+    return `
+      ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
+      ${sizeValue ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(sizeValue)}</div>` : ''}
+      ${rest.length > 0 ? rest.map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('') : ''}
+      ${item.customFields && Object.keys(item.customFields).length > 0
+        ? Object.entries(item.customFields).map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('')
+        : ''}
+    `;
+  };
+
+  // Group items: package items by packageInstanceId, rest as standalone
+  const packageGroups = new Map<string, NonNullable<typeof order.items>>();
+  const standaloneItems: NonNullable<typeof order.items> = [];
+
+  for (const item of order.items ?? []) {
+    if (item.packageInstanceId) {
+      if (!packageGroups.has(item.packageInstanceId)) packageGroups.set(item.packageInstanceId, []);
+      packageGroups.get(item.packageInstanceId)!.push(item);
+    } else {
+      standaloneItems.push(item);
+    }
+  }
+
+  const packageRowsHTML = Array.from(packageGroups.values()).map((pkgItems) => {
+    const first = pkgItems[0];
+    const packageQty = first.quantity;
+    const packagePrice = first.packagePrice ?? 0;
+    const childRows = pkgItems.map((item) => `
+      <tr>
+        <td style="padding-left: 24px;">
+          <div class="product-name" style="font-weight: bold;">${escapeHtml(item.clubProduct?.name) || escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
+          ${renderItemMeta(item)}
+        </td>
+        <td class="right">${item.quantity}</td>
+        <td class="right"></td>
+      </tr>
+    `).join('');
+    return `
+      <tr>
+        <td><div class="product-name">${escapeHtml(first.packageName) || 'Package'}</div></td>
+        <td class="right">${packageQty}</td>
+        <td class="right">$${Number(packagePrice).toFixed(2)}</td>
+      </tr>
+      ${childRows}
+    `;
+  }).join('');
+
+  const standaloneRowsHTML = standaloneItems.map((item) => `
     <tr>
       <td>
         <div class="product-name">${escapeHtml(item.clubProduct?.name) || escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
-        ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
-        ${sizeValue ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(sizeValue)}</div>` : ''}
-        ${rest.length > 0 ? rest.map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('') : ''}
-        ${item.customFields && Object.keys(item.customFields).length > 0
-          ? Object.entries(item.customFields)
-              .map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`)
-              .join('')
-          : ''}
+        ${renderItemMeta(item)}
       </td>
       <td class="right">${item.quantity}</td>
       <td class="right">$${Number(item.unitPrice).toFixed(2)}</td>
     </tr>
-  `;
-      }
-    )
-    .join('') || '<tr><td colspan="3">No items</td></tr>';
+  `).join('');
+
+  const itemsHTML = packageRowsHTML + standaloneRowsHTML || '<tr><td colspan="3">No items</td></tr>';
 
   return `
     <div class="page-content">
@@ -407,30 +452,45 @@ export const generatePackingSlipHTML = (order: Order): string => {
     .filter(Boolean)
     .join('<br/>');
 
-  const itemsHTML = order.items
-    ?.map((item) => {
-      const imageUrl = item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl;
-      const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+  const renderSlipItemMeta = (item: NonNullable<typeof order.items>[0]) => {
+    const { sizeValue, rest } = extractSize(item.attributes, item.productVariant?.attributes);
+    return `
+      ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
+      ${sizeValue ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(sizeValue)}</div>` : ''}
+      ${rest.length > 0 ? rest.map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('') : ''}
+      ${item.customFields && Object.keys(item.customFields).length > 0
+        ? Object.entries(item.customFields).map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('')
+        : ''}
+    `;
+  };
 
+  const slipPackageGroups = new Map<string, NonNullable<typeof order.items>>();
+  const slipStandaloneItems: NonNullable<typeof order.items> = [];
+
+  for (const item of order.items ?? []) {
+    if (item.packageInstanceId) {
+      if (!slipPackageGroups.has(item.packageInstanceId)) slipPackageGroups.set(item.packageInstanceId, []);
+      slipPackageGroups.get(item.packageInstanceId)!.push(item);
+    } else {
+      slipStandaloneItems.push(item);
+    }
+  }
+
+  const slipPackageRowsHTML = Array.from(slipPackageGroups.values()).map((pkgItems) => {
+    const first = pkgItems[0];
+    const packageQty = first.quantity;
+    const childRows = pkgItems.map((item) => {
+      const imageUrl = item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl;
       return `
         <tr>
-          <td>
+          <td style="padding-left: 24px;">
             <div class="product-cell">
-              ${
-                imageUrl
-                  ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name) || 'Product'}" class="product-image" />`
-                  : '<div style="width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; margin-right: 8px;"></div>'
-              }
+              ${imageUrl
+                ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name) || 'Product'}" class="product-image" />`
+                : '<div style="width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; margin-right: 8px;"></div>'}
               <div style="flex: 1;">
-                <div class="product-name">${escapeHtml(item.clubProduct?.name) || escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
-                ${item.sku ? `<div class="product-meta"><strong>SKU:</strong> ${escapeHtml(item.sku)}</div>` : ''}
-                ${sizeValue ? `<div class="product-meta"><strong>Size:</strong> ${escapeHtml(sizeValue)}</div>` : ''}
-                ${rest.length > 0 ? rest.map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`).join('') : ''}
-                ${item.customFields && Object.keys(item.customFields).length > 0
-                  ? Object.entries(item.customFields)
-                      .map(([key, value]) => `<div class="product-meta"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`)
-                      .join('')
-                  : ''}
+                <div class="product-name" style="font-weight: bold;">${escapeHtml(item.clubProduct?.name) || escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
+                ${renderSlipItemMeta(item)}
               </div>
             </div>
           </td>
@@ -438,8 +498,39 @@ export const generatePackingSlipHTML = (order: Order): string => {
           <td class="center"><div class="checkbox-cell"></div></td>
         </tr>
       `;
-    })
-    .join('') || '<tr><td colspan="2">No items</td></tr>';
+    }).join('');
+    return `
+      <tr>
+        <td><div class="product-name">${escapeHtml(first.packageName) || 'Package'}</div></td>
+        <td class="center">${packageQty}</td>
+        <td class="center"></td>
+      </tr>
+      ${childRows}
+    `;
+  }).join('');
+
+  const slipStandaloneRowsHTML = slipStandaloneItems.map((item) => {
+    const imageUrl = item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl;
+    return `
+      <tr>
+        <td>
+          <div class="product-cell">
+            ${imageUrl
+              ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name) || 'Product'}" class="product-image" />`
+              : '<div style="width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; margin-right: 8px;"></div>'}
+            <div style="flex: 1;">
+              <div class="product-name">${escapeHtml(item.clubProduct?.name) || escapeHtml(item.name) || escapeHtml(item.productVariant?.product?.name) || 'Unknown Product'}</div>
+              ${renderSlipItemMeta(item)}
+            </div>
+          </div>
+        </td>
+        <td class="center">${item.quantity}</td>
+        <td class="center"><div class="checkbox-cell"></div></td>
+      </tr>
+    `;
+  }).join('');
+
+  const itemsHTML = slipPackageRowsHTML + slipStandaloneRowsHTML || '<tr><td colspan="2">No items</td></tr>';
 
   return `
     <div class="header">
