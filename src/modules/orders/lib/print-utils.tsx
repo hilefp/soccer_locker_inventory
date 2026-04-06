@@ -245,16 +245,24 @@ const getCommonStyles = () => `
     font-style: italic;
   }
 
+  .product-table tbody tr {
+    page-break-inside: avoid;
+  }
+
+  .product-table thead {
+    display: table-header-group;
+  }
+
   @media print {
     @page {
-      margin: 0;
+      margin: 15mm;
       size: letter portrait;
     }
 
     .page {
-      padding: 10mm;
+      padding: 0;
       page-break-after: always;
-      min-height: 100vh;
+      min-height: auto;
     }
 
     .page:last-child {
