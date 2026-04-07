@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format, endOfDay } from 'date-fns';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { ordersService } from '@/modules/orders/services/orders.service';
 import { toast } from 'sonner';
 
@@ -22,7 +22,7 @@ export function useExportOrders() {
         endDate,
         limit: 10000, // Large limit to get all orders
         sortBy: 'createdAt',
-        sortOrder: 'asc',
+        sortOrder: 'desc',
       });
 
       if (!response.data || response.data.length === 0) {
@@ -30,32 +30,52 @@ export function useExportOrders() {
         return;
       }
 
-      // Prepare data for Excel
-      const excelData = response.data.map((order) => ({
-        'Order Number': order.orderNumber,
-        'Date': format(new Date(order.createdAt), 'MM/dd/yyyy'),
-        'Total': `$${Number(order.total).toFixed(2)}`,
-      }));
-
       // Create workbook and worksheet
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Orders');
 
-      // Set column widths
-      worksheet['!cols'] = [
-        { wch: 15 }, // Order Number
-        { wch: 12 }, // Date
-        { wch: 12 }, // Total
+      // Define columns with bold headers
+      worksheet.columns = [
+        { header: 'Order Number', key: 'orderNumber', width: 18 },
+        { header: 'Date', key: 'date', width: 14 },
+        { header: 'Total', key: 'total', width: 14 },
+        { header: 'Shipping', key: 'shipping', width: 14 },
       ];
 
-      // Add worksheet to workbook
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
+      // Bold and center header row
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true };
+        cell.alignment = { horizontal: 'center' };
+      });
+
+      // Add data rows
+      response.data.forEach((order) => {
+        const row = worksheet.addRow({
+          orderNumber: Number(order.orderNumber),
+          date: format(new Date(order.createdAt), 'MM/dd/yyyy'),
+          total: Number((Number(order.subtotal) + Number(order.taxTotal) + Number(order.rushFee ?? 0)).toFixed(2)),
+          shipping: Number(Number(order.shippingTotal).toFixed(2)),
+        });
+
+        // Apply currency format to Total and Shipping columns
+        row.getCell('total').numFmt = '"$"#,##0.00';
+        row.getCell('shipping').numFmt = '"$"#,##0.00';
+        // Left-align date
+        row.getCell('date').alignment = { horizontal: 'right' };
+      });
 
       // Generate filename with date range
       const filename = `orders_${format(dateRange.from, 'yyyy-MM-dd')}_to_${format(dateRange.to, 'yyyy-MM-dd')}.xlsx`;
 
       // Download file
-      XLSX.writeFile(workbook, filename);
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
 
       toast.success(
         `Successfully exported ${response.data.length} order${response.data.length !== 1 ? 's' : ''}`,
