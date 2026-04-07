@@ -642,7 +642,7 @@ export function EditClubProductPage() {
 
         {/* Size Variants */}
         {availableVariants && availableVariants.variants.length > 0 && (
-          <Card className="md:col-span-2">
+          <Card>
             <CardHeader>
               <CardTitle>Size Variants</CardTitle>
               <p className="text-sm text-muted-foreground">
@@ -681,7 +681,7 @@ export function EditClubProductPage() {
         )}
 
         {/* Base Product Info */}
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Base Product Info</CardTitle>
           </CardHeader>
@@ -709,7 +709,7 @@ export function EditClubProductPage() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Images */}
         <Card className="md:col-span-2">
