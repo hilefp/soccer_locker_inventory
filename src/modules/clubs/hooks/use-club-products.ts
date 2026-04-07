@@ -14,6 +14,7 @@ const CLUB_PRODUCT_QUERY_KEY = 'club-product';
 const CLUB_STATS_QUERY_KEY = 'club-product-stats';
 const CLUB_PRODUCT_TAGS_QUERY_KEY = 'club-product-tags';
 const CLUB_PRODUCT_GROUPS_QUERY_KEY = 'club-product-groups';
+const CLUB_PRODUCT_VARIANTS_QUERY_KEY = 'club-product-variants';
 
 // Get a single club product
 export function useClubProduct(
@@ -58,6 +59,19 @@ export function useClubProductTags(clubId: string | undefined) {
     queryKey: [CLUB_PRODUCT_TAGS_QUERY_KEY, clubId],
     queryFn: () => clubProductsService.getClubProductTags(clubId!),
     enabled: !!clubId,
+  });
+}
+
+// Get available variants for a club product
+export function useClubProductAvailableVariants(
+  clubId: string | undefined,
+  clubProductId: string | undefined
+) {
+  return useQuery({
+    queryKey: [CLUB_PRODUCT_VARIANTS_QUERY_KEY, clubId, clubProductId],
+    queryFn: () =>
+      clubProductsService.getClubProductAvailableVariants(clubId!, clubProductId!),
+    enabled: !!clubId && !!clubProductId,
   });
 }
 

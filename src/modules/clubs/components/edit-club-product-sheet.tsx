@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ClubProduct } from '../types/club-product';
-import { useUpdateClubProduct } from '../hooks/use-club-products';
+import { useUpdateClubProduct, useClubProductAvailableVariants } from '../hooks/use-club-products';
 import { Button } from '@/shared/components/ui/button';
 import {
   Sheet,
@@ -14,6 +14,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Switch } from '@/shared/components/ui/switch';
+import { Checkbox } from '@/shared/components/ui/checkbox';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { Badge } from '@/shared/components/ui/badge';
 import { ProductFormImageUpload } from '@/modules/products/components/product-form-image-upload';
@@ -57,6 +58,12 @@ export function EditClubProductSheet({
   const [gauchito, setGauchito] = useState(false);
   const [gauchitoRequired, setGauchitoRequired] = useState(true);
 
+  const [allowedVariantIds, setAllowedVariantIds] = useState<string[]>([]);
+
+  const { data: availableVariants } = useClubProductAvailableVariants(
+    clubId,
+    clubProduct?.id
+  );
   const updateMutation = useUpdateClubProduct(clubId);
 
   // Reset form when clubProduct changes
@@ -103,6 +110,21 @@ export function EditClubProductSheet({
     }
   }, [clubProduct]);
 
+  // Initialize allowed variants from fetched data
+  useEffect(() => {
+    if (availableVariants) {
+      setAllowedVariantIds(availableVariants.allowedVariantIds);
+    }
+  }, [availableVariants]);
+
+  const toggleVariant = (variantId: string) => {
+    setAllowedVariantIds((prev) =>
+      prev.includes(variantId)
+        ? prev.filter((id) => id !== variantId)
+        : [...prev, variantId]
+    );
+  };
+
   const handleSave = async () => {
     if (!clubProduct) return;
 
@@ -127,6 +149,7 @@ export function EditClubProductSheet({
           isActive,
           imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
           tags,
+          allowedVariantIds: allowedVariantIds.length > 0 ? allowedVariantIds : undefined,
         },
       });
       onOpenChange(false);
@@ -591,6 +614,46 @@ export function EditClubProductSheet({
                   </p>
                 )}
               </div>
+
+              {/* Size Variants */}
+              {availableVariants && availableVariants.variants.length > 0 && (
+                <div className="space-y-2 pt-4 border-t">
+                  <div>
+                    <h4 className="text-sm font-medium mb-3">Size Variants</h4>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Select which size variants are available in the shop. Leave all unchecked to show all variants.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    {availableVariants.variants.map((variant) => {
+                      const label = variant.attributes?.size || Object.values(variant.attributes || {}).join(' / ') || variant.sku;
+                      const isChecked = availableVariants.allowedVariantIds.length === 0 || allowedVariantIds.includes(variant.id!);
+                      return (
+                        <div key={variant.id} className="flex items-center gap-3">
+                          <Checkbox
+                            id={`sheet-variant-${variant.id}`}
+                            checked={isChecked}
+                            onCheckedChange={() => toggleVariant(variant.id!)}
+                          />
+                          <Label htmlFor={`sheet-variant-${variant.id}`} className="cursor-pointer font-normal text-xs">
+                            {label}
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {allowedVariantIds.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setAllowedVariantIds([])}
+                      className="mt-2 h-6 text-xs"
+                    >
+                      Show all variants
+                    </Button>
+                  )}
+                </div>
+              )}
 
               {/* Product Info */}
               <div className="pt-4 border-t">

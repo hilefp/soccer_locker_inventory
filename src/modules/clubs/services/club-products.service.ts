@@ -9,6 +9,7 @@ import type {
   GroupClubProductsDto,
   UpdateGroupDto,
   ClubProductGroup,
+  ClubProductAvailableVariantsResponse,
 } from '../types/club-product';
 import { CustomFields } from '../types';
 
@@ -214,6 +215,17 @@ export const clubProductsService = {
     await apiClient.delete(
       `/admin/clubs/${clubId}/products/groups/${groupId}`
     );
+  },
+
+  // Get available variants for a club product
+  async getClubProductAvailableVariants(
+    clubId: string,
+    clubProductId: string
+  ): Promise<ClubProductAvailableVariantsResponse> {
+    const response = await apiClient.get<ClubProductAvailableVariantsResponse>(
+      `/admin/clubs/${clubId}/products/${clubProductId}/variants`
+    );
+    return response.data;
   },
 };
 

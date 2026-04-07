@@ -1,4 +1,4 @@
-import { Product } from '@/modules/products/types/product.type';
+import { Product, ProductVariant } from '@/modules/products/types/product.type';
 import { CustomFields } from './custom-fields';
 
 // Main ClubProduct entity
@@ -16,6 +16,7 @@ export interface ClubProduct {
   // Club-specific fields
   tags?: string[];
   isActive: boolean;
+  allowedVariantIds?: string[];
 
   // Grouping fields
   groupId?: string | null;
@@ -63,6 +64,7 @@ export interface UpdateClubProductDto {
   tags?: string[];
   groupId?: string;
   isGroupPrimary?: boolean;
+  allowedVariantIds?: string[];
 }
 
 // DTO for grouping club products
@@ -123,4 +125,10 @@ export interface  ClubProductStats {
   total: number;
   active: number;
   inactive: number;
+}
+
+// Available variants response
+export interface ClubProductAvailableVariantsResponse {
+  variants: ProductVariant[];
+  allowedVariantIds: string[];
 }
