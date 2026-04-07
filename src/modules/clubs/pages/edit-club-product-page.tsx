@@ -140,7 +140,7 @@ export function EditClubProductPage() {
           isActive,
           imageUrls,
           tags,
-          allowedVariantIds: allowedVariantIds.length > 0 ? allowedVariantIds : undefined,
+          allowedVariantIds,
         },
       });
     } catch (error) {
@@ -652,7 +652,7 @@ export function EditClubProductPage() {
             <CardContent className="space-y-3">
               {availableVariants.variants.map((variant) => {
                 const label = variant.attributes?.size || Object.values(variant.attributes || {}).join(' / ') || variant.sku;
-                const isChecked = availableVariants.allowedVariantIds.length === 0 || allowedVariantIds.includes(variant.id!);
+                const isChecked = allowedVariantIds.length === 0 || allowedVariantIds.includes(variant.id!);
                 return (
                   <div key={variant.id} className="flex items-center gap-3">
                     <Checkbox

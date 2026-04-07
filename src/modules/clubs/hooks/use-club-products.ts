@@ -117,6 +117,9 @@ export function useUpdateClubProduct(clubId: string) {
       queryClient.invalidateQueries({
         queryKey: [CLUB_STATS_QUERY_KEY, clubId],
       });
+      queryClient.invalidateQueries({
+        queryKey: [CLUB_PRODUCT_VARIANTS_QUERY_KEY, clubId, variables.clubProductId],
+      });
       toast.success('Club product updated successfully');
     },
     onError: (error: any) => {
