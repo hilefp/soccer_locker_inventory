@@ -8,7 +8,8 @@ import { Label } from '@/shared/components/ui/label';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Switch } from '@/shared/components/ui/switch';
-import { useClubProduct, useUpdateClubProduct } from '../hooks/use-club-products';
+import { Checkbox } from '@/shared/components/ui/checkbox';
+import { useClubProduct, useUpdateClubProduct, useClubProductAvailableVariants } from '../hooks/use-club-products';
 import { useClub } from '../hooks/use-clubs';
 import { ProductFormImageUpload } from '@/modules/products/components/product-form-image-upload';
 import { TagMultiSelect } from '@/modules/tags/components/tag-multi-select';
@@ -48,9 +49,12 @@ export function EditClubProductPage() {
   const [gauchito, setGauchito] = useState(false);
   const [gauchitoRequired, setGauchitoRequired] = useState(true);
 
+  const [allowedVariantIds, setAllowedVariantIds] = useState<string[]>([]);
+
   // Fetch data
   const { data: club } = useClub(clubId);
   const { data: clubProduct, isLoading } = useClubProduct(clubId, clubProductId);
+  const { data: availableVariants } = useClubProductAvailableVariants(clubId, clubProductId);
   const updateMutation = useUpdateClubProduct(clubId || '');
 
   // Reset form when clubProduct changes
@@ -97,6 +101,21 @@ export function EditClubProductPage() {
     }
   }, [clubProduct]);
 
+  // Initialize allowed variants from fetched data
+  useEffect(() => {
+    if (availableVariants) {
+      setAllowedVariantIds(availableVariants.allowedVariantIds);
+    }
+  }, [availableVariants]);
+
+  const toggleVariant = (variantId: string) => {
+    setAllowedVariantIds((prev) =>
+      prev.includes(variantId)
+        ? prev.filter((id) => id !== variantId)
+        : [...prev, variantId]
+    );
+  };
+
   const handleSave = async () => {
     if (!clubProduct || !clubId) return;
 
@@ -121,6 +140,7 @@ export function EditClubProductPage() {
           isActive,
           imageUrls,
           tags,
+          allowedVariantIds,
         },
       });
     } catch (error) {
@@ -619,6 +639,46 @@ export function EditClubProductPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Size Variants */}
+        {availableVariants && availableVariants.variants.length > 0 && (
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Size Variants</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Select which size variants are available in the shop. Leave all unchecked to show all variants.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {availableVariants.variants.map((variant) => {
+                const label = variant.attributes?.size || Object.values(variant.attributes || {}).join(' / ') || variant.sku;
+                const isChecked = allowedVariantIds.length === 0 || allowedVariantIds.includes(variant.id!);
+                return (
+                  <div key={variant.id} className="flex items-center gap-3">
+                    <Checkbox
+                      id={`variant-${variant.id}`}
+                      checked={isChecked}
+                      onCheckedChange={() => toggleVariant(variant.id!)}
+                    />
+                    <Label htmlFor={`variant-${variant.id}`} className="cursor-pointer font-normal">
+                      {label}
+                    </Label>
+                  </div>
+                );
+              })}
+              {allowedVariantIds.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAllowedVariantIds([])}
+                  className="mt-2"
+                >
+                  Show all variants
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Base Product Info */}
         <Card>

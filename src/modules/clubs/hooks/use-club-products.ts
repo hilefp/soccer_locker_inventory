@@ -14,6 +14,7 @@ const CLUB_PRODUCT_QUERY_KEY = 'club-product';
 const CLUB_STATS_QUERY_KEY = 'club-product-stats';
 const CLUB_PRODUCT_TAGS_QUERY_KEY = 'club-product-tags';
 const CLUB_PRODUCT_GROUPS_QUERY_KEY = 'club-product-groups';
+const CLUB_PRODUCT_VARIANTS_QUERY_KEY = 'club-product-variants';
 
 // Get a single club product
 export function useClubProduct(
@@ -61,6 +62,19 @@ export function useClubProductTags(clubId: string | undefined) {
   });
 }
 
+// Get available variants for a club product
+export function useClubProductAvailableVariants(
+  clubId: string | undefined,
+  clubProductId: string | undefined
+) {
+  return useQuery({
+    queryKey: [CLUB_PRODUCT_VARIANTS_QUERY_KEY, clubId, clubProductId],
+    queryFn: () =>
+      clubProductsService.getClubProductAvailableVariants(clubId!, clubProductId!),
+    enabled: !!clubId && !!clubProductId,
+  });
+}
+
 // Add products to club
 export function useAddProductsToClub(clubId: string) {
   const queryClient = useQueryClient();
@@ -102,6 +116,9 @@ export function useUpdateClubProduct(clubId: string) {
       });
       queryClient.invalidateQueries({
         queryKey: [CLUB_STATS_QUERY_KEY, clubId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [CLUB_PRODUCT_VARIANTS_QUERY_KEY, clubId, variables.clubProductId],
       });
       toast.success('Club product updated successfully');
     },
