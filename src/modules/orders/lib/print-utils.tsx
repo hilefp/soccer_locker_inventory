@@ -53,7 +53,6 @@ const getCommonStyles = () => `
     page-break-after: always;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
   }
 
   .page:last-child {
@@ -255,12 +254,17 @@ const getCommonStyles = () => `
 
   @media print {
     @page {
-      margin: 15mm;
+      margin: 5mm 0 0 0;
       size: letter portrait;
     }
 
-    .page {
+    html, body {
+      margin: 0;
       padding: 0;
+    }
+
+    .page {
+      padding: 10mm;
       page-break-after: always;
       min-height: auto;
     }
@@ -608,7 +612,7 @@ export const generateBulkPrintDocument = (
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${documentType === 'INVOICE' ? 'Invoices' : 'Packing Slips'} - Bulk Print</title>
+        <title></title>
         <style>
           ${getCommonStyles()}
         </style>
