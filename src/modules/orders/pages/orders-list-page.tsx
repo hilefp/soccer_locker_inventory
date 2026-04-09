@@ -15,7 +15,7 @@ export function OrdersListPage() {
   const [filters, setFilters] = useState<OrderFilterParams>({
     page: 1,
     limit: 10,
-    status: 'NEW',
+    status: undefined,
     sortBy: 'createdAt',
     sortOrder: 'desc',
   });

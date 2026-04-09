@@ -162,7 +162,7 @@ export function OrderListTable({
   const { data: clubs } = useClubs();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('NEW');
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [clubFilter, setClubFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [inputValue, setInputValue] = useState('');
