@@ -227,4 +227,19 @@ export const ordersService = {
     const response = await apiClient.post<Order>(`${BASE_URL}/${id}/missing/resolve`, data);
     return response.data;
   },
+
+  /**
+   * Swap an order item's product variant (e.g. change size)
+   */
+  async swapOrderItemVariant(
+    orderId: string,
+    itemId: string,
+    newProductVariantId: string
+  ): Promise<Order> {
+    const response = await apiClient.patch<Order>(
+      `${BASE_URL}/${orderId}/items/${itemId}/swap-variant`,
+      { newProductVariantId }
+    );
+    return response.data;
+  },
 };

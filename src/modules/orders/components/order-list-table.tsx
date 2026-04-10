@@ -78,7 +78,7 @@ import {
   PopoverTrigger,
 } from '@/shared/components/ui/popover';
 import { Calendar as CalendarUI } from '@/shared/components/ui/calendar';
-import { Order, OrderStatus, OrderListMeta, ORDER_STATUS_LABELS, ORDER_STATUS_FLOW, DocumentType } from '@/modules/orders/types';
+import { Order, OrderStatus, OrderListMeta, ORDER_STATUS_LABELS, DocumentType } from '@/modules/orders/types';
 import { OrderStatusBadge } from './order-status-badge';
 import { useUpdateOrderStatus, orderKeys } from '@/modules/orders/hooks/use-orders';
 import { ordersService } from '@/modules/orders/services/orders.service';
@@ -456,7 +456,9 @@ export function OrderListTable({
         enableSorting: false,
         cell: ({ row }) => {
           const order = row.original;
-          const validTransitions = ORDER_STATUS_FLOW[order.status] || [];
+          const availableStatuses = (Object.keys(ORDER_STATUS_LABELS) as OrderStatus[]).filter(
+            (status) => status !== order.status
+          );
 
           return (
             <div className="flex items-center justify-center">
@@ -471,10 +473,10 @@ export function OrderListTable({
                     <Eye className="size-4" />
                     View Details
                   </DropdownMenuItem>
-                  {validTransitions.length > 0 && (
+                  {availableStatuses.length > 0 && (
                     <>
                       <DropdownMenuSeparator />
-                      {validTransitions.map((status) => (
+                      {availableStatuses.map((status) => (
                         <DropdownMenuItem
                           key={status}
                           onClick={() => handleUpdateStatus(order, status)}
