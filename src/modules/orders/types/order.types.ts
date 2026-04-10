@@ -342,26 +342,12 @@ export interface BulkPrintRequest {
   documentType: DocumentType;
 }
 
-export interface StockAlertItem {
-  name: string;
-  sku: string | null;
-  orderedQuantity: number;
-  availableQuantity: number;
-}
-
-export interface StockAlert {
-  orderId: string;
-  orderNumber: string;
-  items: StockAlertItem[];
-}
-
 export interface BulkPrintResponse {
   success: boolean;
   documentType: DocumentType;
   count: number;
   presignedUrls: string[];
   expiresIn: string;
-  stockAlerts?: StockAlert[];
 }
 
 // Missing Products Types

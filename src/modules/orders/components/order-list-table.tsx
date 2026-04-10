@@ -238,45 +238,18 @@ export function OrderListTable({
         }`
       );
 
-      // Use backend bulk-print endpoint for status transitions + stock checking
+      // Auto-transition orders from NEW to PRINT when printing packing slips
       if (documentType === 'PACKING_SLIP') {
         const newOrders = fullOrders.filter((o) => o.status === 'NEW');
         if (newOrders.length > 0) {
-          try {
-            const bulkResult = await ordersService.bulkPrint({
-              orderIds: newOrders.map((o) => o.id),
-              documentType: 'PACKING_SLIP',
-            });
-
-            // Show stock alerts for orders diverted to MISSING status
-            if (bulkResult.stockAlerts && bulkResult.stockAlerts.length > 0) {
-              const alertCount = bulkResult.stockAlerts.length;
-              const alertDetails = bulkResult.stockAlerts
-                .map((alert) => {
-                  const itemsList = alert.items
-                    .map((item) => `${item.name || item.sku || 'Unknown'} (need ${item.orderedQuantity}, have ${item.availableQuantity})`)
-                    .join(', ');
-                  return `${alert.orderNumber}: ${itemsList}`;
-                })
-                .join('\n');
-
-              toast.warning(
-                `${alertCount} order(s) moved to Missing due to insufficient stock`,
-                {
-                  description: alertDetails,
-                  duration: 10000,
-                },
-              );
-            }
-
-            const printedCount = newOrders.length - (bulkResult.stockAlerts?.length || 0);
-            if (printedCount > 0) {
-              toast.info(`${printedCount} order(s) moved to Print status`);
-            }
-          } catch (err) {
-            console.error('Bulk print status transition error:', err);
-            toast.error('Failed to update order statuses. Documents were printed but statuses may not be updated.');
-          }
+          await Promise.all(
+            newOrders.map((order) =>
+              ordersService
+                .updateOrderStatus(order.id, { status: 'PRINT' })
+                .catch((err) => console.error(`Failed to update status for order ${order.orderNumber}:`, err)),
+            ),
+          );
+          // Refresh the orders list to reflect status changes
           queryClient.invalidateQueries({ queryKey: orderKeys.all });
         }
       }
