@@ -561,19 +561,32 @@ export function OrderDetailPage() {
         </div>
       </div>
 
-      {/* Stock Reservation Info Banner
-      {order.status !== 'DELIVERED' && order.status !== 'REFUND' && order.status !== 'FAILED' && (
-        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30 p-4">
-          <Info className="size-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
-          <div className="text-sm text-blue-800 dark:text-blue-300">
-            {order.status === 'PENDING_PAYMENT' ? (
-              <p>Stock is reserved for this order and is not available for other customers. It will remain reserved until payment is confirmed or the order is cancelled.</p>
-            ) : (
-              <p>Stock is reserved for this order. It will be automatically deducted from inventory when the order is marked as <strong>Delivered</strong>. If cancelled, the reserved stock will be released back to inventory.</p>
-            )}
+      {/* Missing Items Banner */}
+      {order.status === 'MISSING' && order.items?.some((i) => (i.missingQuantity || 0) > 0) && (
+        <div className="flex items-start gap-3 rounded-lg border border-orange-300 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/30 p-4">
+          <AlertTriangle className="size-5 text-orange-600 dark:text-orange-400 mt-0.5 shrink-0" />
+          <div className="flex-1 space-y-2">
+            <p className="text-sm font-semibold text-orange-800 dark:text-orange-300">
+              This order has items out of stock
+            </p>
+            <div className="space-y-1">
+              {order.items
+                .filter((i) => (i.missingQuantity || 0) > 0)
+                .map((item) => (
+                  <div key={item.id} className="flex items-center justify-between text-sm text-orange-700 dark:text-orange-400">
+                    <span>{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}</span>
+                    <span className="font-medium">
+                      {item.missingQuantity} of {item.quantity} missing
+                    </span>
+                  </div>
+                ))}
+            </div>
+            <p className="text-xs text-orange-600 dark:text-orange-500">
+              Use the <strong>Resolve Missing</strong> button to restock items or swap variants, then move this order back to processing.
+            </p>
           </div>
         </div>
-      )} */}
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
