@@ -21,6 +21,7 @@ import {
   HelpCircle,
   AlertTriangle,
   Info,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/shared/components/ui/card';
@@ -42,6 +43,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogBody,
+} from '@/shared/components/ui/dialog';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { formatDate, timeAgo } from '@/shared/lib/helpers';
 import {
@@ -53,6 +63,7 @@ import {
   useRefundOrder,
   useMarkMissing,
   useResolveMissing,
+  useSwapOrderItemVariant,
 } from '@/modules/orders/hooks/use-orders';
 import {
   OrderStatusBadge,
@@ -65,6 +76,7 @@ import { ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
 import type { OrderItem } from '@/modules/orders/types';
 import { useAuthStore } from '@/shared/stores/auth-store';
 import { extractSize } from '@/modules/orders/lib/extract-size';
+import { useProduct } from '@/modules/products/hooks/use-products';
 
 interface RefundItemState {
   selected: boolean;
@@ -119,6 +131,28 @@ export function OrderDetailPage() {
   const refundMutation = useRefundOrder();
   const markMissingMutation = useMarkMissing();
   const resolveMissingMutation = useResolveMissing();
+  const swapVariantMutation = useSwapOrderItemVariant();
+
+  // Swap variant state
+  const [swapItem, setSwapItem] = useState<OrderItem | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<string>('');
+  const swapProductId = swapItem?.productVariant?.product?.id || '';
+  const { data: swapProduct, isLoading: isLoadingVariants } = useProduct(swapProductId);
+  const siblingVariants = swapProduct?.variants;
+  const canSwapVariant = order && !['DELIVERED', 'REFUND', 'FAILED'].includes(order.status);
+
+  const handleOpenSwap = (item: OrderItem) => {
+    setSwapItem(item);
+    setSelectedVariantId('');
+  };
+
+  const handleConfirmSwap = () => {
+    if (!orderId || !swapItem || !selectedVariantId) return;
+    swapVariantMutation.mutate(
+      { orderId, itemId: swapItem.id, newProductVariantId: selectedVariantId },
+      { onSuccess: () => setSwapItem(null) }
+    );
+  };
 
   // Missing products state
   const [isMissingMode, setIsMissingMode] = useState(false);
@@ -903,12 +937,31 @@ export function OrderDetailPage() {
                                   <p className="text-xs text-orange-600 font-medium mt-0.5">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
                                 )}
                               </div>
-                              <div className="text-right">
-                                <div className="font-medium">${Number(item.totalPrice).toFixed(2)}</div>
-                                <div className="text-sm text-muted-foreground">${Number(item.unitPrice).toFixed(2)} x {item.quantity}</div>
-                                {item.refundedQuantity > 0 && (
-                                  <div className="text-sm text-destructive font-medium">-{item.refundedQuantity} (-${(item.refundedQuantity * Number(item.unitPrice)).toFixed(2)})</div>
+                              <div className="flex items-center gap-2">
+                                {canSwapVariant && item.productVariant?.product?.id && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-8 w-8 p-0"
+                                          onClick={() => handleOpenSwap(item)}
+                                        >
+                                          <ArrowLeftRight className="size-4 text-muted-foreground" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Swap variant (e.g. change size)</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 )}
+                                <div className="text-right">
+                                  <div className="font-medium">${Number(item.totalPrice).toFixed(2)}</div>
+                                  <div className="text-sm text-muted-foreground">${Number(item.unitPrice).toFixed(2)} x {item.quantity}</div>
+                                  {item.refundedQuantity > 0 && (
+                                    <div className="text-sm text-destructive font-medium">-{item.refundedQuantity} (-${(item.refundedQuantity * Number(item.unitPrice)).toFixed(2)})</div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           )}
@@ -1154,6 +1207,23 @@ export function OrderDetailPage() {
                                       <p className="text-xs text-orange-600 font-medium mt-0.5">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
                                     )}
                                   </div>
+                                  {canSwapVariant && item.productVariant?.product?.id && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-7 w-7 p-0 shrink-0"
+                                            onClick={() => handleOpenSwap(item)}
+                                          >
+                                            <ArrowLeftRight className="size-3.5 text-muted-foreground" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Swap variant</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -1611,6 +1681,94 @@ export function OrderDetailPage() {
 
       {/* Invoice Sheet */}
       <OrderInvoice order={order} open={showInvoice} onOpenChange={setShowInvoice} />
+
+      {/* Swap Variant Dialog */}
+      <Dialog open={!!swapItem} onOpenChange={(open) => !open && setSwapItem(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Swap Variant</DialogTitle>
+            <DialogDescription>
+              Select a new variant for this item. Stock will be released from the current variant and reserved on the new one.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogBody className="space-y-4">
+            {swapItem && (
+              <>
+                {/* Current variant info */}
+                <div className="rounded-lg border p-3 space-y-1">
+                  <p className="text-sm font-medium">Current</p>
+                  <p className="text-sm">{swapItem.clubProduct?.name || swapItem.name || swapItem.productVariant?.product?.name || 'Unknown'}</p>
+                  {swapItem.sku && <p className="text-xs text-muted-foreground">SKU: {swapItem.sku}</p>}
+                  {(() => {
+                    const { sizeValue, rest } = extractSize(swapItem.attributes, swapItem.productVariant?.attributes);
+                    return (
+                      <>
+                        {sizeValue && <p className="text-xs text-muted-foreground">Size: {sizeValue}</p>}
+                        {rest.length > 0 && <p className="text-xs text-muted-foreground">{rest.map(([k, v]) => `${k}: ${v}`).join(' | ')}</p>}
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* New variant select */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">New Variant</label>
+                  {isLoadingVariants ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+                      Loading variants...
+                    </div>
+                  ) : (
+                    <Select value={selectedVariantId} onValueChange={setSelectedVariantId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a variant..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {siblingVariants
+                          ?.filter((v) => v.id !== swapItem.productVariantId)
+                          .map((variant) => {
+                            const attrs = variant.attributes
+                              ? Object.entries(variant.attributes).map(([k, v]) => `${k}: ${v}`).join(', ')
+                              : '';
+                            return (
+                              <SelectItem key={variant.id!} value={variant.id!}>
+                                {attrs || variant.sku} — SKU: {variant.sku} — ${Number(variant.price).toFixed(2)}
+                              </SelectItem>
+                            );
+                          })}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {siblingVariants && siblingVariants.filter((v) => v.id !== swapItem.productVariantId).length === 0 && (
+                    <p className="text-sm text-muted-foreground">No other variants available for this product.</p>
+                  )}
+                </div>
+              </>
+            )}
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSwapItem(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmSwap}
+              disabled={!selectedVariantId || swapVariantMutation.isPending}
+            >
+              {swapVariantMutation.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white mr-2" />
+                  Swapping...
+                </>
+              ) : (
+                <>
+                  <ArrowLeftRight className="size-4 mr-2" />
+                  Confirm Swap
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

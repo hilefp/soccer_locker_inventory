@@ -48,7 +48,6 @@ import {
   Order,
   OrderStatus,
   ORDER_STATUS_LABELS,
-  ORDER_STATUS_FLOW,
   KANBAN_STATUS_ORDER,
 } from '@/modules/orders/types';
 import { useUpdateOrderStatus } from '@/modules/orders/hooks/use-orders';
@@ -339,21 +338,12 @@ export function OrderKanbanBoard({
     }
 
     if (targetStatus && targetStatus !== order.status) {
-      // Check if transition is valid
-      const validTransitions = ORDER_STATUS_FLOW[order.status];
-      if (validTransitions.includes(targetStatus)) {
-        updateStatusMutation.mutate({
-          id: orderId,
-          status: targetStatus,
-          note: `Status changed from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[targetStatus]} via drag and drop`,
-          changedByUserId: user?.id,
-        });
-      } else {
-        // Invalid transition - show error toast
-        toast.error(
-          `Cannot move order from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[targetStatus]}. Invalid status transition.`
-        );
-      }
+      updateStatusMutation.mutate({
+        id: orderId,
+        status: targetStatus,
+        note: `Status changed from ${ORDER_STATUS_LABELS[order.status]} to ${ORDER_STATUS_LABELS[targetStatus]} via drag and drop`,
+        changedByUserId: user?.id,
+      });
     }
   };
 

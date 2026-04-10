@@ -389,6 +389,43 @@ export function useResolveMissing() {
   });
 }
 
+// Hook to swap an order item's variant (e.g. change size)
+export function useSwapOrderItemVariant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      itemId,
+      newProductVariantId,
+    }: {
+      orderId: string;
+      itemId: string;
+      newProductVariantId: string;
+    }) => ordersService.swapOrderItemVariant(orderId, itemId, newProductVariantId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.orderId) });
+      queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.orderId, 'notes'] });
+      queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      toast.custom(
+        (t) => (
+          <Alert variant="mono" icon="success" close={true} onClose={() => toast.dismiss(t)}>
+            <AlertIcon>
+              <Info />
+            </AlertIcon>
+            <AlertTitle>Variant swapped successfully.</AlertTitle>
+          </Alert>
+        ),
+        { duration: 5000 }
+      );
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      console.error('Error swapping variant:', error);
+      toast.error(error?.response?.data?.message || 'Failed to swap variant');
+    },
+  });
+}
+
 // Hook to delete an order
 export function useDeleteOrder() {
   const queryClient = useQueryClient();
