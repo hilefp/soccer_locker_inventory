@@ -89,6 +89,7 @@ export interface OrderItem {
   clubPackageId?: string | null;
   packageName?: string | null;
   packagePrice?: number | null;
+  packageQuantity?: number | null;
   clubPackage?: {
     id: string;
     imageUrls?: string[];

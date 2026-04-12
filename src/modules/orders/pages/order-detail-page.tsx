@@ -971,7 +971,7 @@ export function OrderDetailPage() {
 
                     // Package group
                     const { packageInstanceId, packageName, packagePrice, packageImageUrl, items: pkgItems } = group;
-                    const pkgQty = pkgItems[0]?.quantity ?? 1;
+                    const pkgQty = pkgItems[0]?.packageQuantity ?? 1;
                     const pkgTotalPrice = packagePrice * pkgQty;
                     const allPkgRefunded = pkgItems.every((i) => i.refundedQuantity >= i.quantity);
 

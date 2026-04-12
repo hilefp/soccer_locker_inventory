@@ -316,8 +316,9 @@ export const generateInvoiceHTML = (order: Order): string => {
 
   const packageRowsHTML = Array.from(packageGroups.values()).map((pkgItems) => {
     const first = pkgItems[0];
-    const packageQty = first.quantity;
+    const pkgQty = first.packageQuantity ?? 1;
     const packagePrice = first.packagePrice ?? 0;
+    const pkgTotalPrice = Number(packagePrice) * pkgQty;
     const childRows = pkgItems.map((item) => `
       <tr>
         <td style="padding-left: 24px;">
@@ -330,9 +331,15 @@ export const generateInvoiceHTML = (order: Order): string => {
     `).join('');
     return `
       <tr>
-        <td><div class="product-name">${escapeHtml(first.packageName) || 'Package'}</div></td>
-        <td class="right">${packageQty}</td>
-        <td class="right">$${Number(packagePrice).toFixed(2)}</td>
+        <td>
+          <div class="product-name">${escapeHtml(first.packageName) || 'Package'}</div>
+          <div class="product-meta">${pkgItems.length} items</div>
+        </td>
+        <td class="right">${pkgQty}</td>
+        <td class="right">
+          $${pkgTotalPrice.toFixed(2)}
+          ${pkgQty > 1 ? `<div class="product-meta">$${Number(packagePrice).toFixed(2)} x ${pkgQty}</div>` : ''}
+        </td>
       </tr>
       ${childRows}
     `;
@@ -482,7 +489,7 @@ export const generatePackingSlipHTML = (order: Order): string => {
 
   const slipPackageRowsHTML = Array.from(slipPackageGroups.values()).map((pkgItems) => {
     const first = pkgItems[0];
-    const packageQty = first.quantity;
+    const pkgQty = first.packageQuantity ?? 1;
     const childRows = pkgItems.map((item) => {
       const imageUrl = item.clubProduct?.imageUrls[0] || item.productVariant?.product?.imageUrl;
       return `
@@ -505,8 +512,11 @@ export const generatePackingSlipHTML = (order: Order): string => {
     }).join('');
     return `
       <tr>
-        <td><div class="product-name">${escapeHtml(first.packageName) || 'Package'}</div></td>
-        <td class="center">${packageQty}</td>
+        <td>
+          <div class="product-name">${escapeHtml(first.packageName) || 'Package'}</div>
+          <div class="product-meta">${pkgItems.length} items</div>
+        </td>
+        <td class="center">${pkgQty}</td>
         <td class="center"></td>
       </tr>
       ${childRows}
