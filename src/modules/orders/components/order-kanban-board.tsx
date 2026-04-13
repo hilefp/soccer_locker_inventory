@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   DndContext,
@@ -8,7 +8,6 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
-  TouchSensor,
   KeyboardSensor,
   useDroppable,
   useSensor,
@@ -34,7 +33,7 @@ import {
   Clock,
   AlertTriangle,
 } from 'lucide-react';
-import { Card, CardHeader } from '@/shared/components/ui/card';
+import { CardHeader } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
@@ -55,6 +54,14 @@ import { formatDate, timeAgo } from '@/shared/lib/helpers';
 import { cn } from '@/shared/lib/utils';
 import { useAuthStore } from '@/shared/stores/auth-store';
 import { toast } from 'sonner';
+
+function useIsTouchDevice() {
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
+  return isTouch;
+}
 
 // Status icons mapping
 const STATUS_ICONS: Record<OrderStatus, React.ElementType> = {
@@ -84,13 +91,118 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   FAILED: 'border-red-500',
 };
 
-interface OrderCardProps {
+interface OrderCardContentProps {
   order: Order;
   isDragging?: boolean;
   onViewDetails: (order: Order) => void;
 }
 
-function OrderCard({ order, isDragging, onViewDetails }: OrderCardProps) {
+function OrderCardContent({ order, onViewDetails }: OrderCardContentProps) {
+  const itemCount = order._count?.items || order.items?.length || 0;
+
+  return (
+    <div className="space-y-2">
+      {/* Order Number & Time */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-semibold text-foreground">
+          {order.orderNumber}
+        </span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="size-3" />
+                {timeAgo(order.createdAt)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{formatDate(new Date(order.createdAt))}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
+      {/* Customer Info */}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center rounded-full bg-accent/50 h-6 w-6 shrink-0">
+          <User className="size-3 text-muted-foreground" />
+        </div>
+        <span className="text-sm text-muted-foreground truncate">
+          {order.shippingName || order.customerUser?.email || 'N/A'}
+        </span>
+      </div>
+
+      {/* Items & Total */}
+      <div className="flex items-center justify-between">
+        <Badge variant="secondary" appearance="outline" size="sm">
+          {itemCount} item{itemCount !== 1 ? 's' : ''}
+        </Badge>
+        <span className="text-sm font-medium text-foreground">
+          ${Number(order.total).toFixed(2)} {order.currency}
+        </span>
+      </div>
+
+      {/* Club Badge */}
+      {order.club && (
+        <Badge variant="info" appearance="light" size="sm" className="rounded-full">
+          {order.club.name}
+        </Badge>
+      )}
+
+      {/* Missing Items */}
+      {order.status === 'MISSING' && order.items && order.items.some((i) => (i.missingQuantity || 0) > 0) && (
+        <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-md px-2.5 py-1.5 space-y-1">
+          <div className="flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
+            <AlertTriangle className="size-3 shrink-0" />
+            Missing Items
+          </div>
+          {order.items
+            .filter((i) => (i.missingQuantity || 0) > 0)
+            .map((item) => (
+              <div key={item.id} className="text-xs">
+                <span className="text-red-600 dark:text-red-400 font-medium">
+                  {item.missingQuantity} of {item.quantity}
+                </span>
+                {' '}
+                <span className="text-red-700 dark:text-red-300">
+                  {item.name || item.productVariant?.product?.name || 'Unknown'}
+                  {item.attributes && Object.keys(item.attributes).length > 0 && (
+                    <span className="text-red-500 dark:text-red-400/70">
+                      {' — '}{Object.values(item.attributes).join(', ')}
+                    </span>
+                  )}
+                </span>
+              </div>
+            ))}
+        </div>
+      )}
+
+      {/* View Details Button */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full mt-2"
+        onClick={(e) => {
+          e.stopPropagation();
+          onViewDetails(order);
+        }}
+      >
+        <Eye className="size-3.5 mr-1" />
+        View Details
+      </Button>
+    </div>
+  );
+}
+
+interface OrderCardProps {
+  order: Order;
+  isDragging?: boolean;
+  isTouch: boolean;
+  statuses: OrderStatus[];
+  onViewDetails: (order: Order) => void;
+  onMoveToNextStatus?: (orderId: string, currentStatus: OrderStatus) => void;
+}
+
+function OrderCard({ order, isDragging, isTouch, statuses, onViewDetails, onMoveToNextStatus }: OrderCardProps) {
+  const lastTapRef = useRef(0);
   const {
     attributes,
     listeners,
@@ -98,16 +210,57 @@ function OrderCard({ order, isDragging, onViewDetails }: OrderCardProps) {
     transform,
     transition,
     isDragging: isSortableDragging,
-  } = useSortable({ id: order.id });
+  } = useSortable({ id: order.id, disabled: isTouch });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isSortableDragging ? 0.5 : 1,
-    touchAction: 'none' as const,
+    ...(!isTouch ? { touchAction: 'none' as const } : {}),
   };
 
-  const itemCount = order._count?.items || order.items?.length || 0;
+  const currentIndex = statuses.indexOf(order.status);
+  const hasNextStatus = currentIndex >= 0 && currentIndex < statuses.length - 1;
+  const nextStatus = hasNextStatus ? statuses[currentIndex + 1] : null;
+  const NextIcon = nextStatus ? STATUS_ICONS[nextStatus] : null;
+
+  const handleDoubleTap = useCallback(() => {
+    const now = Date.now();
+    const DOUBLE_TAP_THRESHOLD = 400;
+
+    if (now - lastTapRef.current < DOUBLE_TAP_THRESHOLD) {
+      // Double tap detected — move to next status
+      if (hasNextStatus) {
+        onMoveToNextStatus?.(order.id, order.status);
+      }
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
+  }, [order.id, order.status, hasNextStatus, onMoveToNextStatus]);
+
+  if (isTouch) {
+    return (
+      <div
+        onTouchEnd={handleDoubleTap}
+        className={cn(
+          'bg-card border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow',
+          isDragging && 'shadow-lg ring-2 ring-primary'
+        )}
+      >
+        <OrderCardContent order={order} onViewDetails={onViewDetails} />
+        {nextStatus && NextIcon && (
+          <div className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <span>Double-tap to move to</span>
+            <Badge variant="secondary" size="sm" className="gap-1">
+              <NextIcon className="size-3" />
+              {ORDER_STATUS_LABELS[nextStatus]}
+            </Badge>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -120,94 +273,7 @@ function OrderCard({ order, isDragging, onViewDetails }: OrderCardProps) {
         isDragging && 'shadow-lg ring-2 ring-primary'
       )}
     >
-      <div className="space-y-2">
-        {/* Order Number & Time */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-foreground">
-            {order.orderNumber}
-          </span>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="size-3" />
-                  {timeAgo(order.createdAt)}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>{formatDate(new Date(order.createdAt))}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        {/* Customer Info */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center rounded-full bg-accent/50 h-6 w-6 shrink-0">
-            <User className="size-3 text-muted-foreground" />
-          </div>
-          <span className="text-sm text-muted-foreground truncate">
-            {order.shippingName || order.customerUser?.email || 'N/A'}
-          </span>
-        </div>
-
-        {/* Items & Total */}
-        <div className="flex items-center justify-between">
-          <Badge variant="secondary" appearance="outline" size="sm">
-            {itemCount} item{itemCount !== 1 ? 's' : ''}
-          </Badge>
-          <span className="text-sm font-medium text-foreground">
-            ${Number(order.total).toFixed(2)} {order.currency}
-          </span>
-        </div>
-
-        {/* Club Badge */}
-        {order.club && (
-          <Badge variant="info" appearance="light" size="sm" className="rounded-full">
-            {order.club.name}
-          </Badge>
-        )}
-
-        {/* Missing Items */}
-        {order.status === 'MISSING' && order.items && order.items.some((i) => (i.missingQuantity || 0) > 0) && (
-          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-md px-2.5 py-1.5 space-y-1">
-            <div className="flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
-              <AlertTriangle className="size-3 shrink-0" />
-              Missing Items
-            </div>
-            {order.items
-              .filter((i) => (i.missingQuantity || 0) > 0)
-              .map((item) => (
-                <div key={item.id} className="text-xs">
-                  <span className="text-red-600 dark:text-red-400 font-medium">
-                    {item.missingQuantity} of {item.quantity}
-                  </span>
-                  {' '}
-                  <span className="text-red-700 dark:text-red-300">
-                    {item.name || item.productVariant?.product?.name || 'Unknown'}
-                    {item.attributes && Object.keys(item.attributes).length > 0 && (
-                      <span className="text-red-500 dark:text-red-400/70">
-                        {' — '}{Object.values(item.attributes).join(', ')}
-                      </span>
-                    )}
-                  </span>
-                </div>
-              ))}
-          </div>
-        )}
-
-        {/* View Details Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full mt-2"
-          onClick={(e) => {
-            e.stopPropagation();
-            onViewDetails(order);
-          }}
-        >
-          <Eye className="size-3.5 mr-1" />
-          View Details
-        </Button>
-      </div>
+      <OrderCardContent order={order} onViewDetails={onViewDetails} />
     </div>
   );
 }
@@ -215,10 +281,13 @@ function OrderCard({ order, isDragging, onViewDetails }: OrderCardProps) {
 interface KanbanColumnProps {
   status: OrderStatus;
   orders: Order[];
+  isTouch: boolean;
+  statuses: OrderStatus[];
   onViewDetails: (order: Order) => void;
+  onMoveToNextStatus?: (orderId: string, currentStatus: OrderStatus) => void;
 }
 
-function KanbanColumn({ status, orders, onViewDetails }: KanbanColumnProps) {
+function KanbanColumn({ status, orders, isTouch, statuses, onViewDetails, onMoveToNextStatus }: KanbanColumnProps) {
   const Icon = STATUS_ICONS[status];
   const borderColor = STATUS_COLORS[status];
   const { setNodeRef, isOver } = useDroppable({
@@ -249,7 +318,7 @@ function KanbanColumn({ status, orders, onViewDetails }: KanbanColumnProps) {
         <SortableContext items={orders.map((o) => o.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {orders.map((order) => (
-              <OrderCard key={order.id} order={order} onViewDetails={onViewDetails} />
+              <OrderCard key={order.id} order={order} isTouch={isTouch} statuses={statuses} onViewDetails={onViewDetails} onMoveToNextStatus={onMoveToNextStatus} />
             ))}
             {orders.length === 0 && (
               <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
@@ -278,17 +347,13 @@ export function OrderKanbanBoard({
   const { user } = useAuthStore();
   const updateStatusMutation = useUpdateOrderStatus();
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
+  const isTouch = useIsTouchDevice();
 
+  // On touch devices, disable DnD sensors entirely so scrolling works naturally
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 6,
       },
     }),
     useSensor(KeyboardSensor)
@@ -327,10 +392,8 @@ export function OrderKanbanBoard({
 
     const overId = over.id as string;
     if (overId.startsWith('column-')) {
-      // Dropped on a column droppable zone
       targetStatus = overId.replace('column-', '') as OrderStatus;
     } else {
-      // Dropped on another order card — use that order's status
       const targetOrder = orders.find((o) => o.id === overId);
       if (targetOrder) {
         targetStatus = targetOrder.status;
@@ -345,6 +408,19 @@ export function OrderKanbanBoard({
         changedByUserId: user?.id,
       });
     }
+  };
+
+  // Handler for touch devices: tap card -> pick status from dropdown
+  const handleMoveToNextStatus = (orderId: string, currentStatus: OrderStatus) => {
+    const currentIndex = statuses.indexOf(currentStatus);
+    if (currentIndex < 0 || currentIndex >= statuses.length - 1) return;
+    const nextStatus = statuses[currentIndex + 1];
+    updateStatusMutation.mutate({
+      id: orderId,
+      status: nextStatus,
+      note: `Status changed from ${ORDER_STATUS_LABELS[currentStatus]} to ${ORDER_STATUS_LABELS[nextStatus]}`,
+      changedByUserId: user?.id,
+    });
   };
 
   const handleViewDetails = (order: Order) => {
@@ -372,16 +448,23 @@ export function OrderKanbanBoard({
             key={status}
             status={status}
             orders={ordersByStatus[status]}
+            isTouch={isTouch}
+            statuses={statuses}
             onViewDetails={handleViewDetails}
+            onMoveToNextStatus={handleMoveToNextStatus}
           />
         ))}
       </div>
 
-      <DragOverlay>
-        {activeOrder && (
-          <OrderCard order={activeOrder} isDragging onViewDetails={() => {}} />
-        )}
-      </DragOverlay>
+      {!isTouch && (
+        <DragOverlay>
+          {activeOrder && (
+            <div className="bg-card border rounded-lg p-3 shadow-lg ring-2 ring-primary">
+              <OrderCardContent order={activeOrder} isDragging onViewDetails={() => {}} />
+            </div>
+          )}
+        </DragOverlay>
+      )}
     </DndContext>
   );
 }
