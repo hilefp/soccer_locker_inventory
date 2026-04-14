@@ -48,6 +48,8 @@ export function EditClubProductPage() {
   const [initialsRequired, setInitialsRequired] = useState(true);
   const [gauchito, setGauchito] = useState(false);
   const [gauchitoRequired, setGauchitoRequired] = useState(true);
+  const [parkLocation, setParkLocation] = useState(false);
+  const [parkLocationRequired, setParkLocationRequired] = useState(true);
 
   const [allowedVariantIds, setAllowedVariantIds] = useState<string[]>([]);
 
@@ -98,6 +100,10 @@ export function EditClubProductPage() {
       const gauchitoField = clubProduct.customFields?.find((field) => field.key === 'gauchito');
       setGauchito(!!gauchitoField);
       setGauchitoRequired(gauchitoField?.required ?? true);
+
+      const parkLocationField = clubProduct.customFields?.find((field) => field.key === 'parkLocation');
+      setParkLocation(!!parkLocationField);
+      setParkLocationRequired(parkLocationField?.required ?? true);
     }
   }, [clubProduct]);
 
@@ -128,6 +134,7 @@ export function EditClubProductPage() {
     if (locationOpaLocka) defaultFieldKeys.push({ key: 'locationOpaLocka', required: locationOpaLockaRequired });
     if (initials) defaultFieldKeys.push({ key: 'initials', required: initialsRequired });
     if (gauchito) defaultFieldKeys.push({ key: 'gauchito', required: gauchitoRequired });
+    if (parkLocation) defaultFieldKeys.push({ key: 'parkLocation', required: parkLocationRequired });
 
     try {
       await updateMutation.mutateAsync({
@@ -633,6 +640,37 @@ export function EditClubProductPage() {
                     id="gauchitoRequired"
                     checked={gauchitoRequired}
                     onCheckedChange={setGauchitoRequired}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="parkLocation">Park Location</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Show a dropdown to select a park location
+                  </p>
+                </div>
+                <Switch
+                  id="parkLocation"
+                  checked={parkLocation}
+                  onCheckedChange={setParkLocation}
+                />
+              </div>
+              {parkLocation && (
+                <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="parkLocationRequired" className="text-sm font-medium text-primary/80">Required</Label>
+                    <p className="text-xs text-muted-foreground">
+                      {parkLocationRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                    </p>
+                  </div>
+                  <Switch
+                    id="parkLocationRequired"
+                    checked={parkLocationRequired}
+                    onCheckedChange={setParkLocationRequired}
                   />
                 </div>
               )}
