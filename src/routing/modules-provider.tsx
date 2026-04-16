@@ -38,6 +38,7 @@ import { reportsRoutes } from '@/modules/reports/routes';
 import { shopRoutes } from '@/modules/shop/routes';
 import { ordersRoutes } from '@/modules/orders/routes';
 import { tagsRoutes } from '@/modules/tags/routes';
+import { catalogsRoutes } from '@/modules/catalogs/routes';
 
 export function ModulesProvider() {
   return (
@@ -78,6 +79,9 @@ export function ModulesProvider() {
                   </Route>
                   <Route element={<ProtectedRoute allowedPermissions={['orders:read']} />}>
                     <Route path="orders/*" element={<RenderRouteTree route={ordersRoutes} />} />
+                  </Route>
+                  <Route element={<ProtectedRoute allowedPermissions={['catalogs:read']} />}>
+                    <Route path="catalogs/*" element={<RenderRouteTree route={catalogsRoutes} />} />
                   </Route>
                 </Route>
               </Route>

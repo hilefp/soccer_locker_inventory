@@ -6,7 +6,7 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-export type EntityType = 'product-brands' | 'products' | 'categories' | 'users' | 'clubs';
+export type EntityType = 'product-brands' | 'products' | 'categories' | 'users' | 'clubs' | 'catalogs';
 
 export interface ResizeOptions {
   width?: number;
@@ -27,6 +27,7 @@ export interface AdvancedUploadOptions {
 
 export interface UploadResponse {
   url: string;
+  key: string;
   originalName: string;
   filename: string;
   size: number;
@@ -57,11 +58,14 @@ class FileUploadService {
   async uploadImage(
     file: File,
     entityType: EntityType,
+    visibility?: 'public' | 'private',
   ): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
 
-    const url = `${API_BASE_URL}/file-upload/image?entityType=${entityType}`;
+    const params = new URLSearchParams({ entityType });
+    if (visibility) params.set('visibility', visibility);
+    const url = `${API_BASE_URL}/file-upload/image?${params.toString()}`;
     console.log('Uploading to:', url);
     console.log('File:', file.name, file.type, file.size);
 

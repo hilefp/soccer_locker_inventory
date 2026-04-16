@@ -195,6 +195,11 @@ export const MENU_SIDEBAR: MenuConfig = [
         title: 'Coupon Codes',
         path: '/settings/coupon-codes',
       },
+      {
+        title: 'Catalogs',
+        path: '/catalogs',
+        permissions: ['catalogs:read'],
+      },
     ],
   },
 ];
