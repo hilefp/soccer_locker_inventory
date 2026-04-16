@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, X } from 'lucide-react';
+import { FileText, ImageIcon, X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
@@ -123,6 +123,104 @@ function PdfUpload({
   );
 }
 
+function CoverImageUpload({
+  coverImageUrl,
+  brand,
+  onCoverImageUploaded,
+  onCoverImageRemoved,
+}: {
+  coverImageUrl: string | null;
+  brand: string;
+  onCoverImageUploaded: (url: string, key: string) => void;
+  onCoverImageRemoved: () => void;
+}) {
+  const [isUploading, setIsUploading] = useState(false);
+
+  const fileUpload = useFileUpload({
+    entityType: 'catalogs',
+    visibility: 'public',
+    onError: (error) => {
+      toast.error(`Cover image upload failed: ${error.message}`);
+    },
+  });
+
+  const handleCoverUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const customFilename = brand.trim()
+        ? `${brand.trim().toLowerCase().replace(/\s+/g, '-')}-cover`
+        : undefined;
+      const response = await fileUpload.uploadSingle(file, customFilename);
+      if (response) {
+        onCoverImageUploaded(response.url, response.key);
+        toast.success('Cover image uploaded successfully');
+      }
+    } catch (error) {
+      console.error('Error uploading cover image:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs font-medium">Cover Image</Label>
+      <div className="flex items-center gap-3 p-3 border border-border rounded-lg bg-accent/50">
+        <div className="size-14 rounded-md bg-background border border-border flex items-center justify-center overflow-hidden shrink-0">
+          {coverImageUrl ? (
+            <img
+              src={coverImageUrl}
+              alt="Catalog cover"
+              className="size-full object-cover"
+            />
+          ) : (
+            <ImageIcon className="size-6 text-muted-foreground" />
+          )}
+        </div>
+        <div className="w-0 flex-1 overflow-hidden">
+          {coverImageUrl ? (
+            <p className="text-sm font-medium truncate">
+              {coverImageUrl.split('/').pop()}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">No cover image uploaded</p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {coverImageUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onCoverImageRemoved}
+              disabled={isUploading}
+            >
+              <X className="size-3" />
+            </Button>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleCoverUpload}
+            className="hidden"
+            id="catalog-cover-upload"
+            disabled={isUploading}
+          />
+          <label htmlFor="catalog-cover-upload">
+            <Button size="sm" variant="outline" asChild disabled={isUploading}>
+              <span>
+                {isUploading ? 'Uploading...' : coverImageUrl ? 'Replace' : 'Upload'}
+              </span>
+            </Button>
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CatalogFormSheet({
   mode,
   open,
@@ -144,6 +242,8 @@ export function CatalogFormSheet({
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfKey, setPdfKey] = useState<string | null>(null);
   const [pdfSizeBytes, setPdfSizeBytes] = useState<number | null>(null);
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [coverImageKey, setCoverImageKey] = useState<string | null>(null);
   const [sortPosition, setSortPosition] = useState(0);
   const [status, setStatus] = useState('active');
 
@@ -165,6 +265,8 @@ export function CatalogFormSheet({
       setPdfUrl(catalog.pdfUrl);
       setPdfKey(catalog.pdfKey);
       setPdfSizeBytes(catalog.pdfSizeBytes);
+      setCoverImageUrl(catalog.coverImageUrl);
+      setCoverImageKey(catalog.coverImageKey);
       setSortPosition(catalog.sortPosition);
       setStatus(catalog.isActive ? 'active' : 'inactive');
     }
@@ -178,6 +280,8 @@ export function CatalogFormSheet({
       setPdfUrl(null);
       setPdfKey(null);
       setPdfSizeBytes(null);
+      setCoverImageUrl(null);
+      setCoverImageKey(null);
       setSortPosition(0);
       setStatus('active');
     }
@@ -195,6 +299,16 @@ export function CatalogFormSheet({
     setPdfSizeBytes(null);
   };
 
+  const handleCoverImageUploaded = (url: string, key: string) => {
+    setCoverImageUrl(url);
+    setCoverImageKey(key);
+  };
+
+  const handleCoverImageRemoved = () => {
+    setCoverImageUrl(null);
+    setCoverImageKey(null);
+  };
+
   const handleSave = async () => {
     if (!brand.trim()) {
       toast.error('Please enter a brand name');
@@ -207,6 +321,8 @@ export function CatalogFormSheet({
       pdfUrl: pdfUrl || undefined,
       pdfKey: pdfKey || undefined,
       pdfSizeBytes: pdfSizeBytes || undefined,
+      coverImageUrl: coverImageUrl || undefined,
+      coverImageKey: coverImageKey || undefined,
       sortPosition,
       isActive: status === 'active',
     };
@@ -283,6 +399,14 @@ export function CatalogFormSheet({
                 brand={brand}
                 onPdfUploaded={handlePdfUploaded}
                 onPdfRemoved={handlePdfRemoved}
+              />
+
+              {/* Cover Image Upload */}
+              <CoverImageUpload
+                coverImageUrl={coverImageUrl}
+                brand={brand}
+                onCoverImageUploaded={handleCoverImageUploaded}
+                onCoverImageRemoved={handleCoverImageRemoved}
               />
 
               {/* Sort Position */}

@@ -5,6 +5,8 @@ export interface Catalog {
   pdfUrl: string | null;
   pdfKey: string | null;
   pdfSizeBytes: number | null;
+  coverImageUrl: string | null;
+  coverImageKey: string | null;
   sortPosition: number;
   isActive: boolean;
   createdAt: string;
@@ -17,6 +19,8 @@ export interface CreateCatalogDto {
   pdfUrl?: string;
   pdfKey?: string;
   pdfSizeBytes?: number;
+  coverImageUrl?: string;
+  coverImageKey?: string;
   sortPosition?: number;
   isActive?: boolean;
 }
