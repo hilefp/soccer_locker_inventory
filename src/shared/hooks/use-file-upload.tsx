@@ -35,7 +35,7 @@ export function useFileUpload(options: UseFileUploadOptions) {
    * Upload a single file
    */
   const uploadSingle = useCallback(
-    async (file: File): Promise<UploadResponse | null> => {
+    async (file: File, customFilename?: string): Promise<UploadResponse | null> => {
       const uploadId = `${Date.now()}-${Math.random()}`;
 
       const newUpload: UploadProgress = {
@@ -60,7 +60,7 @@ export function useFileUpload(options: UseFileUploadOptions) {
           );
         }, 100);
 
-        const response = await fileUploadService.uploadImage(file, entityType, visibility);
+        const response = await fileUploadService.uploadImage(file, entityType, visibility, customFilename);
 
         clearInterval(progressInterval);
 

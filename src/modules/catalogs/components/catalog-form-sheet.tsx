@@ -32,10 +32,12 @@ import { useFileUpload } from '@/shared/hooks/use-file-upload';
 
 function PdfUpload({
   pdfUrl,
+  brand,
   onPdfUploaded,
   onPdfRemoved,
 }: {
   pdfUrl: string | null;
+  brand: string;
   onPdfUploaded: (url: string, key: string, sizeBytes: number) => void;
   onPdfRemoved: () => void;
 }) {
@@ -57,7 +59,10 @@ function PdfUpload({
       setFileName(file.name);
 
       try {
-        const response = await fileUpload.uploadSingle(file);
+        const customFilename = brand.trim()
+          ? `${brand.trim().toLowerCase().replace(/\s+/g, '-')}-catalog`
+          : undefined;
+        const response = await fileUpload.uploadSingle(file, customFilename);
         if (response) {
           onPdfUploaded(response.url, response.key, response.size);
           toast.success('PDF uploaded successfully');
@@ -78,7 +83,7 @@ function PdfUpload({
       <Label className="text-xs font-medium">PDF File</Label>
       <div className="flex items-center gap-3 p-3 border border-border rounded-lg bg-accent/50">
         <FileText className="size-8 text-muted-foreground shrink-0" />
-        <div className="flex-1 min-w-0">
+        <div className="w-0 flex-1 overflow-hidden">
           {displayName ? (
             <p className="text-sm font-medium truncate">{displayName}</p>
           ) : (
@@ -275,6 +280,7 @@ export function CatalogFormSheet({
               {/* PDF Upload */}
               <PdfUpload
                 pdfUrl={pdfUrl}
+                brand={brand}
                 onPdfUploaded={handlePdfUploaded}
                 onPdfRemoved={handlePdfRemoved}
               />

@@ -59,12 +59,14 @@ class FileUploadService {
     file: File,
     entityType: EntityType,
     visibility?: 'public' | 'private',
+    customFilename?: string,
   ): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
 
     const params = new URLSearchParams({ entityType });
     if (visibility) params.set('visibility', visibility);
+    if (customFilename) params.set('customFilename', customFilename);
     const url = `${API_BASE_URL}/file-upload/image?${params.toString()}`;
     console.log('Uploading to:', url);
     console.log('File:', file.name, file.type, file.size);
