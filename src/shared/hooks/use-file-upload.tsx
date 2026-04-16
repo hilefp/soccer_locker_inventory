@@ -19,13 +19,14 @@ export interface UploadProgress {
 
 interface UseFileUploadOptions {
   entityType: EntityType;
+  visibility?: 'public' | 'private';
   onSuccess?: (response: UploadResponse | MultipleUploadResponse) => void;
   onError?: (error: Error) => void;
   onProgress?: (progress: UploadProgress[]) => void;
 }
 
 export function useFileUpload(options: UseFileUploadOptions) {
-  const { entityType, onSuccess, onError, onProgress } = options;
+  const { entityType, visibility, onSuccess, onError, onProgress } = options;
 
   const [uploads, setUploads] = useState<UploadProgress[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -34,7 +35,7 @@ export function useFileUpload(options: UseFileUploadOptions) {
    * Upload a single file
    */
   const uploadSingle = useCallback(
-    async (file: File): Promise<UploadResponse | null> => {
+    async (file: File, customFilename?: string): Promise<UploadResponse | null> => {
       const uploadId = `${Date.now()}-${Math.random()}`;
 
       const newUpload: UploadProgress = {
@@ -59,7 +60,7 @@ export function useFileUpload(options: UseFileUploadOptions) {
           );
         }, 100);
 
-        const response = await fileUploadService.uploadImage(file, entityType);
+        const response = await fileUploadService.uploadImage(file, entityType, visibility, customFilename);
 
         clearInterval(progressInterval);
 
