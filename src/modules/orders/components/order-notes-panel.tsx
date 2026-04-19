@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { formatDate } from '@/shared/lib/helpers';
+import { formatDateTime } from '@/shared/lib/helpers';
 import { useAuthStore } from '@/shared/stores/auth-store';
 import {
   useOrderNotes,
@@ -80,7 +80,7 @@ export function OrderNotesPanel({ orderId }: OrderNotesPanelProps) {
                   </div>
                   <div className="flex items-center justify-between pl-1 pt-1 text-xs text-muted-foreground">
                     <span>
-                      {formatDate(new Date(note.createdAt))}
+                      {formatDateTime(new Date(note.createdAt))}
                       {' · '}
                       <span className="font-medium text-foreground/70">
                         {authorLabel(note.createdByUserId, user?.id, note.type)}
