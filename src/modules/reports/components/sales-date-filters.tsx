@@ -94,12 +94,12 @@ export function SalesDateFilters({
   const hasActiveFilters = startDate || endDate || clubId;
 
   const periodButtons: { label: string; value: DatePeriod }[] = [
-    { label: 'Hoy', value: 'today' },
-    { label: 'Esta semana', value: 'week' },
-    { label: 'Este mes', value: 'month' },
-    { label: '6 meses', value: '6months' },
-    { label: 'Este año', value: 'year' },
-    { label: 'Personalizado', value: 'custom' },
+    { label: 'Today', value: 'today' },
+    { label: 'This week', value: 'week' },
+    { label: 'This month', value: 'month' },
+    { label: '6 months', value: '6months' },
+    { label: 'This year', value: 'year' },
+    { label: 'Custom', value: 'custom' },
   ];
 
   return (
@@ -109,13 +109,13 @@ export function SalesDateFilters({
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
             <Calendar className="h-4.5 w-4.5 text-primary" />
           </div>
-          <span>Filtros de Fecha</span>
+          <span>Date Filters</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         <div>
           <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3 block">
-            Período
+            Period
           </Label>
           <div className="flex flex-wrap gap-2">
             {periodButtons.map((button) => (
@@ -140,12 +140,12 @@ export function SalesDateFilters({
         {selectedPeriod === 'custom' && (
           <div className="space-y-4 pt-2 border-t">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide block">
-              Rango Personalizado
+              Custom Range
             </Label>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="startDate" className="text-sm font-medium">
-                  Fecha Inicio
+                  Start Date
                 </Label>
                 <Input
                   id="startDate"
@@ -161,7 +161,7 @@ export function SalesDateFilters({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="endDate" className="text-sm font-medium">
-                  Fecha Fin
+                  End Date
                 </Label>
                 <Input
                   id="endDate"
@@ -182,7 +182,7 @@ export function SalesDateFilters({
         {showClubFilter && onClubIdChange && (
           <div className="space-y-3 pt-2 border-t">
             <Label htmlFor="clubId" className="text-sm font-medium">
-              Club <span className="text-muted-foreground font-normal">(Opcional)</span>
+              Club <span className="text-muted-foreground font-normal">(Optional)</span>
             </Label>
             <select
               id="clubId"
@@ -193,7 +193,7 @@ export function SalesDateFilters({
               aria-label="Club filter"
             >
               <option value="">
-                {clubsLoading ? 'Cargando clubs...' : 'Todos los clubs'}
+                {clubsLoading ? 'Loading clubs...' : 'All clubs'}
               </option>
               {clubs?.map((club) => (
                 <option key={club.id} value={club.id}>
@@ -221,7 +221,7 @@ export function SalesDateFilters({
             className="w-full rounded-lg border-2 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all duration-200"
           >
             <X className="mr-2 h-4 w-4" />
-            Limpiar Filtros
+            Clear Filters
           </Button>
         )}
       </CardContent>

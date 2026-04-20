@@ -23,6 +23,10 @@ export function CustomerListPage() {
     setFilters((prev) => ({ ...prev, page }));
   };
 
+  const handleLimitChange = (limit: number) => {
+    setFilters((prev) => ({ ...prev, limit, page: 1 }));
+  };
+
   const handleSearchChange = (search: string) => {
     setFilters((prev) => ({ ...prev, search, page: 1 }));
   };
@@ -58,6 +62,7 @@ export function CustomerListPage() {
         isLoading={isLoading}
         error={error?.message || null}
         onPageChange={handlePageChange}
+        onLimitChange={handleLimitChange}
         onSearchChange={handleSearchChange}
         onStatusFilterChange={handleStatusFilterChange}
       />

@@ -101,7 +101,7 @@ export default function ClubSalesReportPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
               <Building2 className="h-4.5 w-4.5 text-primary" />
             </div>
-            <span>Seleccionar Club</span>
+            <span>Select Club</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -119,7 +119,7 @@ export default function ClubSalesReportPage() {
               aria-required="true"
             >
               <option value="">
-                {clubsLoading ? 'Cargando clubs...' : 'Selecciona un club...'}
+                {clubsLoading ? 'Loading clubs...' : 'Select a club...'}
               </option>
               {clubs?.map((club) => (
                 <option key={club.id} value={club.id}>
@@ -137,7 +137,7 @@ export default function ClubSalesReportPage() {
               className="w-full rounded-lg border-2 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all duration-200"
             >
               <X className="mr-2 h-4 w-4" />
-              Limpiar Todo
+              Clear All
             </Button>
           )}
         </CardContent>
@@ -165,7 +165,7 @@ export default function ClubSalesReportPage() {
       {/* Club Name Display */}
       {data && (
         <div className="rounded-lg border bg-primary/5 p-4">
-          <p className="text-sm text-muted-foreground">Mostrando resultados para:</p>
+          <p className="text-sm text-muted-foreground">Showing results for:</p>
           <h2 className="text-2xl font-bold text-primary">{data.clubName}</h2>
         </div>
       )}
@@ -271,10 +271,10 @@ export default function ClubSalesReportPage() {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <Building2 className="h-16 w-16 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Ningún Club Seleccionado</h3>
+            <h3 className="text-lg font-semibold mb-2">No Club Selected</h3>
             <p className="text-sm text-muted-foreground max-w-md">
-              Selecciona un club arriba para ver las métricas de ventas detalladas y datos de
-              rendimiento de ese club específico.
+              Select a club above to view detailed sales metrics and performance data for that
+              specific club.
             </p>
           </CardContent>
         </Card>
