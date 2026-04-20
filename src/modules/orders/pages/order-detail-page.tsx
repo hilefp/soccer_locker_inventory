@@ -53,7 +53,7 @@ import {
   DialogBody,
 } from '@/shared/components/ui/dialog';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
-import { formatDate, timeAgo } from '@/shared/lib/helpers';
+import { formatDate, formatDateTime, timeAgo } from '@/shared/lib/helpers';
 import {
   useOrder,
   useOrderStatusHistory,
@@ -1595,7 +1595,7 @@ export function OrderDetailPage() {
                         )}
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                           <Clock className="size-3" />
-                          {formatDate(new Date(history.createdAt))}
+                          {formatDateTime(new Date(history.createdAt))}
                           {history.changedByUser && (
                             <span>by {history.changedByUser.email}</span>
                           )}
