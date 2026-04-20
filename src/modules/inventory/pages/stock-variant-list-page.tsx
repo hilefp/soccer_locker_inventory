@@ -4,7 +4,17 @@ import { StockVariantListTable } from '../components/stock-variant-list';
 import { StockVariantGrid } from '../components/stock-variant-grid';
 import { Button } from '@/shared/components/ui/button';
 import { Input, InputWrapper } from '@/shared/components/ui/input';
-import { LayoutGrid, LayoutList, Search, X, Download, Check } from 'lucide-react';
+import {
+  LayoutGrid,
+  LayoutList,
+  Search,
+  X,
+  Download,
+  Check,
+  ChevronDown,
+  Tag,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { Card, CardHeader, CardToolbar } from '@/shared/components/ui/card';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import {
@@ -22,11 +32,32 @@ import {
   CommandItem,
   CommandList,
 } from '@/shared/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select';
+import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/lib/utils';
 import { useProducts } from '@/modules/products/hooks/use-products';
+import { useProductCategories } from '@/modules/products/hooks/use-product-categories';
 import { useExportInventory } from '../hooks/use-export-inventory';
+import { StockStatus } from '../types/stock-variant.types';
 
 type ViewMode = 'grid' | 'table';
+
+const STATUS_OPTIONS: { label: string; value: StockStatus }[] = [
+  { label: 'In Stock', value: StockStatus.IN_STOCK },
+  { label: 'Low Stock', value: StockStatus.LOW_STOCK },
+  { label: 'Out of Stock', value: StockStatus.OUT_OF_STOCK },
+];
 
 export function StockVariantListPage() {
   useDocumentTitle('Stock Variants');
@@ -39,7 +70,15 @@ export function StockVariantListPage() {
   const [exportOpen, setExportOpen] = useState(false);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
 
+  // Filter state
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<StockStatus | ''>('');
+  const [colorQuery, setColorQuery] = useState('');
+  const [saleOnly, setSaleOnly] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+
   const { data: products } = useProducts();
+  const { data: categories } = useProductCategories();
   const { exportInventory, isExporting } = useExportInventory();
 
   const setSearchQuery = useCallback(
@@ -77,6 +116,12 @@ export function StockVariantListPage() {
     [setSearchParams]
   );
 
+  const toggleCategory = (id: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+    );
+  };
+
   const toggleProduct = (id: string) => {
     setSelectedProductIds((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
@@ -92,6 +137,26 @@ export function StockVariantListPage() {
   const handleOpenChange = (open: boolean) => {
     setExportOpen(open);
     if (!open) setSelectedProductIds([]);
+  };
+
+  const clearFilters = () => {
+    setSelectedCategoryIds([]);
+    setSelectedStatus('');
+    setColorQuery('');
+    setSaleOnly(false);
+  };
+
+  const activeFilterCount =
+    selectedCategoryIds.length +
+    (selectedStatus ? 1 : 0) +
+    (colorQuery ? 1 : 0) +
+    (saleOnly ? 1 : 0);
+
+  const filterProps = {
+    categoryIds: selectedCategoryIds.length ? selectedCategoryIds : undefined,
+    status: selectedStatus ? (selectedStatus as StockStatus) : undefined,
+    color: colorQuery || undefined,
+    tags: saleOnly ? ['sale'] : undefined,
   };
 
   return (
@@ -113,48 +178,159 @@ export function StockVariantListPage() {
       {/* Toolbar */}
       <Card>
         <CardHeader className="py-4">
-          <CardToolbar className="flex items-center justify-between gap-4">
-            {/* Search */}
-            <InputWrapper className="w-full lg:w-[400px] py-4 h-12 rounded-xl">
-              <Search className="h-5 w-5" />
-              <Input
-                placeholder="Search by SKU or product name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="text-base py-4 h-12 rounded-xl"
-              />
-              {searchQuery && (
+          <CardToolbar className="flex flex-col gap-3">
+            {/* Row 1: search + view toggle */}
+            <div className="flex items-center justify-between gap-4">
+              <InputWrapper className="w-full lg:w-[400px] py-4 h-12 rounded-xl">
+                <Search className="h-5 w-5" />
+                <Input
+                  placeholder="Search by SKU or product name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="text-base py-4 h-12 rounded-xl"
+                />
+                {searchQuery && (
+                  <Button
+                    variant="dim"
+                    size="sm"
+                    className="-me-3.5"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </InputWrapper>
+
+              <div className="flex items-center">
                 <Button
-                  variant="dim"
+                  variant={viewMode === 'grid' ? 'mono' : 'ghost'}
                   size="sm"
-                  className="-me-3.5"
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => handleViewModeChange('grid')}
+                  className="gap-2 h-10 px-4"
                 >
-                  <X className="h-4 w-4" />
+                  <LayoutGrid className="h-5 w-5" />
+                  <span className="font-medium">Grid</span>
+                </Button>
+                <Button
+                  variant={viewMode === 'table' ? 'mono' : 'ghost'}
+                  size="sm"
+                  onClick={() => handleViewModeChange('table')}
+                  className="gap-2 h-10 px-4"
+                >
+                  <LayoutList className="h-5 w-5" />
+                  <span className="font-medium">Table</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Row 2: filters */}
+            <div className="flex flex-wrap items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-muted-foreground shrink-0" />
+
+              {/* Category multiselect */}
+              <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5">
+                    Categories
+                    {selectedCategoryIds.length > 0 && (
+                      <Badge variant="secondary" size="sm" className="rounded-full px-1.5">
+                        {selectedCategoryIds.length}
+                      </Badge>
+                    )}
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search categories..." />
+                    <CommandList>
+                      <CommandEmpty>No categories found.</CommandEmpty>
+                      <CommandGroup>
+                        {categories?.map((cat) => (
+                          <CommandItem
+                            key={cat.id}
+                            value={cat.name}
+                            onSelect={() => toggleCategory(cat.id!)}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                selectedCategoryIds.includes(cat.id!)
+                                  ? 'opacity-100'
+                                  : 'opacity-0'
+                              )}
+                            />
+                            {cat.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              {/* Status */}
+              <Select
+                value={selectedStatus}
+                onValueChange={(v) => setSelectedStatus(v === 'all' ? '' : (v as StockStatus))}
+              >
+                <SelectTrigger className="h-8 w-auto min-w-[130px] text-sm">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  {STATUS_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Color */}
+              <div className="relative">
+                <Input
+                  placeholder="Color (e.g. navy)"
+                  value={colorQuery}
+                  onChange={(e) => setColorQuery(e.target.value)}
+                  variant="sm"
+                  className="h-8 text-sm w-36 pr-7"
+                />
+                {colorQuery && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-8 w-7 p-0"
+                    onClick={() => setColorQuery('')}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+
+              {/* Sale tag toggle */}
+              <Button
+                variant={saleOnly ? 'mono' : 'outline'}
+                size="sm"
+                className="h-8 gap-1.5"
+                onClick={() => setSaleOnly((v) => !v)}
+              >
+                <Tag className="h-3.5 w-3.5" />
+                Sale
+              </Button>
+
+              {/* Clear filters */}
+              {activeFilterCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-muted-foreground gap-1"
+                  onClick={clearFilters}
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Clear ({activeFilterCount})
                 </Button>
               )}
-            </InputWrapper>
-
-            {/* View Toggle */}
-            <div className="flex items-center">
-              <Button
-                variant={viewMode === 'grid' ? 'mono' : 'ghost'}
-                size="sm"
-                onClick={() => handleViewModeChange('grid')}
-                className="gap-2 h-10 px-4"
-              >
-                <LayoutGrid className="h-5 w-5" />
-                <span className="font-medium">Grid</span>
-              </Button>
-              <Button
-                variant={viewMode === 'table' ? 'mono' : 'ghost'}
-                size="sm"
-                onClick={() => handleViewModeChange('table')}
-                className="gap-2 h-10 px-4"
-              >
-                <LayoutList className="h-5 w-5" />
-                <span className="font-medium">Table</span>
-              </Button>
             </div>
           </CardToolbar>
         </CardHeader>
@@ -162,9 +338,9 @@ export function StockVariantListPage() {
 
       {/* Content */}
       {viewMode === 'grid' ? (
-        <StockVariantGrid searchQuery={searchQuery} />
+        <StockVariantGrid searchQuery={searchQuery} {...filterProps} />
       ) : (
-        <StockVariantListTable searchQuery={searchQuery} />
+        <StockVariantListTable searchQuery={searchQuery} {...filterProps} />
       )}
 
       {/* Export Dialog */}

@@ -15,6 +15,10 @@ interface StockVariantGridProps {
   warehouseId?: string;
   productId?: string;
   categoryId?: string;
+  categoryIds?: string[];
+  tags?: string[];
+  color?: string;
+  status?: StockStatus;
   searchQuery: string;
   pageSize?: number;
 }
@@ -49,6 +53,10 @@ export function StockVariantGrid({
   warehouseId,
   productId,
   categoryId,
+  categoryIds,
+  tags,
+  color,
+  status,
   searchQuery,
   pageSize = 12,
 }: StockVariantGridProps) {
@@ -76,6 +84,10 @@ export function StockVariantGrid({
     warehouseId,
     productId,
     categoryId,
+    categoryIds,
+    tags,
+    color,
+    status,
     sortBy: 'productName',
     sortOrder: 'asc',
   });

@@ -140,6 +140,36 @@ export function SidebarMenu() {
 
   const buildMenuItemRoot = (item: MenuItem, index: number): JSX.Element => {
     if (item.children) {
+      if (item.alwaysOpen) {
+        return (
+          <div key={index}>
+            <div className="w-full relative flex items-center select-none rounded-lg gap-2 px-2 py-1.5 text-sm font-medium text-foreground [&_svg]:pointer-events-none [&_svg:not([role=img]):not([class*=text-])]:opacity-60 [&_svg:not([class*=size-])]:size-4 [&_svg]:shrink-0">
+              {item.icon && <item.icon data-slot="accordion-menu-icon" />}
+              <span data-slot="accordion-menu-title">{item.title}</span>
+            </div>
+            <div className="ps-6 py-0.5 space-y-0.5">
+              {item.children.map((child, childIndex) => (
+                <Link
+                  key={childIndex}
+                  to={child.path || '#'}
+                  className={cn(
+                    'flex items-center justify-between h-8 text-[13px] rounded-lg px-2 py-1.5 transition-colors',
+                    'text-accent-foreground hover:bg-transparent hover:text-primary',
+                    matchPath(child.path || '') && 'text-primary font-medium bg-muted',
+                  )}
+                >
+                  {child.title}
+                  {child.path === '/orders' && newOrderCount > 0 && (
+                    <Badge variant="primary" size="sm" shape="circle">
+                      {newOrderCount}
+                    </Badge>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        );
+      }
       return (
         <AccordionMenuSub key={index} value={item.path || `root-${index}`}>
           <AccordionMenuSubTrigger className="text-sm font-medium">
