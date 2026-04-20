@@ -105,6 +105,7 @@ interface CustomerListProps {
   isLoading?: boolean;
   error?: string | null;
   onPageChange?: (page: number) => void;
+  onLimitChange?: (limit: number) => void;
   onSearchChange?: (search: string) => void;
   onStatusFilterChange?: (status: CustomerStatus | undefined) => void;
 }
@@ -173,6 +174,7 @@ export function CustomerListTable({
   customers,
   meta,
   onPageChange,
+  onLimitChange,
   onSearchChange,
   onStatusFilterChange,
 }: CustomerListProps) {
@@ -513,10 +515,7 @@ export function CustomerListTable({
     data,
     columns,
     state: {
-      pagination: {
-        pageIndex: pagination.pageIndex,
-        pageSize: meta?.limit || 10,
-      },
+      pagination,
       sorting,
       rowSelection,
     },
@@ -526,8 +525,11 @@ export function CustomerListTable({
       if (typeof updater === 'function') {
         const newState = updater(pagination);
         setPagination(newState);
-        if (onPageChange) {
-          onPageChange(newState.pageIndex + 1);
+        if (newState.pageSize !== pagination.pageSize) {
+          if (onLimitChange) onLimitChange(newState.pageSize);
+          if (onPageChange) onPageChange(1);
+        } else if (newState.pageIndex !== pagination.pageIndex) {
+          if (onPageChange) onPageChange(newState.pageIndex + 1);
         }
       }
     },
