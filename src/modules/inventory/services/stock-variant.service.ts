@@ -18,6 +18,9 @@ const buildQueryParams = (params: StockVariantQueryParams): string => {
   if (params.warehouseId) urlParams.append('warehouseId', params.warehouseId);
   if (params.productId) urlParams.append('productId', params.productId);
   if (params.categoryId) urlParams.append('categoryId', params.categoryId);
+  if (params.categoryIds?.length) urlParams.append('categoryIds', params.categoryIds.join(','));
+  if (params.tags?.length) urlParams.append('tags', params.tags.join(','));
+  if (params.color) urlParams.append('color', params.color);
   if (params.status) urlParams.append('status', params.status);
   if (params.sortBy) urlParams.append('sortBy', params.sortBy);
   if (params.sortOrder) urlParams.append('sortOrder', params.sortOrder);

@@ -59,6 +59,7 @@ export const MENU_SIDEBAR: MenuConfig = [
     title: 'Orders',
     icon: ClipboardList,
     permissions: ['orders:read'],
+    alwaysOpen: true,
     children: [
       { title: 'Order List', path: '/orders' },
       { title: 'Order Tracking', path: '/orders/tracking' },

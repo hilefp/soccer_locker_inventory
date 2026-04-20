@@ -29,12 +29,12 @@ export function SidebarHeader() {
         </div>
         <div className="hidden dark:block">
           <img
-            src={toAbsoluteUrl('/media/app/default-logo-dark.svg')}
-            className="default-logo h-[22px] max-w-none"
+            src={toAbsoluteUrl('/media/app/soccerlocker-team-logo-white.svg')}
+            className="default-logo h-[60px] max-w-none"
             alt="Default Dark Logo"
           />
           <img
-            src={toAbsoluteUrl('/media/app/mini-logo.svg')}
+            src={toAbsoluteUrl('/media/app/soccerlocker-team-logo.svg')}
             className="small-logo h-[22px] max-w-none"
             alt="Mini Logo"
           />

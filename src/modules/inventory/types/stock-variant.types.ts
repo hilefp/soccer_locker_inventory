@@ -21,6 +21,7 @@ export interface StockVariantItem {
   status: StockStatus;
   imageUrl: string | null;
   cost: number | null;
+  tags: string[];
 }
 
 // Pagination Metadata
@@ -45,6 +46,9 @@ export interface StockVariantQueryParams {
   warehouseId?: string;
   productId?: string;
   categoryId?: string;
+  categoryIds?: string[];
+  tags?: string[];
+  color?: string;
   status?: StockStatus;
   sortBy?: 'sku' | 'productName' | 'totalQuantity' | 'lastMovement';
   sortOrder?: 'asc' | 'desc';

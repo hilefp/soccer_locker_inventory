@@ -63,6 +63,10 @@ interface StockVariantListProps {
   warehouseId?: string;
   productId?: string;
   categoryId?: string;
+  categoryIds?: string[];
+  tags?: string[];
+  color?: string;
+  status?: StockStatus;
   searchQuery?: string;
 }
 
@@ -121,6 +125,10 @@ export function StockVariantListTable({
   warehouseId,
   productId,
   categoryId,
+  categoryIds,
+  tags,
+  color,
+  status,
   searchQuery = '',
 }: StockVariantListProps) {
   const navigate = useNavigate();
@@ -153,6 +161,10 @@ export function StockVariantListTable({
     warehouseId,
     productId,
     categoryId,
+    categoryIds,
+    tags,
+    color,
+    status,
     sortBy: sorting[0]?.id as 'sku' | 'productName' | 'totalQuantity' | 'lastMovement' | undefined,
     sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
   });

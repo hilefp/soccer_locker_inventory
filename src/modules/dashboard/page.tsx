@@ -68,7 +68,7 @@ export function DashboardPage() {
         {visibleCards.map((card) => (
           <Link
             to={card.href}
-            className="group relative flex flex-col items-center justify-between rounded-2xl p-0 transition-all bg-white"
+            className="group relative flex flex-col items-center justify-between rounded-2xl p-0 transition-all bg-white dark:bg-zinc-900 dark:text-white"
           >
             {/* Image Container */}
             <div className="relative rounded-2xl overflow-hidden h-64 w-full flex items-center justify-center">

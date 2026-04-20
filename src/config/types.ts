@@ -16,6 +16,7 @@ export interface MenuItem {
   separator?: boolean;
   permissions?: string[];
   roles?: string[];
+  alwaysOpen?: boolean;
 }
 
 export type MenuConfig = MenuItem[];
