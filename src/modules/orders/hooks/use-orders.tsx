@@ -23,6 +23,7 @@ export const orderKeys = {
   items: (id: string) => [...orderKeys.all, id, 'items'] as const,
   statusHistory: (id: string) => [...orderKeys.all, id, 'status-history'] as const,
   statistics: () => [...orderKeys.all, 'statistics'] as const,
+  shipments: (id: string) => [...orderKeys.all, id, 'shipments'] as const,
 };
 
 // Hook to fetch orders with pagination and filters
@@ -423,6 +424,16 @@ export function useSwapOrderItemVariant() {
       console.error('Error swapping variant:', error);
       toast.error(error?.response?.data?.message || 'Failed to swap variant');
     },
+  });
+}
+
+// Hook to fetch shipments for an order
+export function useOrderShipments(id: string) {
+  return useQuery({
+    queryKey: orderKeys.shipments(id),
+    queryFn: () => ordersService.getShipments(id),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 2,
   });
 }
 

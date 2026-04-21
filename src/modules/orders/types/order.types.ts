@@ -5,10 +5,18 @@ export type OrderStatus =
   | 'PRINT'
   | 'PICKING_UP'
   | 'PROCESSING'
+  | 'PARTIALLY_SHIPPED'
   | 'SHIPPING'
   | 'DELIVERED'
   | 'MISSING'
   | 'REFUND'
+  | 'FAILED';
+
+export type ShipmentStatus =
+  | 'PENDING'
+  | 'LABEL_CREATED'
+  | 'IN_TRANSIT'
+  | 'DELIVERED'
   | 'FAILED';
 
 // Order Status Flow Configuration
@@ -17,10 +25,11 @@ export const ORDER_STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
   NEW: ['PRINT', 'MISSING', 'REFUND'],
   PRINT: ['PICKING_UP', 'MISSING', 'REFUND'],
   PICKING_UP: ['PROCESSING', 'MISSING', 'REFUND'],
-  PROCESSING: ['SHIPPING', 'MISSING', 'REFUND'],
+  PROCESSING: ['SHIPPING', 'PARTIALLY_SHIPPED', 'MISSING', 'REFUND'],
+  PARTIALLY_SHIPPED: ['SHIPPING', 'MISSING', 'REFUND'],
   SHIPPING: ['DELIVERED', 'MISSING', 'REFUND'],
   DELIVERED: ['REFUND'],
-  MISSING: ['NEW', 'REFUND'],
+  MISSING: ['NEW', 'PARTIALLY_SHIPPED', 'REFUND'],
   REFUND: [],
   FAILED: ['NEW', 'REFUND'],
 };
@@ -32,6 +41,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   PRINT: 'Print',
   PICKING_UP: 'Preparing',
   PROCESSING: 'Processing',
+  PARTIALLY_SHIPPED: 'Partially Shipped',
   SHIPPING: 'Shipping',
   DELIVERED: 'Delivered',
   MISSING: 'Missing',
@@ -45,6 +55,7 @@ export const KANBAN_STATUS_ORDER: OrderStatus[] = [
   'PRINT',
   'PICKING_UP',
   'PROCESSING',
+  'PARTIALLY_SHIPPED',
   'SHIPPING',
   'DELIVERED',
   'MISSING',
@@ -64,6 +75,7 @@ export interface OrderItem {
   totalPrice: number;
   refundedQuantity: number;
   missingQuantity: number;
+  shippedQuantity: number;
   createdAt: string;
   productVariant?: {
     id: string;
@@ -94,6 +106,45 @@ export interface OrderItem {
     id: string;
     imageUrls?: string[];
   } | null;
+}
+
+// Order Shipment Item Interface
+export interface OrderShipmentItem {
+  id: string;
+  shipmentId: string;
+  orderItemId: string;
+  quantity: number;
+  orderItem?: OrderItem;
+}
+
+// Order Shipment Interface
+export interface OrderShipment {
+  id: string;
+  orderId: string;
+  shipmentNumber: number;
+  shippoTransactionId: string | null;
+  trackingNumber: string | null;
+  carrier: string | null;
+  labelUrl: string | null;
+  trackingUrl: string | null;
+  status: ShipmentStatus;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  stockDeducted: boolean;
+  items: OrderShipmentItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Create Shipment Request
+export interface CreateShipmentItemRequest {
+  orderItemId: string;
+  quantity: number;
+}
+
+export interface CreateShipmentRequest {
+  items: CreateShipmentItemRequest[];
+  note?: string;
 }
 
 // Order Status History Interface
@@ -169,6 +220,7 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   items?: OrderItem[];
+  shipments?: OrderShipment[];
   club?: OrderClub | null;
   customerUser?: OrderCustomerUser | null;
   assignedInventoryUser?: OrderInventoryUser | null;

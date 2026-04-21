@@ -4,6 +4,7 @@ import {
   OrderItem,
   OrderStatusHistory,
   OrderNote,
+  OrderShipment,
   CreateOrderNoteRequest,
   OrderListResponse,
   OrderStatistics,
@@ -242,4 +243,21 @@ export const ordersService = {
     );
     return response.data;
   },
+
+  /**
+   * Get all shipments for an order
+   */
+  async getShipments(orderId: string): Promise<OrderShipment[]> {
+    const response = await apiClient.get<OrderShipment[]>(`${BASE_URL}/${orderId}/shipments`);
+    return response.data;
+  },
+
+  /**
+   * Get a single shipment
+   */
+  async getShipment(orderId: string, shipmentId: string): Promise<OrderShipment> {
+    const response = await apiClient.get<OrderShipment>(`${BASE_URL}/${orderId}/shipments/${shipmentId}`);
+    return response.data;
+  },
+
 };
