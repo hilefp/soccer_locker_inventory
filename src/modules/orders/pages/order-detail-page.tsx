@@ -160,6 +160,8 @@ export function OrderDetailPage() {
   const [missingItemStates, setMissingItemStates] = useState<Record<string, { selected: boolean; quantity: number }>>({});
   const [missingReason, setMissingReason] = useState('');
 
+  const hasMissingItems = order?.items?.some((i) => (i.missingQuantity || 0) > 0) ?? false;
+
   useDocumentTitle(order ? `Order ${order.orderNumber}` : 'Order Details');
 
   const handleBack = () => navigate('/orders');
@@ -397,11 +399,11 @@ export function OrderDetailPage() {
   };
 
   // Missing products helpers
-  const isResolvingMode = isMissingMode && order?.status === 'MISSING';
+  const isResolvingMode = isMissingMode && hasMissingItems;
 
   const handleStartMissing = () => {
     const states: Record<string, { selected: boolean; quantity: number }> = {};
-    if (order?.status === 'MISSING') {
+    if (hasMissingItems) {
       // Resolve mode: pre-populate with currently missing items
       order?.items?.forEach((item) => {
         const mq = item.missingQuantity || 0;
@@ -545,7 +547,7 @@ export function OrderDetailPage() {
               className="text-orange-600 hover:text-orange-700"
             >
               <AlertTriangle className="size-4 mr-2" />
-              {order.status === 'MISSING' ? 'Resolve Missing' : 'Missing Products'}
+              {hasMissingItems ? 'Resolve Missing' : 'Missing Products'}
             </Button>
           )}
           {!isRefunding && !isMissingMode && (
@@ -574,9 +576,10 @@ export function OrderDetailPage() {
               {order.items.map((item) => {
                 const shipped = item.shippedQuantity || 0;
                 const remaining = item.quantity - shipped - (item.refundedQuantity || 0);
+                const { sizeValue } = extractSize(item.attributes, item.productVariant?.attributes);
                 return (
                   <div key={item.id} className="flex items-center justify-between text-sm text-blue-700 dark:text-blue-400">
-                    <span>{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}</span>
+                    <span>{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}{sizeValue ? ` — ${sizeValue}` : ''}</span>
                     <span className="font-medium">
                       {shipped} of {item.quantity} shipped
                       {remaining > 0 && <span className="text-blue-500 dark:text-blue-500"> ({remaining} pending)</span>}
