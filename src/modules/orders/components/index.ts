@@ -8,4 +8,5 @@ export { OrderPackingSlip } from './order-packing-slip';
 export { OrderInvoice } from './order-invoice';
 export { ExportOrdersDialog } from './export-orders-dialog';
 export { OrderNotesPanel } from './order-notes-panel';
+export { OrderShipmentsPanel } from './order-shipments-panel';
 export { QrScannerButton } from './qr-scanner-button';

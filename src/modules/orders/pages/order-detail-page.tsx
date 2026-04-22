@@ -71,6 +71,7 @@ import {
   OrderPackingSlip,
   OrderInvoice,
   OrderNotesPanel,
+  OrderShipmentsPanel,
 } from '@/modules/orders/components';
 import { ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
 import type { OrderItem } from '@/modules/orders/types';
@@ -158,6 +159,8 @@ export function OrderDetailPage() {
   const [isMissingMode, setIsMissingMode] = useState(false);
   const [missingItemStates, setMissingItemStates] = useState<Record<string, { selected: boolean; quantity: number }>>({});
   const [missingReason, setMissingReason] = useState('');
+
+  const hasMissingItems = order?.items?.some((i) => (i.missingQuantity || 0) > 0) ?? false;
 
   useDocumentTitle(order ? `Order ${order.orderNumber}` : 'Order Details');
 
@@ -396,11 +399,11 @@ export function OrderDetailPage() {
   };
 
   // Missing products helpers
-  const isResolvingMode = isMissingMode && order?.status === 'MISSING';
+  const isResolvingMode = isMissingMode && hasMissingItems;
 
   const handleStartMissing = () => {
     const states: Record<string, { selected: boolean; quantity: number }> = {};
-    if (order?.status === 'MISSING') {
+    if (hasMissingItems) {
       // Resolve mode: pre-populate with currently missing items
       order?.items?.forEach((item) => {
         const mq = item.missingQuantity || 0;
@@ -544,7 +547,7 @@ export function OrderDetailPage() {
               className="text-orange-600 hover:text-orange-700"
             >
               <AlertTriangle className="size-4 mr-2" />
-              {order.status === 'MISSING' ? 'Resolve Missing' : 'Missing Products'}
+              {hasMissingItems ? 'Resolve Missing' : 'Missing Products'}
             </Button>
           )}
           {!isRefunding && !isMissingMode && (
@@ -560,6 +563,37 @@ export function OrderDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Partially Shipped Banner */}
+      {order.status === 'PARTIALLY_SHIPPED' && order.items && order.items.some((i) => (i.shippedQuantity || 0) > 0) && (
+        <div className="flex items-start gap-3 rounded-lg border border-blue-300 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30 p-4">
+          <Truck className="size-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+          <div className="flex-1 space-y-2">
+            <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">
+              This order has been partially shipped
+            </p>
+            <div className="space-y-1">
+              {order.items.map((item) => {
+                const shipped = item.shippedQuantity || 0;
+                const remaining = item.quantity - shipped - (item.refundedQuantity || 0);
+                const { sizeValue } = extractSize(item.attributes, item.productVariant?.attributes);
+                return (
+                  <div key={item.id} className="flex items-center justify-between text-sm text-blue-700 dark:text-blue-400">
+                    <span>{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}{sizeValue ? ` — ${sizeValue}` : ''}</span>
+                    <span className="font-medium">
+                      {shipped} of {item.quantity} shipped
+                      {remaining > 0 && <span className="text-blue-500 dark:text-blue-500"> ({remaining} pending)</span>}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-blue-600 dark:text-blue-500">
+              Remaining items will be shipped when available. Check the <strong>Shipments</strong> panel for tracking details.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Missing Items Banner */}
       {order.status === 'MISSING' && order.items?.some((i) => (i.missingQuantity || 0) > 0) && (
@@ -1654,6 +1688,9 @@ export function OrderDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Shipments Panel */}
+          <OrderShipmentsPanel orderId={order.id} />
 
           {/* Order Notes Panel */}
           <OrderNotesPanel orderId={order.id} />
