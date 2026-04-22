@@ -112,7 +112,7 @@ export function OrderShipmentsPanel({ orderId }: OrderShipmentsPanelProps) {
                 )}
 
                 {/* Label URL */}
-                {shipment.labelUrl && (
+                {/* {shipment.labelUrl && (
                   <div className="flex items-center gap-2 text-sm">
                     <ExternalLink className="size-3.5 text-muted-foreground shrink-0" />
                     <a
@@ -124,7 +124,7 @@ export function OrderShipmentsPanel({ orderId }: OrderShipmentsPanelProps) {
                       View Shipping Label
                     </a>
                   </div>
-                )}
+                )} */}
 
                 {/* Items in shipment */}
                 {shipment.items && shipment.items.length > 0 && (
