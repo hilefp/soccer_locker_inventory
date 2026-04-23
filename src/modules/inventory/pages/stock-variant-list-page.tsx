@@ -55,7 +55,6 @@ type ViewMode = 'grid' | 'table';
 
 const STATUS_OPTIONS: { label: string; value: StockStatus }[] = [
   { label: 'In Stock', value: StockStatus.IN_STOCK },
-  { label: 'Low Stock', value: StockStatus.LOW_STOCK },
   { label: 'Out of Stock', value: StockStatus.OUT_OF_STOCK },
 ];
 
