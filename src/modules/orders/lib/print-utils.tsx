@@ -392,6 +392,7 @@ export const generateInvoiceHTML = (order: Order): string => {
           <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
           <div><strong>Order Number:</strong> ${escapeHtml(order.orderNumber)}</div>
           <div><strong>Payment Method:</strong> ${order.currency === 'USD' ? 'Credit Card' : escapeHtml(order.currency)}</div>
+          ${order.club ? `<div><strong>Club:</strong> ${escapeHtml(order.club.name)}</div>` : ''}
         </div>
       </div>
 
@@ -570,6 +571,7 @@ export const generatePackingSlipHTML = (order: Order): string => {
       <div style="text-align: left; margin-right: 30px;">
         <div><strong>Order Date:</strong> ${formatDate(new Date(order.createdAt))}</div>
         <div><strong>Shipping Method:</strong> ${escapeHtml(order.carrier) || 'Standard Shipping'}</div>
+        ${order.club ? `<div><strong>Club:</strong> ${escapeHtml(order.club.name)}</div>` : ''}
       </div>
       <div class="qr-code-section">
         <img src="${getQRCodeUrl(order.orderNumber)}" alt="QR Code for order ${escapeHtml(order.orderNumber)}" />
