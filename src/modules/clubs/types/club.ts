@@ -15,6 +15,7 @@ export interface Club {
   personInCharge?: string | null;
   personInChargeEmail?: string | null;
   personInChargePhone?: string | null;
+  sortPosition: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -37,6 +38,7 @@ export interface CreateClubDto {
   personInChargeEmail?: string;
   personInChargePhone?: string;
   isActive?: boolean;
+  sortPosition?: number;
 }
 
 export interface UpdateClubDto {
@@ -56,4 +58,9 @@ export interface UpdateClubDto {
   personInChargeEmail?: string;
   personInChargePhone?: string;
   isActive?: boolean;
+  sortPosition?: number;
+}
+
+export interface ReorderClubsDto {
+  ids: string[];
 }

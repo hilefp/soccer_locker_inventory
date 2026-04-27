@@ -69,12 +69,48 @@ export function StockVariantListPage() {
   const [exportOpen, setExportOpen] = useState(false);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
 
-  // Filter state
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<StockStatus | ''>('');
-  const [colorQuery, setColorQuery] = useState('');
-  const [saleOnly, setSaleOnly] = useState(false);
+  // Filter state (persisted in URL)
+  const selectedCategoryIds = searchParams.get('categories')
+    ? searchParams.get('categories')!.split(',').filter(Boolean)
+    : [];
+  const selectedStatus = (searchParams.get('status') as StockStatus | null) || '';
+  const colorQuery = searchParams.get('color') || '';
+  const saleOnly = searchParams.get('sale') === '1';
   const [categoryOpen, setCategoryOpen] = useState(false);
+
+  const updateParam = useCallback(
+    (key: string, value: string | null) => {
+      setSearchParams(
+        (prev) => {
+          if (value) {
+            prev.set(key, value);
+          } else {
+            prev.delete(key);
+          }
+          return prev;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
+
+  const setSelectedCategoryIds = useCallback(
+    (ids: string[]) => updateParam('categories', ids.length ? ids.join(',') : null),
+    [updateParam]
+  );
+  const setSelectedStatus = useCallback(
+    (status: StockStatus | '') => updateParam('status', status || null),
+    [updateParam]
+  );
+  const setColorQuery = useCallback(
+    (color: string) => updateParam('color', color || null),
+    [updateParam]
+  );
+  const setSaleOnly = useCallback(
+    (value: boolean) => updateParam('sale', value ? '1' : null),
+    [updateParam]
+  );
 
   const { data: products } = useProducts();
   const { data: categories } = useProductCategories();
@@ -116,8 +152,10 @@ export function StockVariantListPage() {
   );
 
   const toggleCategory = (id: string) => {
-    setSelectedCategoryIds((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+    setSelectedCategoryIds(
+      selectedCategoryIds.includes(id)
+        ? selectedCategoryIds.filter((c) => c !== id)
+        : [...selectedCategoryIds, id]
     );
   };
 
@@ -139,10 +177,16 @@ export function StockVariantListPage() {
   };
 
   const clearFilters = () => {
-    setSelectedCategoryIds([]);
-    setSelectedStatus('');
-    setColorQuery('');
-    setSaleOnly(false);
+    setSearchParams(
+      (prev) => {
+        prev.delete('categories');
+        prev.delete('status');
+        prev.delete('color');
+        prev.delete('sale');
+        return prev;
+      },
+      { replace: true }
+    );
   };
 
   const activeFilterCount =
@@ -312,7 +356,7 @@ export function StockVariantListPage() {
                 variant={saleOnly ? 'mono' : 'outline'}
                 size="sm"
                 className="h-8 gap-1.5"
-                onClick={() => setSaleOnly((v) => !v)}
+                onClick={() => setSaleOnly(!saleOnly)}
               >
                 <Tag className="h-3.5 w-3.5" />
                 Sale
