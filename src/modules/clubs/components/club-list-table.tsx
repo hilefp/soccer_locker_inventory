@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { arrayMove } from '@dnd-kit/sortable';
+import { type DragEndEvent } from '@dnd-kit/core';
 import { ClubFormSheet } from './club-form-sheet';
-import { useDeleteClub } from '../hooks/use-clubs';
+import { useDeleteClub, useReorderClubs } from '../hooks/use-clubs';
 import { Club } from '../types';
 import { Badge, BadgeProps } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -17,10 +19,9 @@ import { DataGrid } from '@/shared/components/ui/data-grid';
 import { DataGridColumnHeader } from '@/shared/components/ui/data-grid-column-header';
 import { DataGridPagination } from '@/shared/components/ui/data-grid-pagination';
 import {
-  DataGridTable,
-  DataGridTableRowSelect,
-  DataGridTableRowSelectAll,
-} from '@/shared/components/ui/data-grid-table';
+  DataGridTableDndRowHandle,
+  DataGridTableDndRows,
+} from '@/shared/components/ui/data-grid-table-dnd-rows';
 import { Input, InputWrapper } from '@/shared/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 import {
@@ -61,6 +62,7 @@ export function ClubListTable({
 
   // React Query hook for delete mutation
   const deleteMutation = useDeleteClub();
+  const reorderMutation = useReorderClubs();
 
   // Modal state
   const [isEditClubOpen, setIsEditClubOpen] = useState(false);
@@ -72,17 +74,13 @@ export function ClubListTable({
   const columns = useMemo<ColumnDef<Club>[]>(
     () => [
       {
-        accessorKey: 'id',
-        accessorFn: (row) => row.id,
-        header: () => <DataGridTableRowSelectAll />,
-        cell: ({ row }) => <DataGridTableRowSelect row={row} />,
+        id: 'drag',
+        header: () => '',
+        cell: ({ row }) => <DataGridTableDndRowHandle rowId={row.id} />,
         enableSorting: false,
         enableHiding: false,
         enableResizing: false,
-        size: 23,
-        meta: {
-          cellClassName: '',
-        },
+        size: 40,
       },
       {
         id: 'clubInfo',
@@ -299,9 +297,15 @@ export function ClubListTable({
     );
   }, [clubs, searchQuery]);
 
+  const dataIds = useMemo(
+    () => filteredData.map((_, index) => index.toString()),
+    [filteredData],
+  );
+
   const table = useReactTable({
     data: filteredData,
     columns,
+    getRowId: (_, index) => index.toString(),
     state: {
       pagination,
       sorting,
@@ -314,6 +318,22 @@ export function ClubListTable({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const oldIndex = parseInt(active.id as string, 10);
+      const newIndex = parseInt(over.id as string, 10);
+
+      const reordered = arrayMove(filteredData, oldIndex, newIndex);
+      const ids = reordered.map((club) => club.id);
+
+      reorderMutation.mutate({ ids });
+    },
+    [filteredData, reorderMutation],
+  );
 
   return (
     <>
@@ -370,7 +390,10 @@ export function ClubListTable({
               </div>
             ) : (
               <ScrollArea>
-                <DataGridTable />
+                <DataGridTableDndRows
+                  handleDragEnd={handleDragEnd}
+                  dataIds={dataIds}
+                />
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
             )}

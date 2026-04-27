@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { clubsService } from '../services/clubs.service';
-import type { CreateClubDto, UpdateClubDto } from '../types';
+import type { Club, CreateClubDto, ReorderClubsDto, UpdateClubDto } from '../types';
 import { toast } from 'sonner';
 
 const QUERY_KEY = 'clubs';
@@ -63,6 +63,38 @@ export function useDeleteClub() {
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Failed to delete club');
+    },
+  });
+}
+
+export function useReorderClubs() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: ReorderClubsDto) => clubsService.reorder(data),
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEY] });
+
+      const previousClubs = queryClient.getQueryData<Club[]>([QUERY_KEY]);
+
+      if (previousClubs) {
+        const reordered = data.ids.map((id, index) => {
+          const club = previousClubs.find((c) => c.id === id)!;
+          return { ...club, sortPosition: index };
+        });
+        queryClient.setQueryData([QUERY_KEY], reordered);
+      }
+
+      return { previousClubs };
+    },
+    onError: (error: any, _data, context) => {
+      if (context?.previousClubs) {
+        queryClient.setQueryData([QUERY_KEY], context.previousClubs);
+      }
+      toast.error(error?.response?.data?.message || 'Failed to reorder clubs');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }

@@ -1,5 +1,10 @@
 import { apiClient } from '@/shared/lib/api-client';
-import type { Club, CreateClubDto, UpdateClubDto } from '../types';
+import type {
+  Club,
+  CreateClubDto,
+  ReorderClubsDto,
+  UpdateClubDto,
+} from '../types';
 
 const BASE_URL = '/inventory/clubs';
 
@@ -26,5 +31,10 @@ export const clubsService = {
 
   async delete(id: string): Promise<void> {
     await apiClient.delete(`${BASE_URL}/${id}`);
+  },
+
+  async reorder(data: ReorderClubsDto): Promise<Club[]> {
+    const response = await apiClient.patch<Club[]>(`${BASE_URL}/reorder`, data);
+    return response.data;
   },
 };
