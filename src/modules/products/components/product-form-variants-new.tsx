@@ -59,7 +59,6 @@ export function ProductFormVariantsNew({ mode, variants, onVariantsChange }: Pro
   const [selectedAttributeIds, setSelectedAttributeIds] = useState<string[]>([]);
   const [newVariant, setNewVariant] = useState<Omit<Variant, 'id'>>({
     sku: '',
-    barcode: '',
     attributes: {},
     price: 0,
     compareAtPrice: undefined,
@@ -83,7 +82,6 @@ export function ProductFormVariantsNew({ mode, variants, onVariantsChange }: Pro
   const resetForm = () => {
     setNewVariant({
       sku: '',
-      barcode: '',
       attributes: {},
       price: 0,
       compareAtPrice: undefined,
@@ -175,7 +173,6 @@ export function ProductFormVariantsNew({ mode, variants, onVariantsChange }: Pro
     if (variant) {
       setNewVariant({
         sku: variant.sku,
-        barcode: variant.barcode,
         attributes: variant.attributes,
         price: variant.price,
         compareAtPrice: variant.compareAtPrice,
@@ -241,7 +238,6 @@ export function ProductFormVariantsNew({ mode, variants, onVariantsChange }: Pro
       return {
         id: `gen-${Date.now()}-${idx}`,
         sku: skuSuffix,
-        barcode: '',
         attributes,
         price: 0,
         compareAtPrice: undefined,
@@ -512,26 +508,13 @@ export function ProductFormVariantsNew({ mode, variants, onVariantsChange }: Pro
             <TabsContent value="form" className="m-0 space-y-4">
               <div className="p-5 space-y-4">
                 {/* Basic Info */}
-                <div className="grid grid-cols-2 gap-5">
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs">SKU *</Label>
-                    <Input
-                      placeholder="PROD-001-M-RED"
-                      value={newVariant.sku}
-                      onChange={(e) => setNewVariant({ ...newVariant, sku: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs">Barcode</Label>
-                    <Input
-                      placeholder="123456789"
-                      value={newVariant.barcode || ''}
-                      onChange={(e) =>
-                        setNewVariant({ ...newVariant, barcode: e.target.value })
-                      }
-                    />
-                  </div>
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs">SKU *</Label>
+                  <Input
+                    placeholder="PROD-001-M-RED"
+                    value={newVariant.sku}
+                    onChange={(e) => setNewVariant({ ...newVariant, sku: e.target.value })}
+                  />
                 </div>
 
                 {/* Dynamic Attributes from ProductAttribute model */}

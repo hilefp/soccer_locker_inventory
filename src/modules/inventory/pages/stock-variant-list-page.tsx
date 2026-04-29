@@ -49,7 +49,12 @@ import { cn } from '@/shared/lib/utils';
 import { useProducts } from '@/modules/products/hooks/use-products';
 import { useProductCategories } from '@/modules/products/hooks/use-product-categories';
 import { useExportInventory } from '../hooks/use-export-inventory';
+import { useStockVariantByBarcode } from '../hooks/use-stock-variants';
 import { StockStatus } from '../types/stock-variant.types';
+import { CodeScannerButton } from '@/shared/components/scanner/code-scanner-button';
+import { Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { toast } from 'sonner';
+import { isAxiosError } from 'axios';
 
 type ViewMode = 'grid' | 'table';
 
@@ -76,7 +81,11 @@ export function StockVariantListPage() {
   const selectedStatus = (searchParams.get('status') as StockStatus | null) || '';
   const colorQuery = searchParams.get('color') || '';
   const saleOnly = searchParams.get('sale') === '1';
+  const productIdFilter = searchParams.get('productId') || '';
+  const scannedBarcode = searchParams.get('barcode') || '';
   const [categoryOpen, setCategoryOpen] = useState(false);
+
+  const { mutateAsync: lookupBarcode, isPending: isScanning } = useStockVariantByBarcode();
 
   const updateParam = useCallback(
     (key: string, value: string | null) => {
@@ -176,6 +185,56 @@ export function StockVariantListPage() {
     if (!open) setSelectedProductIds([]);
   };
 
+  const handleBarcodeScan = useCallback(
+    async (raw: string) => {
+      const cleaned = raw.trim().replace(/\D/g, '');
+      if (!cleaned) {
+        toast.error('Empty barcode');
+        return;
+      }
+
+      try {
+        const response = await lookupBarcode(cleaned);
+        const productId = response.product?.id;
+        if (!productId) {
+          toast.error('Barcode not registered');
+          return;
+        }
+
+        setSearchParams(
+          (prev) => {
+            prev.set('productId', productId);
+            prev.set('barcode', cleaned);
+            prev.delete('search');
+            return prev;
+          },
+          { replace: true }
+        );
+        toast.success(`Found product for barcode ${cleaned}`);
+      } catch (err) {
+        if (isAxiosError(err) && err.response?.status === 404) {
+          toast.error('Barcode not registered');
+        } else if (isAxiosError(err) && err.response?.status === 400) {
+          toast.error('Invalid barcode');
+        } else {
+          toast.error('Could not look up barcode');
+        }
+      }
+    },
+    [lookupBarcode, setSearchParams]
+  );
+
+  const clearScannedBarcode = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        prev.delete('productId');
+        prev.delete('barcode');
+        return prev;
+      },
+      { replace: true }
+    );
+  }, [setSearchParams]);
+
   const clearFilters = () => {
     setSearchParams(
       (prev) => {
@@ -200,6 +259,7 @@ export function StockVariantListPage() {
     status: selectedStatus ? (selectedStatus as StockStatus) : undefined,
     color: colorQuery || undefined,
     tags: saleOnly ? ['sale'] : undefined,
+    productId: productIdFilter || undefined,
   };
 
   return (
@@ -244,7 +304,21 @@ export function StockVariantListPage() {
                 )}
               </InputWrapper>
 
-              <div className="flex items-center">
+              <div className="flex items-center gap-2">
+                <CodeScannerButton
+                  label={isScanning ? 'Scanning…' : 'Scan'}
+                  title="Scan Product Barcode"
+                  helperText="Point the camera at a product barcode (UPC/EAN)"
+                  scannerId="inventory-barcode-scanner"
+                  formats={[
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                  ]}
+                  onScan={handleBarcodeScan}
+                />
                 <Button
                   variant={viewMode === 'grid' ? 'mono' : 'ghost'}
                   size="sm"
@@ -361,6 +435,21 @@ export function StockVariantListPage() {
                 <Tag className="h-3.5 w-3.5" />
                 Sale
               </Button>
+
+              {/* Active barcode filter */}
+              {scannedBarcode && (
+                <Badge variant="secondary" className="h-8 gap-1.5 px-2.5">
+                  Barcode: {scannedBarcode}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0"
+                    onClick={clearScannedBarcode}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              )}
 
               {/* Clear filters */}
               {activeFilterCount > 0 && (

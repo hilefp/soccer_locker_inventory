@@ -5,8 +5,6 @@ import { Label } from '@/shared/components/ui/label';
 interface VariantDetailBasicInfoProps {
   sku: string;
   setSku: (value: string) => void;
-  barcode: string;
-  setBarcode: (value: string) => void;
   imageUrl: string;
   setImageUrl: (value: string) => void;
   isSaving: boolean;
@@ -15,8 +13,6 @@ interface VariantDetailBasicInfoProps {
 export function VariantDetailBasicInfo({
   sku,
   setSku,
-  barcode,
-  setBarcode,
   imageUrl,
   setImageUrl,
   isSaving,
@@ -36,19 +32,6 @@ export function VariantDetailBasicInfo({
             value={sku}
             onChange={(e) => setSku(e.target.value)}
             placeholder="Enter SKU"
-            disabled={isSaving}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="barcode" className="text-xs">
-            Barcode
-          </Label>
-          <Input
-            id="barcode"
-            value={barcode}
-            onChange={(e) => setBarcode(e.target.value)}
-            placeholder="Enter barcode"
             disabled={isSaving}
           />
         </div>

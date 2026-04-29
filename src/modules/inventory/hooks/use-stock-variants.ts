@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { stockVariantService } from '../services/stock-variant.service';
 import { StockVariantQueryParams } from '../types/stock-variant.types';
 
@@ -22,5 +22,15 @@ export const useStockVariantDetail = (variantId: string) => {
     queryKey: [STOCK_VARIANTS_QUERY_KEY, 'detail', variantId],
     queryFn: () => stockVariantService.getDetail(variantId),
     enabled: !!variantId,
+  });
+};
+
+/**
+ * Imperative lookup of stock variants by a scanned barcode.
+ * Use `mutateAsync(barcode)` from the scan handler.
+ */
+export const useStockVariantByBarcode = () => {
+  return useMutation({
+    mutationFn: (barcode: string) => stockVariantService.getByBarcode(barcode),
   });
 };

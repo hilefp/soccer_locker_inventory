@@ -231,11 +231,6 @@ export function ProductDetailPage() {
                       <TableRow key={variant.id}>
                         <TableCell>
                           <span className="font-medium">{variant.sku}</span>
-                          {variant.barcode && (
-                            <span className="block text-xs text-muted-foreground">
-                              {variant.barcode}
-                            </span>
-                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">

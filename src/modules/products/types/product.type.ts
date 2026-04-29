@@ -16,7 +16,6 @@ export interface ProductVariant {
   productId?: string;
 
   sku: string;
-  barcode?: string;
   attributes: ProductVariantAttributes; // JSON object from Prisma
 
   price: number;
@@ -39,7 +38,6 @@ export interface ProductVariant {
 
 export interface ProductVariantRequest {
   sku?: string;
-  barcode?: string;
   attributes?: Record<string, string>;
   price?: number | string;
   compareAtPrice?: number | string;
@@ -68,6 +66,7 @@ export interface ProductRequest {
   isActive?: boolean;
   isFeatured?: boolean;
   sku?: string;
+  barcode?: string;
   price?: number;
   cost?: number;
   variants?: ProductVariantRequest[];
