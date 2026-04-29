@@ -2,11 +2,13 @@ import { apiClient } from '@/shared/lib/api-client';
 import {
   StockVariantsResponse,
   StockVariantQueryParams,
+  BarcodeLookupResponse,
 } from '../types/stock-variant.types';
 import { StockVariantDetail } from '../types/stock-variant-detail.types';
 
 const STOCK_VARIANTS_ENDPOINT = '/inventory/stocks/variants';
 const STOCK_VARIANT_DETAIL_ENDPOINT = '/inventory/stocks/variant';
+const STOCK_BARCODE_ENDPOINT = '/inventory/stocks/barcode';
 
 // Helper to build query params
 const buildQueryParams = (params: StockVariantQueryParams): string => {
@@ -49,6 +51,17 @@ export const stockVariantService = {
   async getDetail(variantId: string): Promise<StockVariantDetail> {
     const response = await apiClient.get<StockVariantDetail>(
       `${STOCK_VARIANT_DETAIL_ENDPOINT}/${variantId}/detail`
+    );
+
+    return response.data;
+  },
+
+  /**
+   * Look up stock variants by a product barcode (UPC/EAN/GTIN/internal).
+   */
+  async getByBarcode(barcode: string): Promise<BarcodeLookupResponse> {
+    const response = await apiClient.get<BarcodeLookupResponse>(
+      `${STOCK_BARCODE_ENDPOINT}/${encodeURIComponent(barcode)}`
     );
 
     return response.data;

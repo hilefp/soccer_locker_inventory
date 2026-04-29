@@ -38,6 +38,33 @@ export interface StockVariantsResponse {
   meta: PaginationMeta;
 }
 
+// Barcode lookup response (envelope around the variants list + product info)
+export interface BarcodeLookupProduct {
+  id: string;
+  name: string;
+  description: string | null;
+  slug: string;
+  model: string | null;
+  categoryId: string | null;
+  brandId: string | null;
+  imageUrl: string | null;
+  tags: string[];
+  imageUrls: string[];
+  isActive: boolean;
+  isFeatured: boolean;
+  minPrice: number | null;
+  maxPrice: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BarcodeLookupResponse {
+  barcode: string;
+  type: string;
+  product: BarcodeLookupProduct;
+  variants: StockVariantsResponse;
+}
+
 // Query Parameters
 export interface StockVariantQueryParams {
   page?: number;

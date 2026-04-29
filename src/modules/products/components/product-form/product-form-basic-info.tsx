@@ -11,6 +11,8 @@ interface ProductFormBasicInfoProps {
   setSlug: (value: string) => void;
   sku: string;
   setSku: (value: string) => void;
+  barcode: string;
+  setBarcode: (value: string) => void;
   price: number;
   setPrice: (value: number) => void;
   cost?: number;
@@ -29,6 +31,8 @@ export function ProductFormBasicInfo({
   setSlug,
   sku,
   setSku,
+  barcode,
+  setBarcode,
   price,
   setPrice,
   cost,
@@ -87,6 +91,16 @@ export function ProductFormBasicInfo({
               disabled={isLoading}
             />
           </div>
+        </div>
+
+        <div className="flex flex-col gap-2 mb-2.5">
+          <Label className="text-xs">Barcode</Label>
+          <Input
+            placeholder="Enter barcode (UPC/EAN)"
+            value={barcode}
+            onChange={(e) => setBarcode(e.target.value)}
+            disabled={isLoading}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-5 mb-2.5">
