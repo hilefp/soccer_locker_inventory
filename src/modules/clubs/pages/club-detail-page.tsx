@@ -99,6 +99,9 @@ export function ClubDetailPage() {
           <Badge variant={club.isActive ? 'success' : 'secondary'}>
             {club.isActive ? 'Active' : 'Inactive'}
           </Badge>
+          {club.isUnderConstruction && (
+            <Badge variant="warning">Under Construction</Badge>
+          )}
           {/* <Button variant="outline" onClick={() => navigate(`/clubs/${clubId}/groups`)}>
             <Group className="size-4 mr-2" />
             Group Products

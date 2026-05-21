@@ -17,6 +17,8 @@ export interface Club {
   personInChargePhone?: string | null;
   sortPosition: number;
   isActive: boolean;
+  isUnderConstruction: boolean;
+  underConstructionMessage?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,6 +40,8 @@ export interface CreateClubDto {
   personInChargeEmail?: string;
   personInChargePhone?: string;
   isActive?: boolean;
+  isUnderConstruction?: boolean;
+  underConstructionMessage?: string | null;
   sortPosition?: number;
 }
 
@@ -58,6 +62,8 @@ export interface UpdateClubDto {
   personInChargeEmail?: string;
   personInChargePhone?: string;
   isActive?: boolean;
+  isUnderConstruction?: boolean;
+  underConstructionMessage?: string | null;
   sortPosition?: number;
 }
 

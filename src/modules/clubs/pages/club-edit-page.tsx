@@ -39,6 +39,8 @@ export function ClubEditPage() {
   const [personInChargeEmail, setPersonInChargeEmail] = useState('');
   const [personInChargePhone, setPersonInChargePhone] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [isUnderConstruction, setIsUnderConstruction] = useState(false);
+  const [underConstructionMessage, setUnderConstructionMessage] = useState('');
 
   // Populate form when editing
   useEffect(() => {
@@ -59,6 +61,8 @@ export function ClubEditPage() {
       setPersonInChargeEmail(club.personInChargeEmail || '');
       setPersonInChargePhone(club.personInChargePhone || '');
       setIsActive(club.isActive);
+      setIsUnderConstruction(club.isUnderConstruction ?? false);
+      setUnderConstructionMessage(club.underConstructionMessage || '');
     }
   }, [isEditMode, club]);
 
@@ -90,6 +94,10 @@ export function ClubEditPage() {
       personInChargeEmail: personInChargeEmail || undefined,
       personInChargePhone: personInChargePhone || undefined,
       isActive,
+      isUnderConstruction,
+      underConstructionMessage: isUnderConstruction
+        ? underConstructionMessage.trim() || undefined
+        : undefined,
     };
 
     try {
@@ -345,7 +353,7 @@ export function ClubEditPage() {
             <CardHeader>
               <CardTitle>Status</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="isActive">Active Status</Label>
@@ -359,6 +367,38 @@ export function ClubEditPage() {
                   onCheckedChange={setIsActive}
                 />
               </div>
+
+              <div className="flex items-center justify-between border-t pt-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="isUnderConstruction">
+                    Under Construction
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Hide this club from the shop grid and show a message on its
+                    page
+                  </p>
+                </div>
+                <Switch
+                  id="isUnderConstruction"
+                  checked={isUnderConstruction}
+                  onCheckedChange={setIsUnderConstruction}
+                />
+              </div>
+
+              {isUnderConstruction && (
+                <div>
+                  <Label htmlFor="underConstructionMessage">Message</Label>
+                  <Textarea
+                    id="underConstructionMessage"
+                    value={underConstructionMessage}
+                    onChange={(e) =>
+                      setUnderConstructionMessage(e.target.value)
+                    }
+                    placeholder="We're getting the team store ready — back online June 1st!"
+                    rows={3}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
