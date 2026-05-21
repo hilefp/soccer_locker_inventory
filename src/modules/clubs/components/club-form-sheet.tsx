@@ -26,6 +26,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/shared/components/ui/sheet';
+import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { ImageIcon, X } from 'lucide-react';
 
@@ -145,6 +146,8 @@ export function ClubFormSheet({
   const [personInChargeEmail, setPersonInChargeEmail] = useState('');
   const [personInChargePhone, setPersonInChargePhone] = useState('');
   const [status, setStatus] = useState('active');
+  const [isUnderConstruction, setIsUnderConstruction] = useState(false);
+  const [underConstructionMessage, setUnderConstructionMessage] = useState('');
 
   // React Query hooks
   const { data: club, isLoading: isFetchingClub } = useClub(
@@ -181,6 +184,8 @@ export function ClubFormSheet({
     setPersonInChargeEmail(club.personInChargeEmail || '');
     setPersonInChargePhone(club.personInChargePhone || '');
     setStatus(club.isActive ? 'active' : 'inactive');
+    setIsUnderConstruction(club.isUnderConstruction ?? false);
+    setUnderConstructionMessage(club.underConstructionMessage || '');
   }, [isEditMode, clubId, open, club]);
 
   // Reset form when closed
@@ -202,6 +207,8 @@ export function ClubFormSheet({
       setPersonInChargeEmail('');
       setPersonInChargePhone('');
       setStatus('active');
+      setIsUnderConstruction(false);
+      setUnderConstructionMessage('');
     }
   }, [open]);
 
@@ -227,6 +234,10 @@ export function ClubFormSheet({
       personInChargeEmail: personInChargeEmail.trim() || undefined,
       personInChargePhone: personInChargePhone.trim() || undefined,
       isActive: status === 'active',
+      isUnderConstruction,
+      underConstructionMessage: isUnderConstruction
+        ? underConstructionMessage.trim() || undefined
+        : undefined,
     };
 
     try {
@@ -447,6 +458,37 @@ export function ClubFormSheet({
                     <SelectItem value="inactive">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Under Construction */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label className="text-xs font-medium">
+                      Under Construction
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Hide this club from the shop grid and show a message on
+                      its page.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isUnderConstruction}
+                    onCheckedChange={setIsUnderConstruction}
+                    disabled={isLoading || isFetchingClub}
+                  />
+                </div>
+                {isUnderConstruction && (
+                  <Textarea
+                    placeholder="We're getting the team store ready — back online June 1st!"
+                    value={underConstructionMessage}
+                    onChange={(e) =>
+                      setUnderConstructionMessage(e.target.value)
+                    }
+                    rows={3}
+                    disabled={isLoading || isFetchingClub}
+                  />
+                )}
               </div>
             </div>
           </ScrollArea>

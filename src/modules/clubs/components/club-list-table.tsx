@@ -200,9 +200,16 @@ export function ClubListTable({
             ? 'success'
             : 'secondary';
           return (
-            <Badge variant={variant} appearance="light">
-              {isActive ? 'Active' : 'Inactive'}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge variant={variant} appearance="light">
+                {isActive ? 'Active' : 'Inactive'}
+              </Badge>
+              {row.original.isUnderConstruction && (
+                <Badge variant="warning" appearance="light">
+                  Under Construction
+                </Badge>
+              )}
+            </div>
           );
         },
         enableSorting: true,
