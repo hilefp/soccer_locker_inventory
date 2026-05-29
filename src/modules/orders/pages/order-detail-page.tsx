@@ -357,13 +357,20 @@ export function OrderDetailPage() {
     Object.values(refundPackageStates).forEach((s) => {
       if (s.selected) packageRefund += s.amount === '' ? 0 : s.amount;
     });
+    // Package items carry no per-item tax (their unit prices don't sum to the package
+    // price), so tax on the package amount is computed here from the order's effective
+    // rate — this mirrors the tax the backend applies to customAmount, keeping the
+    // displayed total equal to the amount actually refunded.
+    const orderSubtotal = Number(order?.subtotal ?? 0);
+    const taxRate = orderSubtotal > 0 ? Number(order?.taxTotal ?? 0) / orderSubtotal : 0;
+    const packageTaxRefund = Math.round(packageRefund * taxRate * 100) / 100;
     const shippingRefund = refundShipping ? Number(order?.shippingTotal ?? 0) : 0;
     const rushFeeRefund = refundRushFee ? Number(order?.rushFee ?? 0) : 0;
     const amountAlreadyRefunded = Number(order?.totalRefunded ?? 0);
     const totalAvailable = Number(order?.total ?? 0) - amountAlreadyRefunded;
-    const totalRefund = totalItemRefund + totalTaxRefund + packageRefund + shippingRefund + rushFeeRefund;
-    return { totalItemRefund, totalTaxRefund, packageRefund, shippingRefund, rushFeeRefund, totalRefund, amountAlreadyRefunded, totalAvailable };
-  }, [refundItemStates, refundPackageStates, refundShipping, refundRushFee, order?.shippingTotal, order?.rushFee, order?.total, order?.totalRefunded]);
+    const totalRefund = totalItemRefund + totalTaxRefund + packageRefund + packageTaxRefund + shippingRefund + rushFeeRefund;
+    return { totalItemRefund, totalTaxRefund, packageRefund, packageTaxRefund, shippingRefund, rushFeeRefund, totalRefund, amountAlreadyRefunded, totalAvailable };
+  }, [refundItemStates, refundPackageStates, refundShipping, refundRushFee, order?.shippingTotal, order?.rushFee, order?.total, order?.totalRefunded, order?.subtotal, order?.taxTotal]);
 
   const handleSubmitRefund = () => {
     if (!orderId || refundTotals.totalRefund <= 0) return;
@@ -388,7 +395,12 @@ export function OrderDetailPage() {
         id: orderId,
         data: {
           items: items.length > 0 ? items : undefined,
-          customAmount: hasPackageRefund ? refundTotals.totalRefund : undefined,
+          // customAmount is the pre-tax taxable items subtotal (package price + any
+          // standalone items). The backend adds tax, shipping, and rush fee on top
+          // based on the flags below — do NOT include them here or they get double counted.
+          customAmount: hasPackageRefund
+            ? refundTotals.totalItemRefund + refundTotals.packageRefund
+            : undefined,
           refundShipping: refundShipping || undefined,
           refundRushFee: refundRushFee || undefined,
           reason: refundReason.trim() || undefined,
