@@ -78,6 +78,7 @@ import type { OrderItem } from '@/modules/orders/types';
 import { useAuthStore } from '@/shared/stores/auth-store';
 import { extractSize } from '@/modules/orders/lib/extract-size';
 import { useProduct } from '@/modules/products/hooks/use-products';
+import { useStockVariantDetail } from '@/modules/inventory/hooks/use-stock-variants';
 
 interface RefundItemState {
   selected: boolean;
@@ -141,6 +142,14 @@ export function OrderDetailPage() {
   const { data: swapProduct, isLoading: isLoadingVariants } = useProduct(swapProductId);
   const siblingVariants = swapProduct?.variants;
   const canSwapVariant = order && !['DELIVERED', 'REFUND', 'FAILED'].includes(order.status);
+
+  // Availability of the selected new variant (for a non-blocking out-of-stock warning).
+  // The swap is always allowed — this only surfaces an oversell so the user is aware.
+  const { data: selectedVariantStock, isLoading: isLoadingStock } = useStockVariantDetail(selectedVariantId);
+  const swapRequiredQty = swapItem?.quantity ?? 0;
+  const selectedAvailable = selectedVariantStock?.stockSummary.totalAvailable;
+  const isSelectedOutOfStock =
+    !!selectedVariantId && selectedAvailable !== undefined && selectedAvailable < swapRequiredQty;
 
   const handleOpenSwap = (item: OrderItem) => {
     setSwapItem(item);
@@ -1805,6 +1814,33 @@ export function OrderDetailPage() {
                     <p className="text-sm text-muted-foreground">No other variants available for this product.</p>
                   )}
                 </div>
+
+                {/* Stock availability for the selected variant (non-blocking) */}
+                {selectedVariantId && (
+                  isLoadingStock ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+                      Checking stock...
+                    </div>
+                  ) : isSelectedOutOfStock ? (
+                    <div className="flex items-start gap-3 rounded-lg border border-orange-300 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/30 p-3">
+                      <AlertTriangle className="size-5 text-orange-600 dark:text-orange-400 mt-0.5 shrink-0" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-orange-800 dark:text-orange-300">
+                          This variant is out of stock
+                        </p>
+                        <p className="text-xs text-orange-700 dark:text-orange-400">
+                          Available: {selectedAvailable} · Needed: {swapRequiredQty}. You can still swap and reserve it —
+                          the item will be flagged as missing/oversold until it&apos;s restocked.
+                        </p>
+                      </div>
+                    </div>
+                  ) : selectedAvailable !== undefined ? (
+                    <p className="text-xs text-muted-foreground">
+                      Available: {selectedAvailable} (need {swapRequiredQty})
+                    </p>
+                  ) : null
+                )}
               </>
             )}
           </DialogBody>
@@ -1824,7 +1860,7 @@ export function OrderDetailPage() {
               ) : (
                 <>
                   <ArrowLeftRight className="size-4 mr-2" />
-                  Confirm Swap
+                  {isSelectedOutOfStock ? 'Swap Anyway' : 'Confirm Swap'}
                 </>
               )}
             </Button>
