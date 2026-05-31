@@ -57,6 +57,7 @@ export function VariantDetailPage() {
         variantId: variantId,
         data: {
           sku: editingVariant.sku,
+          barcode: editingVariant.barcode ?? undefined,
           attributes: editingVariant.attributes,
           price: editingVariant.price,
           compareAtPrice: editingVariant.compareAtPrice,
@@ -142,6 +143,8 @@ export function VariantDetailPage() {
         <VariantDetailBasicInfo
           sku={editingVariant.sku}
           setSku={(value) => setEditingVariant({ ...editingVariant, sku: value })}
+          barcode={editingVariant.barcode || ''}
+          setBarcode={(value) => setEditingVariant({ ...editingVariant, barcode: value })}
           imageUrl={editingVariant.imageUrl || ''}
           setImageUrl={(value) => setEditingVariant({ ...editingVariant, imageUrl: value })}
           isSaving={isSaving}

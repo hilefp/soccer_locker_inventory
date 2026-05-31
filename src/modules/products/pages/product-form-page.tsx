@@ -31,7 +31,6 @@ export function ProductFormPage() {
   const [productName, setProductName] = useState('');
   const [slug, setSlug] = useState('');
   const [sku, setSku] = useState('');
-  const [barcode, setBarcode] = useState('');
   const [price, setPrice] = useState(0);
   const [cost, setCost] = useState(0);
   const [description, setDescription] = useState('');
@@ -64,7 +63,6 @@ export function ProductFormPage() {
       setProductName(product.name);
       setSlug(product.slug);
       setSku(product.defaultVariant?.sku || '');
-      setBarcode(product.barcode || '');
       setPrice(product.defaultVariant?.price || 0);
       setCost(product.defaultVariant?.cost || 0);
       setDescription(product.description || '');
@@ -111,7 +109,6 @@ export function ProductFormPage() {
       slug: slug,
       description: description || undefined,
       sku: sku,
-      barcode: barcode.trim() || undefined,
       price: parseFloat(price.toString()),
       cost: parseFloat(cost.toString()),
       categoryId: categoryId || undefined,
@@ -145,7 +142,6 @@ export function ProductFormPage() {
       slug: slug,
       description: description || undefined,
       sku: sku,
-      barcode: barcode.trim() || undefined,
       price: parseFloat(price.toString()),
       cost: parseFloat(cost.toString()),
       categoryId: categoryId || undefined,
@@ -267,8 +263,6 @@ export function ProductFormPage() {
                   setSlug={setSlug}
                   sku={sku}
                   setSku={setSku}
-                  barcode={barcode}
-                  setBarcode={setBarcode}
                   price={price}
                   setPrice={setPrice}
                   cost={cost}
@@ -406,8 +400,6 @@ export function ProductFormPage() {
             setSlug={setSlug}
             sku={sku}
             setSku={setSku}
-            barcode={barcode}
-            setBarcode={setBarcode}
             price={price}
             setPrice={setPrice}
             cost={cost}
