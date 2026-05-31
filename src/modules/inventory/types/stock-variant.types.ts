@@ -74,6 +74,8 @@ export interface StockVariantQueryParams {
   productId?: string;
   categoryId?: string;
   categoryIds?: string[];
+  brandId?: string;
+  sizeType?: string;
   tags?: string[];
   color?: string;
   status?: StockStatus;

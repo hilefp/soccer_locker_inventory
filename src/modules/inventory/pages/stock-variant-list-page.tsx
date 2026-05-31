@@ -48,6 +48,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/lib/utils';
 import { useProducts } from '@/modules/products/hooks/use-products';
 import { useProductCategories } from '@/modules/products/hooks/use-product-categories';
+import { useProductBrands } from '@/modules/products/hooks/use-product-brands';
 import { useExportInventory } from '../hooks/use-export-inventory';
 import { useStockVariantByBarcode } from '../hooks/use-stock-variants';
 import { StockStatus } from '../types/stock-variant.types';
@@ -61,6 +62,15 @@ type ViewMode = 'grid' | 'table';
 const STATUS_OPTIONS: { label: string; value: StockStatus }[] = [
   { label: 'In Stock', value: StockStatus.IN_STOCK },
   { label: 'Out of Stock', value: StockStatus.OUT_OF_STOCK },
+];
+
+// Size groups stored on the variant attributes JSON (case-sensitive on the backend)
+const SIZE_TYPE_OPTIONS: { label: string; value: string }[] = [
+  { label: 'Youth', value: 'Youth' },
+  { label: 'Adult', value: 'Adult' },
+  { label: "Women's", value: "Women's" },
+  { label: 'Socks', value: 'Socks' },
+  { label: 'Balls', value: 'Balls' },
 ];
 
 export function StockVariantListPage() {
@@ -79,11 +89,14 @@ export function StockVariantListPage() {
     ? searchParams.get('categories')!.split(',').filter(Boolean)
     : [];
   const selectedStatus = (searchParams.get('status') as StockStatus | null) || '';
+  const selectedBrandId = searchParams.get('brandId') || '';
+  const selectedSizeType = searchParams.get('sizeType') || '';
   const colorQuery = searchParams.get('color') || '';
   const saleOnly = searchParams.get('sale') === '1';
   const productIdFilter = searchParams.get('productId') || '';
   const scannedBarcode = searchParams.get('barcode') || '';
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [brandOpen, setBrandOpen] = useState(false);
 
   const { mutateAsync: lookupBarcode, isPending: isScanning } = useStockVariantByBarcode();
 
@@ -116,6 +129,14 @@ export function StockVariantListPage() {
     (color: string) => updateParam('color', color || null),
     [updateParam]
   );
+  const setSelectedBrandId = useCallback(
+    (brandId: string) => updateParam('brandId', brandId || null),
+    [updateParam]
+  );
+  const setSelectedSizeType = useCallback(
+    (sizeType: string) => updateParam('sizeType', sizeType || null),
+    [updateParam]
+  );
   const setSaleOnly = useCallback(
     (value: boolean) => updateParam('sale', value ? '1' : null),
     [updateParam]
@@ -123,6 +144,7 @@ export function StockVariantListPage() {
 
   const { data: products } = useProducts();
   const { data: categories } = useProductCategories();
+  const { data: brands } = useProductBrands();
   const { exportInventory, isExporting } = useExportInventory();
 
   const setSearchQuery = useCallback(
@@ -240,6 +262,8 @@ export function StockVariantListPage() {
       (prev) => {
         prev.delete('categories');
         prev.delete('status');
+        prev.delete('brandId');
+        prev.delete('sizeType');
         prev.delete('color');
         prev.delete('sale');
         return prev;
@@ -251,12 +275,16 @@ export function StockVariantListPage() {
   const activeFilterCount =
     selectedCategoryIds.length +
     (selectedStatus ? 1 : 0) +
+    (selectedBrandId ? 1 : 0) +
+    (selectedSizeType ? 1 : 0) +
     (colorQuery ? 1 : 0) +
     (saleOnly ? 1 : 0);
 
   const filterProps = {
     categoryIds: selectedCategoryIds.length ? selectedCategoryIds : undefined,
     status: selectedStatus ? (selectedStatus as StockStatus) : undefined,
+    brandId: selectedBrandId || undefined,
+    sizeType: selectedSizeType || undefined,
     color: colorQuery || undefined,
     tags: saleOnly ? ['sale'] : undefined,
     productId: productIdFilter || undefined,
@@ -385,6 +413,71 @@ export function StockVariantListPage() {
                   </Command>
                 </PopoverContent>
               </Popover>
+
+              {/* Brand single-select */}
+              <Popover open={brandOpen} onOpenChange={setBrandOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5">
+                    {selectedBrandId
+                      ? brands?.find((b) => b.id === selectedBrandId)?.name ?? 'Brand'
+                      : 'Brand'}
+                    {selectedBrandId && (
+                      <Badge variant="secondary" size="sm" className="rounded-full px-1.5">
+                        1
+                      </Badge>
+                    )}
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search brands..." />
+                    <CommandList>
+                      <CommandEmpty>No brands found.</CommandEmpty>
+                      <CommandGroup>
+                        {brands?.map((brand) => (
+                          <CommandItem
+                            key={brand.id}
+                            value={brand.name}
+                            onSelect={() => {
+                              setSelectedBrandId(
+                                selectedBrandId === brand.id ? '' : brand.id!
+                              );
+                              setBrandOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                selectedBrandId === brand.id ? 'opacity-100' : 'opacity-0'
+                              )}
+                            />
+                            {brand.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              {/* Size type */}
+              <Select
+                value={selectedSizeType}
+                onValueChange={(v) => setSelectedSizeType(v === 'all' ? '' : v)}
+              >
+                <SelectTrigger className="h-8 w-auto min-w-[130px] text-sm">
+                  <SelectValue placeholder="Size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All sizes</SelectItem>
+                  {SIZE_TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
               {/* Status */}
               <Select
