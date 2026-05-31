@@ -64,6 +64,8 @@ interface StockVariantListProps {
   productId?: string;
   categoryId?: string;
   categoryIds?: string[];
+  brandId?: string;
+  sizeType?: string;
   tags?: string[];
   color?: string;
   status?: StockStatus;
@@ -126,6 +128,8 @@ export function StockVariantListTable({
   productId,
   categoryId,
   categoryIds,
+  brandId,
+  sizeType,
   tags,
   color,
   status,
@@ -162,6 +166,8 @@ export function StockVariantListTable({
     productId,
     categoryId,
     categoryIds,
+    brandId,
+    sizeType,
     tags,
     color,
     status,

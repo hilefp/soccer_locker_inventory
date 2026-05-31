@@ -157,6 +157,7 @@ export function ProductFormVariants({
       // Prepare variant data for API (convert ProductVariant to ProductVariantRequest)
       const variantData: ProductVariantRequest = {
         sku: editingVariant.sku,
+        barcode: editingVariant.barcode ?? undefined,
         attributes: editingVariant.attributes,
         price: editingVariant.price,
         compareAtPrice: editingVariant.compareAtPrice,
@@ -305,6 +306,9 @@ export function ProductFormVariants({
                         SKU
                       </TableHead>
                       <TableHead className="min-w-[120px] h-8.5 border-e border-border/60">
+                        Barcode
+                      </TableHead>
+                      <TableHead className="min-w-[120px] h-8.5 border-e border-border/60">
                         Attributes
                       </TableHead>
                       <TableHead className="min-w-[80px] w-[100px] h-8.5 border-e border-border/60">
@@ -332,6 +336,15 @@ export function ProductFormVariants({
                           <span className="font-medium text-foreground">
                             {variant.sku}
                           </span>
+                        </TableCell>
+                        <TableCell className="py-1 border-e border-border/60">
+                          {variant.barcode ? (
+                            <span className="font-mono text-xs text-foreground">
+                              {variant.barcode}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="py-1 border-e border-border/60">
                           <div className="flex flex-wrap gap-1">
@@ -526,22 +539,41 @@ export function ProductFormVariants({
               </SheetHeader>
 
               <div className="mt-6 space-y-4">
-                    {/* SKU */}
-                    <div className="space-y-2">
-                      <Label htmlFor="sku" className="text-xs">
-                        SKU *
-                      </Label>
-                      <Input
-                        id="sku"
-                        value={editingVariant.sku}
-                        onChange={(e) =>
-                          setEditingVariant({
-                            ...editingVariant,
-                            sku: e.target.value,
-                          })
-                        }
-                        placeholder="Enter SKU"
-                      />
+                    {/* SKU & Barcode */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="sku" className="text-xs">
+                          SKU *
+                        </Label>
+                        <Input
+                          id="sku"
+                          value={editingVariant.sku}
+                          onChange={(e) =>
+                            setEditingVariant({
+                              ...editingVariant,
+                              sku: e.target.value,
+                            })
+                          }
+                          placeholder="Enter SKU"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="barcode" className="text-xs">
+                          Barcode
+                        </Label>
+                        <Input
+                          id="barcode"
+                          value={editingVariant.barcode ?? ''}
+                          onChange={(e) =>
+                            setEditingVariant({
+                              ...editingVariant,
+                              barcode: e.target.value,
+                            })
+                          }
+                          placeholder="Scan or enter (UPC/EAN)"
+                        />
+                      </div>
                     </div>
 
                     {/* Pricing */}

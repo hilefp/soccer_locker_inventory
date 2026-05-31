@@ -5,6 +5,8 @@ import { Label } from '@/shared/components/ui/label';
 interface VariantDetailBasicInfoProps {
   sku: string;
   setSku: (value: string) => void;
+  barcode: string;
+  setBarcode: (value: string) => void;
   imageUrl: string;
   setImageUrl: (value: string) => void;
   isSaving: boolean;
@@ -13,6 +15,8 @@ interface VariantDetailBasicInfoProps {
 export function VariantDetailBasicInfo({
   sku,
   setSku,
+  barcode,
+  setBarcode,
   imageUrl,
   setImageUrl,
   isSaving,
@@ -34,6 +38,22 @@ export function VariantDetailBasicInfo({
             placeholder="Enter SKU"
             disabled={isSaving}
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="barcode" className="text-xs">
+            Barcode
+          </Label>
+          <Input
+            id="barcode"
+            value={barcode}
+            onChange={(e) => setBarcode(e.target.value)}
+            placeholder="Scan or enter (UPC/EAN)"
+            disabled={isSaving}
+          />
+          <p className="text-xs text-muted-foreground">
+            Unique to this size. Scanning it in inventory resolves to this exact variant.
+          </p>
         </div>
 
         <div className="space-y-2">

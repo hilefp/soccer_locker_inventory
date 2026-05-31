@@ -16,6 +16,8 @@ interface StockVariantGridProps {
   productId?: string;
   categoryId?: string;
   categoryIds?: string[];
+  brandId?: string;
+  sizeType?: string;
   tags?: string[];
   color?: string;
   status?: StockStatus;
@@ -54,6 +56,8 @@ export function StockVariantGrid({
   productId,
   categoryId,
   categoryIds,
+  brandId,
+  sizeType,
   tags,
   color,
   status,
@@ -85,6 +89,8 @@ export function StockVariantGrid({
     productId,
     categoryId,
     categoryIds,
+    brandId,
+    sizeType,
     tags,
     color,
     status,
