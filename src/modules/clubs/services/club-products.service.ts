@@ -15,10 +15,10 @@ import { CustomFields } from '../types';
 
 export const defaultFields: CustomFields[] = [
   {
-    key: "playerName",
+    key: "playerLastName",
     type: "text",
     required: true,
-    label: "Player name",
+    label: "Player last name",
     placeholder: "",
   },
   {
@@ -87,6 +87,17 @@ export const defaultFields: CustomFields[] = [
     options: [
       "GAUCHITO",
       "GAUCHITA",
+    ],
+  },
+  {
+    key: "momDad",
+    type: "select",
+    required: true,
+    label: "Mom/Dad",
+    placeholder: "Select an option",
+    options: [
+      "Mom",
+      "Dad",
     ],
   },
 ];
