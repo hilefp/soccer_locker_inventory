@@ -41,8 +41,8 @@ export function EditClubProductSheet({
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
 
-  const [playerName, setPlayerName] = useState(false);
-  const [playerNameRequired, setPlayerNameRequired] = useState(true);
+  const [playerLastName, setPlayerLastName] = useState(false);
+  const [playerLastNameRequired, setPlayerLastNameRequired] = useState(true);
   const [playerNumber, setPlayerNumber] = useState(false);
   const [playerNumberRequired, setPlayerNumberRequired] = useState(true);
   const [coachName, setCoachName] = useState(false);
@@ -57,6 +57,8 @@ export function EditClubProductSheet({
   const [initialsRequired, setInitialsRequired] = useState(true);
   const [gauchito, setGauchito] = useState(false);
   const [gauchitoRequired, setGauchitoRequired] = useState(true);
+  const [momDad, setMomDad] = useState(false);
+  const [momDadRequired, setMomDadRequired] = useState(true);
 
   const [allowedVariantIds, setAllowedVariantIds] = useState<string[]>([]);
 
@@ -76,9 +78,9 @@ export function EditClubProductSheet({
       setImageUrls(clubProduct.imageUrls || []);
       setTags(clubProduct.tags || []);
 
-      const pnField = clubProduct.customFields?.find((f) => f.key === 'playerName');
-      setPlayerName(!!pnField);
-      setPlayerNameRequired(pnField?.required ?? true);
+      const pnField = clubProduct.customFields?.find((f) => f.key === 'playerLastName');
+      setPlayerLastName(!!pnField);
+      setPlayerLastNameRequired(pnField?.required ?? true);
 
       const pnumField = clubProduct.customFields?.find((f) => f.key === 'playerNumber');
       setPlayerNumber(!!pnumField);
@@ -107,6 +109,10 @@ export function EditClubProductSheet({
       const gauchitoField = clubProduct.customFields?.find((f) => f.key === 'gauchito');
       setGauchito(!!gauchitoField);
       setGauchitoRequired(gauchitoField?.required ?? true);
+
+      const momDadField = clubProduct.customFields?.find((f) => f.key === 'momDad');
+      setMomDad(!!momDadField);
+      setMomDadRequired(momDadField?.required ?? true);
     }
   }, [clubProduct]);
 
@@ -129,7 +135,7 @@ export function EditClubProductSheet({
     if (!clubProduct) return;
 
     const defaultFieldKeys: { key: string; required: boolean }[] = [];
-    if (playerName) defaultFieldKeys.push({ key: 'playerName', required: playerNameRequired });
+    if (playerLastName) defaultFieldKeys.push({ key: 'playerLastName', required: playerLastNameRequired });
     if (playerNumber) defaultFieldKeys.push({ key: 'playerNumber', required: playerNumberRequired });
     if (coachName) defaultFieldKeys.push({ key: 'coachName', required: coachNameRequired });
     if (playerBirthYear) defaultFieldKeys.push({ key: 'playerBirthYear', required: playerBirthYearRequired });
@@ -137,6 +143,7 @@ export function EditClubProductSheet({
     if (locationOpaLocka) defaultFieldKeys.push({ key: 'locationOpaLocka', required: locationOpaLockaRequired });
     if (initials) defaultFieldKeys.push({ key: 'initials', required: initialsRequired });
     if (gauchito) defaultFieldKeys.push({ key: 'gauchito', required: gauchitoRequired });
+    if (momDad) defaultFieldKeys.push({ key: 'momDad', required: momDadRequired });
 
     try {
       await updateMutation.mutateAsync({
@@ -334,29 +341,29 @@ export function EditClubProductSheet({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="sheetPlayerName">Field Player Name</Label>
+                      <Label htmlFor="sheetPlayerLastName">Field Player Last Name</Label>
                       <p className="text-xs text-muted-foreground">
-                        Controls Show the field player name on the product
+                        Controls Show the field player last name on the product
                       </p>
                     </div>
                     <Switch
-                      id="sheetPlayerName"
-                      checked={playerName}
-                      onCheckedChange={setPlayerName}
+                      id="sheetPlayerLastName"
+                      checked={playerLastName}
+                      onCheckedChange={setPlayerLastName}
                     />
                   </div>
-                  {playerName && (
+                  {playerLastName && (
                     <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
                       <div className="space-y-0.5">
-                        <Label htmlFor="sheetPlayerNameReq" className="text-sm font-medium text-primary/80">Required</Label>
+                        <Label htmlFor="sheetPlayerLastNameReq" className="text-sm font-medium text-primary/80">Required</Label>
                         <p className="text-xs text-muted-foreground">
-                          {playerNameRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                          {playerLastNameRequired ? 'Customer must fill this field' : 'Optional for the customer'}
                         </p>
                       </div>
                       <Switch
-                        id="sheetPlayerNameReq"
-                        checked={playerNameRequired}
-                        onCheckedChange={setPlayerNameRequired}
+                        id="sheetPlayerLastNameReq"
+                        checked={playerLastNameRequired}
+                        onCheckedChange={setPlayerLastNameRequired}
                       />
                     </div>
                   )}
@@ -574,6 +581,37 @@ export function EditClubProductSheet({
                         id="sheetGauchitoReq"
                         checked={gauchitoRequired}
                         onCheckedChange={setGauchitoRequired}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sheetMomDad">Mom/Dad</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Show a dropdown to select Mom or Dad
+                      </p>
+                    </div>
+                    <Switch
+                      id="sheetMomDad"
+                      checked={momDad}
+                      onCheckedChange={setMomDad}
+                    />
+                  </div>
+                  {momDad && (
+                    <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="sheetMomDadReq" className="text-sm font-medium text-primary/80">Required</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {momDadRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="sheetMomDadReq"
+                        checked={momDadRequired}
+                        onCheckedChange={setMomDadRequired}
                       />
                     </div>
                   )}

@@ -32,8 +32,8 @@ export function EditClubProductPage() {
 
   const [tags, setTags] = useState<string[]>([]);
 
-  const [playerName, setPlayerName] = useState(false);
-  const [playerNameRequired, setPlayerNameRequired] = useState(true);
+  const [playerLastName, setPlayerLastName] = useState(false);
+  const [playerLastNameRequired, setPlayerLastNameRequired] = useState(true);
   const [playerNumber, setPlayerNumber] = useState(false);
   const [playerNumberRequired, setPlayerNumberRequired] = useState(true);
   const [coachName, setCoachName] = useState(false);
@@ -48,6 +48,8 @@ export function EditClubProductPage() {
   const [initialsRequired, setInitialsRequired] = useState(true);
   const [gauchito, setGauchito] = useState(false);
   const [gauchitoRequired, setGauchitoRequired] = useState(true);
+  const [momDad, setMomDad] = useState(false);
+  const [momDadRequired, setMomDadRequired] = useState(true);
   const [parkLocation, setParkLocation] = useState(false);
   const [parkLocationRequired, setParkLocationRequired] = useState(true);
 
@@ -69,9 +71,9 @@ export function EditClubProductPage() {
       setImageUrls(clubProduct.imageUrls || []);
       setTags(clubProduct.tags || []);
 
-      const playerNameField = clubProduct.customFields?.find((field) => field.key === 'playerName');
-      setPlayerName(!!playerNameField);
-      setPlayerNameRequired(playerNameField?.required ?? true);
+      const playerLastNameField = clubProduct.customFields?.find((field) => field.key === 'playerLastName');
+      setPlayerLastName(!!playerLastNameField);
+      setPlayerLastNameRequired(playerLastNameField?.required ?? true);
 
       const playerNumberField = clubProduct.customFields?.find((field) => field.key === 'playerNumber');
       setPlayerNumber(!!playerNumberField);
@@ -101,6 +103,10 @@ export function EditClubProductPage() {
       setGauchito(!!gauchitoField);
       setGauchitoRequired(gauchitoField?.required ?? true);
 
+      const momDadField = clubProduct.customFields?.find((field) => field.key === 'momDad');
+      setMomDad(!!momDadField);
+      setMomDadRequired(momDadField?.required ?? true);
+
       const parkLocationField = clubProduct.customFields?.find((field) => field.key === 'parkLocation');
       setParkLocation(!!parkLocationField);
       setParkLocationRequired(parkLocationField?.required ?? true);
@@ -126,7 +132,7 @@ export function EditClubProductPage() {
     if (!clubProduct || !clubId) return;
 
     const defaultFieldKeys: { key: string; required: boolean }[] = [];
-    if (playerName) defaultFieldKeys.push({ key: 'playerName', required: playerNameRequired });
+    if (playerLastName) defaultFieldKeys.push({ key: 'playerLastName', required: playerLastNameRequired });
     if (playerNumber) defaultFieldKeys.push({ key: 'playerNumber', required: playerNumberRequired });
     if (coachName) defaultFieldKeys.push({ key: 'coachName', required: coachNameRequired });
     if (playerBirthYear) defaultFieldKeys.push({ key: 'playerBirthYear', required: playerBirthYearRequired });
@@ -134,6 +140,7 @@ export function EditClubProductPage() {
     if (locationOpaLocka) defaultFieldKeys.push({ key: 'locationOpaLocka', required: locationOpaLockaRequired });
     if (initials) defaultFieldKeys.push({ key: 'initials', required: initialsRequired });
     if (gauchito) defaultFieldKeys.push({ key: 'gauchito', required: gauchitoRequired });
+    if (momDad) defaultFieldKeys.push({ key: 'momDad', required: momDadRequired });
     if (parkLocation) defaultFieldKeys.push({ key: 'parkLocation', required: parkLocationRequired });
 
     try {
@@ -400,29 +407,29 @@ export function EditClubProductPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="playerName">Field Player Name</Label>
+                  <Label htmlFor="playerLastName">Field Player Last Name</Label>
                   <p className="text-xs text-muted-foreground">
-                    Controls Show the field player name on the product
+                    Controls Show the field player last name on the product
                   </p>
                 </div>
                 <Switch
-                  id="playerName"
-                  checked={playerName}
-                  onCheckedChange={setPlayerName}
+                  id="playerLastName"
+                  checked={playerLastName}
+                  onCheckedChange={setPlayerLastName}
                 />
               </div>
-              {playerName && (
+              {playerLastName && (
                 <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
                   <div className="space-y-0.5">
-                    <Label htmlFor="playerNameRequired" className="text-sm font-medium text-primary/80">Required</Label>
+                    <Label htmlFor="playerLastNameRequired" className="text-sm font-medium text-primary/80">Required</Label>
                     <p className="text-xs text-muted-foreground">
-                      {playerNameRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                      {playerLastNameRequired ? 'Customer must fill this field' : 'Optional for the customer'}
                     </p>
                   </div>
                   <Switch
-                    id="playerNameRequired"
-                    checked={playerNameRequired}
-                    onCheckedChange={setPlayerNameRequired}
+                    id="playerLastNameRequired"
+                    checked={playerLastNameRequired}
+                    onCheckedChange={setPlayerLastNameRequired}
                   />
                 </div>
               )}
@@ -640,6 +647,37 @@ export function EditClubProductPage() {
                     id="gauchitoRequired"
                     checked={gauchitoRequired}
                     onCheckedChange={setGauchitoRequired}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="momDad">Mom/Dad</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Show a dropdown to select Mom or Dad
+                  </p>
+                </div>
+                <Switch
+                  id="momDad"
+                  checked={momDad}
+                  onCheckedChange={setMomDad}
+                />
+              </div>
+              {momDad && (
+                <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="momDadRequired" className="text-sm font-medium text-primary/80">Required</Label>
+                    <p className="text-xs text-muted-foreground">
+                      {momDadRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                    </p>
+                  </div>
+                  <Switch
+                    id="momDadRequired"
+                    checked={momDadRequired}
+                    onCheckedChange={setMomDadRequired}
                   />
                 </div>
               )}
