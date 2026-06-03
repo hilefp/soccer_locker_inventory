@@ -10,22 +10,53 @@ import { useOrders, useOrderStatistics } from '@/modules/orders/hooks/use-orders
 import { OrderFilterParams, OrderStatus, KANBAN_STATUS_ORDER } from '@/modules/orders/types';
 import { Badge } from '@/shared/components/ui/badge';
 
+// Active (non-delivered) statuses are loaded in full; delivered is capped since
+// it grows unbounded over time and we only need the most recent ones on the board.
+const ACTIVE_STATUSES: OrderStatus[] = KANBAN_STATUS_ORDER.filter((s) => s !== 'DELIVERED');
+const ALL_ACTIVE_LIMIT = 1000; // high cap to effectively load all active orders
+const DELIVERED_LIMIT = 500;
+
 export function CurrentOrdersPage() {
   useDocumentTitle('Current Orders - Kanban');
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [filters, setFilters] = useState<OrderFilterParams>({
-    statuses: KANBAN_STATUS_ORDER,
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
-    limit: 100, // Get more orders for kanban view
-  });
+  // Two fetches so each column shows ALL its orders: one for every active status
+  // (uncapped in practice), and a separate, capped fetch for the Delivered column.
+  const activeFilters = useMemo<OrderFilterParams>(
+    () => ({
+      statuses: ACTIVE_STATUSES,
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+      limit: ALL_ACTIVE_LIMIT,
+    }),
+    []
+  );
+
+  const deliveredFilters = useMemo<OrderFilterParams>(
+    () => ({
+      statuses: ['DELIVERED'],
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+      limit: DELIVERED_LIMIT,
+    }),
+    []
+  );
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
-  const { data, isLoading, error, refetch, isFetching } = useOrders(filters);
+  const activeQuery = useOrders(activeFilters);
+  const deliveredQuery = useOrders(deliveredFilters);
   const { data: statistics } = useOrderStatistics();
+
+  const isLoading = activeQuery.isLoading || deliveredQuery.isLoading;
+  const isFetching = activeQuery.isFetching || deliveredQuery.isFetching;
+  const error = activeQuery.error || deliveredQuery.error;
+
+  const allOrders = useMemo(
+    () => [...(activeQuery.data?.data ?? []), ...(deliveredQuery.data?.data ?? [])],
+    [activeQuery.data?.data, deliveredQuery.data?.data]
+  );
 
   // Sync URL search params with state
   useEffect(() => {
@@ -37,11 +68,10 @@ export function CurrentOrdersPage() {
 
   // Filter orders by search query on client side for real-time search
   const filteredOrders = useMemo(() => {
-    if (!data?.data) return [];
-    if (!searchQuery) return data.data;
+    if (!searchQuery) return allOrders;
 
     const query = searchQuery.toLowerCase();
-    return data.data.filter((order) => {
+    return allOrders.filter((order) => {
       return (
         order.orderNumber.toLowerCase().includes(query) ||
         order.shippingName?.toLowerCase().includes(query) ||
@@ -50,7 +80,7 @@ export function CurrentOrdersPage() {
         order.club?.name?.toLowerCase().includes(query)
       );
     });
-  }, [data?.data, searchQuery]);
+  }, [allOrders, searchQuery]);
 
   const handleSearchChange = (search: string) => {
     setSearchQuery(search);
@@ -62,7 +92,8 @@ export function CurrentOrdersPage() {
   };
 
   const handleRefresh = () => {
-    refetch();
+    activeQuery.refetch();
+    deliveredQuery.refetch();
   };
 
   // Calculate statistics for displayed statuses
