@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Users } from 'lucide-react';
+import { Download, Users } from 'lucide-react';
 import { CustomerListTable } from '../components/customer-list';
 import { useCustomers } from '@/modules/shop/hooks/use-customers';
+import { useExportCustomers } from '@/modules/shop/hooks/use-export-customers';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
+import { Button } from '@/shared/components/ui/button';
 import { CustomerFilterParams, CustomerStatus } from '@/modules/shop/types/customer.type';
 
 export function CustomerListPage() {
@@ -18,6 +20,7 @@ export function CustomerListPage() {
   });
 
   const { data, isLoading, error } = useCustomers(filters);
+  const { exportCustomers, isExporting } = useExportCustomers();
 
   const handlePageChange = (page: number) => {
     setFilters((prev) => ({ ...prev, page }));
@@ -54,6 +57,16 @@ export function CustomerListPage() {
                 : `${totalCustomers} customers found. ${activeCustomers} active.`}
           </span>
         </div>
+
+        <Button
+          variant="outline"
+          onClick={() => exportCustomers(filters)}
+          disabled={isExporting || totalCustomers === 0}
+          className="gap-2"
+        >
+          <Download className="h-4 w-4" />
+          {isExporting ? 'Exporting…' : 'Export'}
+        </Button>
       </div>
 
       <CustomerListTable

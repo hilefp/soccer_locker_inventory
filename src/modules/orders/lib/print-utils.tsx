@@ -601,7 +601,7 @@ export const generatePackingSlipHTML = (order: Order): string => {
 };
 
 /** Maximum orders allowed per bulk print (Vercel best practice: js-early-exit) */
-export const MAX_BULK_PRINT = 20;
+export const MAX_BULK_PRINT = 25;
 
 /**
  * Generate complete print document with multiple orders
