@@ -34,6 +34,31 @@ export const customerService = {
     return response.data;
   },
 
+  async exportCustomers(params?: CustomerFilterParams): Promise<Blob> {
+    const queryParams = new URLSearchParams();
+
+    if (params) {
+      // Only the filter fields matter for export — pagination is ignored server-side.
+      if (params.search) queryParams.append('search', params.search);
+      if (params.status) queryParams.append('status', params.status);
+      if (params.emailVerified !== undefined) queryParams.append('emailVerified', params.emailVerified.toString());
+      if (params.newsletter !== undefined) queryParams.append('newsletter', params.newsletter.toString());
+      if (params.city) queryParams.append('city', params.city);
+      if (params.state) queryParams.append('state', params.state);
+      if (params.country) queryParams.append('country', params.country);
+      if (params.createdFrom) queryParams.append('createdFrom', params.createdFrom);
+      if (params.createdTo) queryParams.append('createdTo', params.createdTo);
+      if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+      if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `/admin-shop/customers/export${queryString ? `?${queryString}` : ''}`;
+
+    const response = await apiClient.get<Blob>(url, { responseType: 'blob' });
+    return response.data;
+  },
+
   async getCustomer(id: string): Promise<Customer> {
     const response = await apiClient.get<Customer>(`/admin-shop/customers/${id}`);
     return response.data;

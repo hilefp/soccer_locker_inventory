@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useProducts } from '@/modules/products/hooks/use-products';
+import { ProductFilterBar } from '@/modules/products/components/product-filter-bar';
 import { Product } from '@/modules/products/types/product.type';
 import { useAddProductsToClub } from '../hooks/use-club-products';
 import { Badge } from '@/shared/components/ui/badge';
@@ -39,7 +40,7 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { Package, Search, X } from 'lucide-react';
+import { Package, Search, SlidersHorizontal, X } from 'lucide-react';
 
 interface AddProductsToClubDialogProps {
   clubId: string;
@@ -59,6 +60,10 @@ export function AddProductsToClubDialog({
   onOpenChange,
 }: AddProductsToClubDialogProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedBrandId, setSelectedBrandId] = useState('');
+  const [selectedSizeType, setSelectedSizeType] = useState('');
+  const [colorQuery, setColorQuery] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
@@ -196,19 +201,91 @@ export function AddProductsToClubDialog({
     []
   );
 
-  const filteredData = useMemo(() => {
-    if (!searchQuery) {
-      return availableProducts;
-    }
-    const query = searchQuery.toLowerCase();
-    return availableProducts.filter(
-      (p) =>
-        p?.name?.toLowerCase().includes(query) ||
-        p?.defaultVariant?.sku?.toLowerCase().includes(query) ||
-        p?.category?.name?.toLowerCase().includes(query) ||
-        p?.brand?.name?.toLowerCase().includes(query)
+  const toggleCategory = (id: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
     );
-  }, [availableProducts, searchQuery]);
+  };
+
+  const activeFilterCount =
+    selectedCategoryIds.length +
+    (selectedBrandId ? 1 : 0) +
+    (selectedSizeType ? 1 : 0) +
+    (colorQuery ? 1 : 0);
+
+  const clearFilters = () => {
+    setSelectedCategoryIds([]);
+    setSelectedBrandId('');
+    setSelectedSizeType('');
+    setColorQuery('');
+  };
+
+  const filteredData = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const color = colorQuery.trim().toLowerCase();
+    const sizeKey = selectedSizeType.toLowerCase();
+
+    return availableProducts.filter((p) => {
+      // Free-text search across name / SKU / category / brand
+      if (query) {
+        const matchesSearch =
+          p?.name?.toLowerCase().includes(query) ||
+          p?.defaultVariant?.sku?.toLowerCase().includes(query) ||
+          p?.category?.name?.toLowerCase().includes(query) ||
+          p?.brand?.name?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+
+      // Category (multi-select)
+      if (selectedCategoryIds.length > 0) {
+        const catId = p.category?.id ?? p.categoryId;
+        if (!catId || !selectedCategoryIds.includes(catId)) return false;
+      }
+
+      // Brand (single-select)
+      if (selectedBrandId) {
+        const brandId = p.brand?.id ?? p.brandId;
+        if (brandId !== selectedBrandId) return false;
+      }
+
+      // Size type: matches a variant attribute KEY (e.g. { "Youth": "Youth X-Small" })
+      if (selectedSizeType) {
+        const hasSize = p.variants?.some(
+          (v) =>
+            v.attributes &&
+            Object.keys(v.attributes).some((k) => k.toLowerCase() === sizeKey)
+        );
+        if (!hasSize) return false;
+      }
+
+      // Color: backend matches on product name; also check variant attribute values
+      if (color) {
+        const inName = p.name?.toLowerCase().includes(color);
+        const inVariant = p.variants?.some(
+          (v) =>
+            v.attributes &&
+            Object.values(v.attributes).some((val) =>
+              String(val).toLowerCase().includes(color)
+            )
+        );
+        if (!inName && !inVariant) return false;
+      }
+
+      return true;
+    });
+  }, [
+    availableProducts,
+    searchQuery,
+    selectedCategoryIds,
+    selectedBrandId,
+    selectedSizeType,
+    colorQuery,
+  ]);
+
+  // Reset to the first page whenever the result set changes due to filtering
+  useEffect(() => {
+    setPagination((prev) => (prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }));
+  }, [searchQuery, selectedCategoryIds, selectedBrandId, selectedSizeType, colorQuery]);
 
   const table = useReactTable({
     data: filteredData,
@@ -260,6 +337,7 @@ export function AddProductsToClubDialog({
   const handleClose = () => {
     setRowSelection({});
     setSearchQuery('');
+    clearFilters();
     onOpenChange(false);
   };
 
@@ -289,30 +367,61 @@ export function AddProductsToClubDialog({
           >
             <Card>
               <CardHeader className="py-3.5">
-                <CardToolbar className="flex items-center gap-2">
-                  <InputWrapper className="w-full lg:w-[300px]">
-                    <Search />
-                    <Input
-                      placeholder="Search products..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                <CardToolbar className="flex flex-col items-stretch gap-3">
+                  {/* Row 1: search */}
+                  <div className="flex items-center gap-2">
+                    <InputWrapper className="w-full lg:w-[300px]">
+                      <Search />
+                      <Input
+                        placeholder="Search products..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                      {searchQuery && (
+                        <Button
+                          variant="dim"
+                          size="sm"
+                          className="-me-3.5"
+                          onClick={() => setSearchQuery('')}
+                        >
+                          <X />
+                        </Button>
+                      )}
+                    </InputWrapper>
+                    {selectedCount > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        {selectedCount} selected
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Row 2: filters */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <SlidersHorizontal className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <ProductFilterBar
+                      values={{
+                        categoryIds: selectedCategoryIds,
+                        brandId: selectedBrandId,
+                        sizeType: selectedSizeType,
+                        color: colorQuery,
+                      }}
+                      onToggleCategory={toggleCategory}
+                      onBrandChange={setSelectedBrandId}
+                      onSizeTypeChange={setSelectedSizeType}
+                      onColorChange={setColorQuery}
                     />
-                    {searchQuery && (
+                    {activeFilterCount > 0 && (
                       <Button
-                        variant="dim"
+                        variant="ghost"
                         size="sm"
-                        className="-me-3.5"
-                        onClick={() => setSearchQuery('')}
+                        className="h-8 text-muted-foreground gap-1"
+                        onClick={clearFilters}
                       >
-                        <X />
+                        <X className="h-3.5 w-3.5" />
+                        Clear ({activeFilterCount})
                       </Button>
                     )}
-                  </InputWrapper>
-                  {selectedCount > 0 && (
-                    <span className="text-sm text-muted-foreground">
-                      {selectedCount} selected
-                    </span>
-                  )}
+                  </div>
                 </CardToolbar>
               </CardHeader>
               <CardTable>
@@ -326,7 +435,7 @@ export function AddProductsToClubDialog({
                   <div className="flex flex-col items-center justify-center py-12 gap-4">
                     <Package className="size-12 text-muted-foreground" />
                     <p className="text-muted-foreground">
-                      {searchQuery
+                      {searchQuery || activeFilterCount > 0
                         ? 'No products found matching your search'
                         : 'All products have been added to this club'}
                     </p>
