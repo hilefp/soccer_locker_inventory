@@ -169,7 +169,7 @@ export function OrderListTable({
   const inputRef = useRef<HTMLInputElement>(null);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: 25,
   });
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [sorting, setSorting] = useState<SortingState>([
@@ -556,7 +556,7 @@ export function OrderListTable({
     state: {
       pagination: {
         pageIndex: pagination.pageIndex,
-        pageSize: meta?.limit || 10,
+        pageSize: meta?.limit || 25,
       },
       sorting,
       rowSelection,
@@ -793,7 +793,7 @@ export function OrderListTable({
             </ScrollArea>
           </CardTable>
           <CardFooter>
-            <DataGridPagination />
+            <DataGridPagination sizes={[25, 50, 100]} />
           </CardFooter>
         </DataGrid>
       </Card>
