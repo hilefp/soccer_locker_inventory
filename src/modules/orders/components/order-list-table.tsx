@@ -221,8 +221,13 @@ export function OrderListTable({
         toast.warning(`${failedCount} order(s) could not be loaded and will be skipped.`);
       }
 
+      // Print oldest-to-newest regardless of the table's current sort order
+      const sortedOrders = [...fullOrders].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
       // Generate print document with all successfully fetched orders
-      const htmlContent = generateBulkPrintDocument(fullOrders, documentType);
+      const htmlContent = generateBulkPrintDocument(sortedOrders, documentType);
 
       // Open print window
       const success = openPrintWindow(htmlContent);
