@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Input, InputWrapper } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
-import { Textarea } from '@/shared/components/ui/textarea';
+import { RichTextEditor } from '@/shared/components/ui/rich-text-editor';
 import {
   Select,
   SelectContent,
@@ -503,12 +503,11 @@ export function PackageCreatePage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="packageDescription">Package Description</Label>
-                  <Textarea
+                  <RichTextEditor
                     id="packageDescription"
                     value={packageDescription}
-                    onChange={(e) => setPackageDescription(e.target.value)}
+                    onChange={setPackageDescription}
                     placeholder="e.g., FIELD PLAYER PACKAGE INCLUDES: 1 Navy Game Jersey, 1 White Game Jersey..."
-                    rows={4}
                   />
                 </div>
 

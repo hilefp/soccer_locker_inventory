@@ -17,7 +17,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Input, InputWrapper } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
-import { Textarea } from '@/shared/components/ui/textarea';
+import { RichTextEditor } from '@/shared/components/ui/rich-text-editor';
 import {
   Select,
   SelectContent,
@@ -272,12 +272,11 @@ export function PackageEditPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="editPackageDescription">Package Description</Label>
-                <Textarea
+                <RichTextEditor
                   id="editPackageDescription"
                   value={packageDescription}
-                  onChange={(e) => setPackageDescription(e.target.value)}
+                  onChange={setPackageDescription}
                   placeholder="Describe what's included in the package..."
-                  rows={4}
                 />
               </div>
 

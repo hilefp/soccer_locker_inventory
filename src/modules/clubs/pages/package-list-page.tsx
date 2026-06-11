@@ -182,9 +182,10 @@ export function PackageListPage() {
 
                   {/* Description */}
                   {pkg.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {pkg.description}
-                    </p>
+                    <p
+                      className="text-xs text-muted-foreground line-clamp-2 [&_ul]:list-disc [&_ul]:pl-4"
+                      dangerouslySetInnerHTML={{ __html: pkg.description }}
+                    />
                   )}
 
                   {/* Tags */}

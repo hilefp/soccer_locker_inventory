@@ -384,27 +384,6 @@ export function StockVariantListPage() {
                 </SelectContent>
               </Select>
 
-              {/* Color */}
-              <div className="relative">
-                <Input
-                  placeholder="Color (e.g. navy)"
-                  value={colorQuery}
-                  onChange={(e) => setColorQuery(e.target.value)}
-                  variant="sm"
-                  className="h-8 text-sm w-36 pr-7"
-                />
-                {colorQuery && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-8 w-7 p-0"
-                    onClick={() => setColorQuery('')}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                )}
-              </div>
-
               {/* Sale tag toggle */}
               <Button
                 variant={saleOnly ? 'mono' : 'outline'}
