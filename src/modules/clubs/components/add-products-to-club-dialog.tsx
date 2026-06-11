@@ -345,7 +345,7 @@ export function AddProductsToClubDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[80vh] flex flex-col overflow-hidden">
+      <DialogContent className="max-w-5xl h-[80vh] flex flex-col overflow-hidden overflow-y-hidden">
         <DialogHeader>
           <DialogTitle>Add Products to Club</DialogTitle>
           <DialogDescription>
@@ -354,7 +354,7 @@ export function AddProductsToClubDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
           <DataGrid
             table={table}
             recordCount={filteredData?.length || 0}
@@ -365,8 +365,8 @@ export function AddProductsToClubDialog({
               cellBorder: true,
             }}
           >
-            <Card>
-              <CardHeader className="py-3.5">
+            <Card className="flex-1 min-h-0">
+              <CardHeader className="py-3.5 shrink-0">
                 <CardToolbar className="flex flex-col items-stretch gap-3">
                   {/* Row 1: search */}
                   <div className="flex items-center gap-2">
@@ -424,7 +424,7 @@ export function AddProductsToClubDialog({
                   </div>
                 </CardToolbar>
               </CardHeader>
-              <CardTable>
+              <CardTable className="min-h-0 grow flex flex-col">
                 {isLoading ? (
                   <div className="flex items-center justify-center py-10">
                     <span className="text-muted-foreground">
@@ -441,13 +441,13 @@ export function AddProductsToClubDialog({
                     </p>
                   </div>
                 ) : (
-                  <ScrollArea className="max-h-[44vh]">
+                  <ScrollArea className="flex-1 min-h-0">
                     <DataGridTable />
                     <ScrollBar orientation="horizontal" />
                   </ScrollArea>
                 )}
               </CardTable>
-              <CardFooter>
+              <CardFooter className="shrink-0">
                 <DataGridPagination />
               </CardFooter>
             </Card>

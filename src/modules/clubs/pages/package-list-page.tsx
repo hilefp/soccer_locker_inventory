@@ -13,6 +13,7 @@ import {
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
+import { sanitizeRichText } from '@/shared/lib/sanitize-html';
 import { useClub } from '../hooks/use-clubs';
 import { useClubPackages } from '../hooks/use-club-packages';
 import { DeletePackageDialog } from '../components/delete-package-dialog';
@@ -182,9 +183,10 @@ export function PackageListPage() {
 
                   {/* Description */}
                   {pkg.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {pkg.description}
-                    </p>
+                    <p
+                      className="text-xs text-muted-foreground line-clamp-2 [&_ul]:list-disc [&_ul]:pl-4"
+                      dangerouslySetInnerHTML={{ __html: sanitizeRichText(pkg.description) }}
+                    />
                   )}
 
                   {/* Tags */}
