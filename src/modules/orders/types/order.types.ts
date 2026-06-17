@@ -108,6 +108,28 @@ export interface OrderItem {
   } | null;
 }
 
+// A variant an order item can be swapped to (returned by the swap-variants endpoint).
+// Spans all sizes of the item's product (Youth + Adult) plus any grouped sibling
+// products. Availability is included so the UI can warn about out-of-stock swaps.
+export interface SwappableVariant {
+  id: string;
+  sku: string;
+  attributes: Record<string, string> | null;
+  price: number;
+  imageUrl: string | null;
+  productId: string;
+  productName: string;
+  availableQuantity: number;
+  inStock: boolean;
+  isCurrent: boolean;
+}
+
+export interface SwappableVariantsResponse {
+  orderItemId: string;
+  currentVariantId: string;
+  variants: SwappableVariant[];
+}
+
 // Order Shipment Item Interface
 export interface OrderShipmentItem {
   id: string;
