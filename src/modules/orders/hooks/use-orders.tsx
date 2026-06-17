@@ -24,6 +24,8 @@ export const orderKeys = {
   statusHistory: (id: string) => [...orderKeys.all, id, 'status-history'] as const,
   statistics: () => [...orderKeys.all, 'statistics'] as const,
   shipments: (id: string) => [...orderKeys.all, id, 'shipments'] as const,
+  swappableVariants: (orderId: string, itemId: string) =>
+    [...orderKeys.all, orderId, 'items', itemId, 'swap-variants'] as const,
 };
 
 // Hook to fetch orders with pagination and filters
@@ -387,6 +389,16 @@ export function useResolveMissing() {
       console.error('Error resolving missing items:', error);
       toast.error(error?.response?.data?.message || 'Failed to resolve missing items');
     },
+  });
+}
+
+// Hook to fetch the variants an order item can be swapped to
+export function useSwappableVariants(orderId: string, itemId: string, enabled = true) {
+  return useQuery({
+    queryKey: orderKeys.swappableVariants(orderId, itemId),
+    queryFn: () => ordersService.getSwappableVariants(orderId, itemId),
+    enabled: enabled && !!orderId && !!itemId,
+    staleTime: 1000 * 60 * 2,
   });
 }
 

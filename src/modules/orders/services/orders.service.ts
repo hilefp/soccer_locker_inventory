@@ -21,6 +21,7 @@ import {
   MarkMissingRequest,
   ResolveMissingRequest,
   MissingItemSummary,
+  SwappableVariantsResponse,
 } from '@/modules/orders/types';
 
 const BASE_URL = '/inventory/orders';
@@ -226,6 +227,21 @@ export const ordersService = {
    */
   async resolveMissing(id: string, data: ResolveMissingRequest): Promise<Order> {
     const response = await apiClient.post<Order>(`${BASE_URL}/${id}/missing/resolve`, data);
+    return response.data;
+  },
+
+  /**
+   * List every variant an order item can be swapped to (all sizes of the
+   * product including Youth/Adult, plus grouped sibling products), with current
+   * availability. Not filtered by stock so any size can be selected.
+   */
+  async getSwappableVariants(
+    orderId: string,
+    itemId: string
+  ): Promise<SwappableVariantsResponse> {
+    const response = await apiClient.get<SwappableVariantsResponse>(
+      `${BASE_URL}/${orderId}/items/${itemId}/swap-variants`
+    );
     return response.data;
   },
 

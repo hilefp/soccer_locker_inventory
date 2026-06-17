@@ -15,6 +15,13 @@ import { CustomFields } from '../types';
 
 export const defaultFields: CustomFields[] = [
   {
+    key: "playerFirstName",
+    type: "text",
+    required: true,
+    label: "Player first name",
+    placeholder: "",
+  },
+  {
     key: "playerLastName",
     type: "text",
     required: true,

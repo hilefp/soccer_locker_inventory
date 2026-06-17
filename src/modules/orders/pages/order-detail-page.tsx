@@ -64,6 +64,7 @@ import {
   useMarkMissing,
   useResolveMissing,
   useSwapOrderItemVariant,
+  useSwappableVariants,
 } from '@/modules/orders/hooks/use-orders';
 import {
   OrderStatusBadge,
@@ -77,8 +78,6 @@ import { ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
 import type { OrderItem } from '@/modules/orders/types';
 import { useAuthStore } from '@/shared/stores/auth-store';
 import { extractSize } from '@/modules/orders/lib/extract-size';
-import { useProduct } from '@/modules/products/hooks/use-products';
-import { useStockVariantDetail } from '@/modules/inventory/hooks/use-stock-variants';
 
 interface RefundItemState {
   selected: boolean;
@@ -138,16 +137,21 @@ export function OrderDetailPage() {
   // Swap variant state
   const [swapItem, setSwapItem] = useState<OrderItem | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState<string>('');
-  const swapProductId = swapItem?.productVariant?.product?.id || '';
-  const { data: swapProduct, isLoading: isLoadingVariants } = useProduct(swapProductId);
-  const siblingVariants = swapProduct?.variants;
+  // Full list of swappable variants for this item (all sizes incl. Youth/Adult
+  // and grouped sibling products), with availability baked in.
+  const { data: swappableData, isLoading: isLoadingVariants } = useSwappableVariants(
+    orderId || '',
+    swapItem?.id || '',
+    !!swapItem
+  );
+  const swappableVariants = swappableData?.variants;
   const canSwapVariant = order && !['DELIVERED', 'REFUND', 'FAILED'].includes(order.status);
 
   // Availability of the selected new variant (for a non-blocking out-of-stock warning).
   // The swap is always allowed — this only surfaces an oversell so the user is aware.
-  const { data: selectedVariantStock, isLoading: isLoadingStock } = useStockVariantDetail(selectedVariantId);
   const swapRequiredQty = swapItem?.quantity ?? 0;
-  const selectedAvailable = selectedVariantStock?.stockSummary.totalAvailable;
+  const selectedVariant = swappableVariants?.find((v) => v.id === selectedVariantId);
+  const selectedAvailable = selectedVariant?.availableQuantity;
   const isSelectedOutOfStock =
     !!selectedVariantId && selectedAvailable !== undefined && selectedAvailable < swapRequiredQty;
 
@@ -1795,34 +1799,30 @@ export function OrderDetailPage() {
                         <SelectValue placeholder="Select a variant..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {siblingVariants
-                          ?.filter((v) => v.id !== swapItem.productVariantId)
+                        {swappableVariants
+                          ?.filter((v) => !v.isCurrent)
                           .map((variant) => {
                             const attrs = variant.attributes
                               ? Object.entries(variant.attributes).map(([k, v]) => `${k}: ${v}`).join(', ')
                               : '';
                             return (
-                              <SelectItem key={variant.id!} value={variant.id!}>
+                              <SelectItem key={variant.id} value={variant.id}>
                                 {attrs || variant.sku} — SKU: {variant.sku} — ${Number(variant.price).toFixed(2)}
+                                {variant.inStock ? '' : ' — Out of stock'}
                               </SelectItem>
                             );
                           })}
                       </SelectContent>
                     </Select>
                   )}
-                  {siblingVariants && siblingVariants.filter((v) => v.id !== swapItem.productVariantId).length === 0 && (
+                  {swappableVariants && swappableVariants.filter((v) => !v.isCurrent).length === 0 && (
                     <p className="text-sm text-muted-foreground">No other variants available for this product.</p>
                   )}
                 </div>
 
                 {/* Stock availability for the selected variant (non-blocking) */}
                 {selectedVariantId && (
-                  isLoadingStock ? (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-                      Checking stock...
-                    </div>
-                  ) : isSelectedOutOfStock ? (
+                  isSelectedOutOfStock ? (
                     <div className="flex items-start gap-3 rounded-lg border border-orange-300 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/30 p-3">
                       <AlertTriangle className="size-5 text-orange-600 dark:text-orange-400 mt-0.5 shrink-0" />
                       <div className="space-y-1">

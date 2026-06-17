@@ -41,6 +41,8 @@ export function EditClubProductSheet({
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
 
+  const [playerFirstName, setPlayerFirstName] = useState(false);
+  const [playerFirstNameRequired, setPlayerFirstNameRequired] = useState(true);
   const [playerLastName, setPlayerLastName] = useState(false);
   const [playerLastNameRequired, setPlayerLastNameRequired] = useState(true);
   const [playerNumber, setPlayerNumber] = useState(false);
@@ -77,6 +79,10 @@ export function EditClubProductSheet({
       setIsActive(clubProduct.isActive);
       setImageUrls(clubProduct.imageUrls || []);
       setTags(clubProduct.tags || []);
+
+      const pfnField = clubProduct.customFields?.find((f) => f.key === 'playerFirstName');
+      setPlayerFirstName(!!pfnField);
+      setPlayerFirstNameRequired(pfnField?.required ?? true);
 
       const pnField = clubProduct.customFields?.find((f) => f.key === 'playerLastName');
       setPlayerLastName(!!pnField);
@@ -135,6 +141,7 @@ export function EditClubProductSheet({
     if (!clubProduct) return;
 
     const defaultFieldKeys: { key: string; required: boolean }[] = [];
+    if (playerFirstName) defaultFieldKeys.push({ key: 'playerFirstName', required: playerFirstNameRequired });
     if (playerLastName) defaultFieldKeys.push({ key: 'playerLastName', required: playerLastNameRequired });
     if (playerNumber) defaultFieldKeys.push({ key: 'playerNumber', required: playerNumberRequired });
     if (coachName) defaultFieldKeys.push({ key: 'coachName', required: coachNameRequired });
@@ -336,6 +343,37 @@ export function EditClubProductSheet({
                     checked={isActive}
                     onCheckedChange={setIsActive}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sheetPlayerFirstName">Field Player First Name</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Controls Show the field player first name on the product
+                      </p>
+                    </div>
+                    <Switch
+                      id="sheetPlayerFirstName"
+                      checked={playerFirstName}
+                      onCheckedChange={setPlayerFirstName}
+                    />
+                  </div>
+                  {playerFirstName && (
+                    <div className="flex items-center justify-between pl-4 py-2 pr-2 ml-2 rounded-md bg-muted/50 border-l-2 border-primary/30">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="sheetPlayerFirstNameReq" className="text-sm font-medium text-primary/80">Required</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {playerFirstNameRequired ? 'Customer must fill this field' : 'Optional for the customer'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="sheetPlayerFirstNameReq"
+                        checked={playerFirstNameRequired}
+                        onCheckedChange={setPlayerFirstNameRequired}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
