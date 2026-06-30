@@ -65,6 +65,7 @@ export const defaultFields: CustomFields[] = [
       "SYRACUSE",
       "WESTON",
       "NAPA",
+      "CENTRAL NEW JERSEY",
     ],
   },
   {
@@ -83,6 +84,7 @@ export const defaultFields: CustomFields[] = [
       "SYRACUSE",
       "WESTON",
       "NAPA",
+      "CENTRAL NEW JERSEY",
     ],
   },
   {
