@@ -121,6 +121,8 @@ export function OrderDetailPage() {
   const [refundRushFee, setRefundRushFee] = useState(false);
 
   const [refundReason, setRefundReason] = useState('');
+  // Flat, ad-hoc refund amount typed by staff — refunded exactly as entered (no tax).
+  const [refundCustomAmount, setRefundCustomAmount] = useState('');
   const [refundItemStates, setRefundItemStates] = useState<Record<string, RefundItemState>>({});
   const [refundPackageStates, setRefundPackageStates] = useState<Record<string, RefundPackageState>>({});
 
@@ -241,24 +243,28 @@ export function OrderDetailPage() {
     return states;
   };
 
+  // Proportionally allocate the order's actual tax to a refunded dollar amount.
+  const calculateRefundTax = useCallback((refundTotal: number) => {
+    const orderSubtotal = Number(order?.subtotal ?? 0);
+    const orderTaxTotal = Number(order?.taxTotal ?? 0);
+    return orderSubtotal > 0
+      ? parseFloat(((refundTotal / orderSubtotal) * orderTaxTotal).toFixed(4))
+      : 0;
+  }, [order?.subtotal, order?.taxTotal]);
+
   const calculateItemRefund = useCallback((item: OrderItem, qty: number) => {
     const remainingQty = item.quantity - (item.refundedQuantity || 0);
     const clampedQty = Math.max(0, Math.min(qty, remainingQty));
-    const refundTotal = clampedQty * Number(item.unitPrice);
-    const orderSubtotal = Number(order?.subtotal ?? 0);
-    const orderTaxTotal = Number(order?.taxTotal ?? 0);
-    // Proportionally allocate the order's actual tax to this item
-    const refundTax = orderSubtotal > 0
-      ? parseFloat(((refundTotal / orderSubtotal) * orderTaxTotal).toFixed(4))
-      : 0;
-    return { quantity: clampedQty, refundTotal, refundTax };
-  }, [order?.subtotal, order?.taxTotal]);
+    const refundTotal = parseFloat((clampedQty * Number(item.unitPrice)).toFixed(2));
+    return { quantity: clampedQty, refundTotal, refundTax: calculateRefundTax(refundTotal) };
+  }, [calculateRefundTax]);
 
   const handleStartRefund = () => {
     setRefundItemStates(initRefundStates());
     setRefundShipping(false);
     setRefundRushFee(false);
     setRefundReason('');
+    setRefundCustomAmount('');
     setIsRefunding(true);
   };
 
@@ -379,16 +385,23 @@ export function OrderDetailPage() {
     const packageTaxRefund = Math.round(packageRefund * taxRate * 100) / 100;
     const shippingRefund = refundShipping ? Number(order?.shippingTotal ?? 0) : 0;
     const rushFeeRefund = refundRushFee ? Number(order?.rushFee ?? 0) : 0;
+    // Flat custom amount — refunded exactly as typed, no tax added.
+    const manualRefund =
+      refundCustomAmount === '' ? 0 : Math.max(0, parseFloat(refundCustomAmount) || 0);
     const amountAlreadyRefunded = Number(order?.totalRefunded ?? 0);
     const totalAvailable = Number(order?.total ?? 0) - amountAlreadyRefunded;
-    const totalRefund = totalItemRefund + totalTaxRefund + packageRefund + packageTaxRefund + shippingRefund + rushFeeRefund;
-    return { totalItemRefund, totalTaxRefund, packageRefund, packageTaxRefund, shippingRefund, rushFeeRefund, totalRefund, amountAlreadyRefunded, totalAvailable };
-  }, [refundItemStates, refundPackageStates, refundShipping, refundRushFee, order?.shippingTotal, order?.rushFee, order?.total, order?.totalRefunded, order?.subtotal, order?.taxTotal]);
+    const totalRefund = totalItemRefund + totalTaxRefund + packageRefund + packageTaxRefund + shippingRefund + rushFeeRefund + manualRefund;
+    return { totalItemRefund, totalTaxRefund, packageRefund, packageTaxRefund, shippingRefund, rushFeeRefund, manualRefund, totalRefund, amountAlreadyRefunded, totalAvailable };
+  }, [refundItemStates, refundPackageStates, refundShipping, refundRushFee, refundCustomAmount, order?.shippingTotal, order?.rushFee, order?.total, order?.totalRefunded, order?.subtotal, order?.taxTotal]);
 
   const handleSubmitRefund = () => {
     if (!orderId || refundTotals.totalRefund <= 0) return;
     const standaloneItems = Object.entries(refundItemStates)
-      .filter(([, s]) => s.selected && s.quantity > 0)
+      .filter(([itemId, s]) => {
+        if (!s.selected || s.quantity <= 0) return false;
+        const orderItem = order?.items?.find((i) => i.id === itemId);
+        return orderItem?.packageInstanceId == null; // package items handled below
+      })
       .map(([orderItemId, s]) => ({ orderItemId, quantity: s.quantity }));
 
     // Collect individually-selected package items (user controls which ones get refundedQuantity++)
@@ -416,6 +429,11 @@ export function OrderDetailPage() {
             : undefined,
           refundShipping: refundShipping || undefined,
           refundRushFee: refundRushFee || undefined,
+          // Flat custom amount, refunded exactly as entered (no tax added).
+          manualRefundAmount:
+            refundTotals.manualRefund > 0
+              ? parseFloat(refundTotals.manualRefund.toFixed(2))
+              : undefined,
           reason: refundReason.trim() || undefined,
         },
       },
@@ -1479,6 +1497,22 @@ export function OrderDetailPage() {
                       <span className="text-muted-foreground">Total available to refund:</span>
                       <span className="font-medium">${refundTotals.totalAvailable.toFixed(2)}</span>
                     </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm text-muted-foreground">Custom refund amount (optional):</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          step={0.01}
+                          value={refundCustomAmount}
+                          onChange={(e) => setRefundCustomAmount(e.target.value)}
+                          placeholder="0.00"
+                          className="h-9 text-sm pl-6"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">Refunded exactly as entered — no tax added. Use for a partial or extra amount.</p>
+                    </div>
                     <Separator />
                     <div className="flex items-center justify-between">
                       <TooltipProvider>
@@ -1490,7 +1524,7 @@ export function OrderDetailPage() {
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Items + tax + shipping + rush fee (if selected)</p>
+                            <p>Items + tax + shipping + rush fee + custom amount (if any)</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

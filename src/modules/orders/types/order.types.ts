@@ -475,6 +475,8 @@ export interface RefundOrderRequest {
   refundRushFee?: boolean;
   reason?: string;
   customAmount?: number;
+  /** Flat, manually-entered amount refunded exactly as given (no tax added). */
+  manualRefundAmount?: number;
 }
 
 export interface RefundOrderResponse {
