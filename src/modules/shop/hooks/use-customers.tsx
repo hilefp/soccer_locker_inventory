@@ -243,3 +243,11 @@ export function useUpdateCustomer() {
     },
   });
 }
+
+// Hook to reset a customer's password (SUPER_ADMIN only)
+export function useResetCustomerPassword() {
+  return useMutation({
+    mutationFn: ({ id, newPassword }: { id: string; newPassword: string }) =>
+      customerService.resetCustomerPassword(id, newPassword),
+  });
+}
