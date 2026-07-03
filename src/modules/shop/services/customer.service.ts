@@ -92,4 +92,15 @@ export const customerService = {
   async resendVerificationEmail(id: string): Promise<void> {
     await apiClient.post(`/inventory/customers/${id}/resend-verification`);
   },
+
+  async resetCustomerPassword(
+    id: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    const response = await apiClient.patch<{ message: string }>(
+      `/inventory/customers/${id}/reset-password`,
+      { newPassword },
+    );
+    return response.data;
+  },
 };
