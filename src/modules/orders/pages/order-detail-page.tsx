@@ -571,7 +571,7 @@ export function OrderDetailPage() {
               <OrderStatusBadge status={order.status} size="md" />
             </div>
             <span className="text-sm text-muted-foreground">
-              Created {timeAgo(order.createdAt)}
+              Ordered {formatDateTime(order.createdAt)} ({timeAgo(order.createdAt)})
             </span>
           </div>
         </div>
