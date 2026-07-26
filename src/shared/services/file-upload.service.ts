@@ -53,6 +53,14 @@ export interface DeleteResponse {
 
 class FileUploadService {
   /**
+   * Auth header for the API (same token the axios api-client uses)
+   */
+  private getAuthHeaders(): Record<string, string> {
+    const token = localStorage.getItem('accessToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  /**
    * Upload a single image
    */
   async uploadImage(
@@ -73,6 +81,7 @@ class FileUploadService {
 
     const response = await fetch(url, {
       method: 'POST',
+      headers: this.getAuthHeaders(),
       body: formData,
     });
 
@@ -105,6 +114,7 @@ class FileUploadService {
       `${API_BASE_URL}/file-upload/images?entityType=${entityType}`,
       {
         method: 'POST',
+        headers: this.getAuthHeaders(),
         body: formData,
       },
     );
@@ -131,6 +141,7 @@ class FileUploadService {
       `${API_BASE_URL}/file-upload/image/compressed?entityType=${entityType}&quality=${quality}`,
       {
         method: 'POST',
+        headers: this.getAuthHeaders(),
         body: formData,
       },
     );
@@ -162,6 +173,7 @@ class FileUploadService {
       `${API_BASE_URL}/file-upload/image/resized?${params.toString()}`,
       {
         method: 'POST',
+        headers: this.getAuthHeaders(),
         body: formData,
       },
     );
@@ -187,6 +199,7 @@ class FileUploadService {
       `${API_BASE_URL}/file-upload/image/webp?entityType=${entityType}`,
       {
         method: 'POST',
+        headers: this.getAuthHeaders(),
         body: formData,
       },
     );
@@ -225,6 +238,7 @@ class FileUploadService {
       `${API_BASE_URL}/file-upload/image/advanced`,
       {
         method: 'POST',
+        headers: this.getAuthHeaders(),
         body: formData,
       },
     );
@@ -244,6 +258,7 @@ class FileUploadService {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        ...this.getAuthHeaders(),
       },
       body: JSON.stringify({ fileUrl }),
     });
@@ -263,6 +278,7 @@ class FileUploadService {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        ...this.getAuthHeaders(),
       },
       body: JSON.stringify({ fileUrls }),
     });
