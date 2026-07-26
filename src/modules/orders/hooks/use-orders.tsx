@@ -19,6 +19,7 @@ import { Info } from 'lucide-react';
 export const orderKeys = {
   all: ['orders'] as const,
   list: (filters?: OrderFilterParams) => [...orderKeys.all, 'list', filters] as const,
+  listAll: (filters?: OrderFilterParams) => [...orderKeys.all, 'list-all', filters] as const,
   detail: (id: string) => [...orderKeys.all, id] as const,
   items: (id: string) => [...orderKeys.all, id, 'items'] as const,
   statusHistory: (id: string) => [...orderKeys.all, id, 'status-history'] as const,
@@ -33,6 +34,16 @@ export function useOrders(params?: OrderFilterParams) {
   return useQuery({
     queryKey: orderKeys.list(params),
     queryFn: () => ordersService.getOrders(params),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+}
+
+// Hook to fetch every order matching the filters, paging past the API's page size.
+// Pass a bounded filter (date range and/or statuses) — this loads the whole set.
+export function useAllOrders(params?: OrderFilterParams) {
+  return useQuery({
+    queryKey: orderKeys.listAll(params),
+    queryFn: () => ordersService.getAllOrders(params),
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }

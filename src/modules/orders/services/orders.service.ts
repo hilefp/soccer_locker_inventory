@@ -26,6 +26,10 @@ import {
 
 const BASE_URL = '/inventory/orders';
 
+// Rows per request when paging through a full result set in getAllOrders. This is
+// a transport detail, not a cap on how many orders come back.
+const ALL_PAGE_SIZE = 200;
+
 export const ordersService = {
   /**
    * Get all orders with pagination and filters
@@ -55,6 +59,41 @@ export const ordersService = {
 
     const response = await apiClient.get<OrderListResponse>(url);
     return response.data;
+  },
+
+  /**
+   * Get every order matching the filters, with no cap.
+   *
+   * The API always paginates (limit defaults to 20 and has no maximum), so this
+   * reads the first page to learn totalPages, then fetches the remaining pages.
+   * Only use it with a bounded filter — a date range, a status set — never bare.
+   */
+  async getAllOrders(params?: OrderFilterParams): Promise<OrderListResponse> {
+    const pageSize = params?.limit ?? ALL_PAGE_SIZE;
+
+    const firstPage = await ordersService.getOrders({ ...params, page: 1, limit: pageSize });
+    const totalPages = firstPage.meta?.totalPages ?? 1;
+
+    if (totalPages <= 1) return firstPage;
+
+    const remaining = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, index) =>
+        ordersService.getOrders({ ...params, page: index + 2, limit: pageSize })
+      )
+    );
+
+    // Deduplicate by id: an order created while the pages are in flight shifts the
+    // sort window, which can hand the same order back on two different pages.
+    const byId = new Map<string, Order>();
+    for (const order of [...firstPage.data, ...remaining.flatMap((page) => page.data)]) {
+      byId.set(order.id, order);
+    }
+    const data = [...byId.values()];
+
+    return {
+      data,
+      meta: { ...firstPage.meta, total: data.length, page: 1, limit: data.length, totalPages: 1 },
+    };
   },
 
   /**
