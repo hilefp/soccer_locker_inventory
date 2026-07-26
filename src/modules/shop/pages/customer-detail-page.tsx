@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
   User,
@@ -60,6 +60,9 @@ const getStatusLabel = (status: CustomerStatus): string => {
 export function CustomerDetailPage() {
   const { customerId } = useParams<{ customerId: string }>();
   const navigate = useNavigate();
+  const { state } = useLocation() as { state: { fromSearch?: string } | null };
+  // Restore the customer list's filters/pagination when they were passed along.
+  const backToList = `/shop/customers${state?.fromSearch ?? ''}`;
 
   const { data: customer, isLoading, error } = useCustomer(customerId || '');
   const activateMutation = useActivateCustomer();
@@ -93,7 +96,7 @@ export function CustomerDetailPage() {
   if (error || !customer) {
     return (
       <div className="container-fluid space-y-5">
-        <Button variant="ghost" onClick={() => navigate('/shop/customers')}>
+        <Button variant="ghost" onClick={() => navigate(backToList)}>
           <ArrowLeft className="size-4 mr-2" />
           Back to Customers
         </Button>
@@ -136,7 +139,7 @@ export function CustomerDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/shop/customers')}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(backToList)}>
             <ArrowLeft className="size-4" />
           </Button>
           <div className="flex items-center gap-3">

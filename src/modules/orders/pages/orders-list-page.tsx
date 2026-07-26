@@ -1,50 +1,99 @@
 'use client';
 
-import { useState } from 'react';
-import { ClipboardList, Plus } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
+import { useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { ClipboardList } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { OrderListTable, ExportOrdersDialog } from '@/modules/orders/components';
 import { useOrders } from '@/modules/orders/hooks/use-orders';
 import { useExportOrders } from '@/modules/orders/hooks/use-export-orders';
 import { OrderFilterParams, OrderStatus } from '@/modules/orders/types';
 
+const DEFAULT_PAGE_SIZE = 25;
+const DEFAULT_SORT_ID = 'created';
+
 export function OrdersListPage() {
   useDocumentTitle('Orders');
 
-  const [filters, setFilters] = useState<OrderFilterParams>({
-    page: 1,
-    limit: 25,
-    status: undefined,
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
-  });
+  // Filters, pagination and sorting live in the URL so they survive opening an
+  // order and navigating back.
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const filters = useMemo<OrderFilterParams>(
+    () => ({
+      page: Number(searchParams.get('page')) || 1,
+      limit: Number(searchParams.get('limit')) || DEFAULT_PAGE_SIZE,
+      search: searchParams.get('search') || undefined,
+      status: (searchParams.get('status') as OrderStatus | null) || undefined,
+      clubId: searchParams.get('clubId') || undefined,
+      startDate: searchParams.get('startDate') || undefined,
+      endDate: searchParams.get('endDate') || undefined,
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+    }),
+    [searchParams],
+  );
+
+  const sortId = searchParams.get('sort') || DEFAULT_SORT_ID;
+  const sortDesc = searchParams.get('desc') !== 'false'; // default true
 
   const { data, isLoading, error } = useOrders(filters);
   const { exportOrders, isExporting } = useExportOrders();
 
+  // Updates the URL in place so filter changes don't pile up in the history stack.
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          for (const [key, value] of Object.entries(updates)) {
+            if (value === null || value === '') {
+              next.delete(key);
+            } else {
+              next.set(key, value);
+            }
+          }
+          // Drop defaults to keep the URL tidy
+          if (next.get('page') === '1') next.delete('page');
+          if (next.get('limit') === String(DEFAULT_PAGE_SIZE)) next.delete('limit');
+          if (next.get('sort') === DEFAULT_SORT_ID && next.get('desc') !== 'false') {
+            next.delete('sort');
+            next.delete('desc');
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
   const handlePageChange = (page: number) => {
-    setFilters((prev) => ({ ...prev, page }));
+    updateParams({ page: String(page) });
   };
 
   const handlePageSizeChange = (limit: number) => {
-    setFilters((prev) => ({ ...prev, limit, page: 1 }));
+    updateParams({ limit: String(limit), page: null });
   };
 
   const handleSearchChange = (search: string) => {
-    setFilters((prev) => ({ ...prev, search, page: 1 }));
+    updateParams({ search: search || null, page: null });
   };
 
   const handleStatusFilterChange = (status: OrderStatus | undefined) => {
-    setFilters((prev) => ({ ...prev, status, page: 1 }));
+    updateParams({ status: status ?? null, page: null });
   };
 
   const handleClubFilterChange = (clubId: string | undefined) => {
-    setFilters((prev) => ({ ...prev, clubId, page: 1 }));
+    updateParams({ clubId: clubId ?? null, page: null });
   };
 
   const handleDateRangeChange = (startDate: string | undefined, endDate: string | undefined) => {
-    setFilters((prev) => ({ ...prev, startDate, endDate, page: 1 }));
+    updateParams({ startDate: startDate ?? null, endDate: endDate ?? null, page: null });
+  };
+
+  const handleSortChange = (id: string, desc: boolean) => {
+    updateParams({ sort: id, desc: String(desc) });
   };
 
   const totalOrders = data?.meta?.total || 0;
@@ -73,12 +122,22 @@ export function OrdersListPage() {
         meta={data?.meta}
         isLoading={isLoading}
         error={error?.message || null}
+        page={filters.page}
+        pageSize={filters.limit}
+        search={filters.search}
+        status={filters.status}
+        clubId={filters.clubId}
+        startDate={filters.startDate}
+        endDate={filters.endDate}
+        sortId={sortId}
+        sortDesc={sortDesc}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         onSearchChange={handleSearchChange}
         onStatusFilterChange={handleStatusFilterChange}
         onClubFilterChange={handleClubFilterChange}
         onDateRangeChange={handleDateRangeChange}
+        onSortChange={handleSortChange}
       />
     </div>
   );

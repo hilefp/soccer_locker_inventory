@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui/button';
@@ -20,6 +20,10 @@ export function ProductFormPage() {
   useDocumentTitle('Product Form');
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
+  const { state } = useLocation() as { state: { fromSearch?: string } | null };
+  // Keep the product list's filters travelling with the navigation chain.
+  const fromSearch = state?.fromSearch ?? '';
+  const forwardState = { state: { fromSearch } };
   const isEditMode = !!productId;
   const isNewMode = !productId;
 
@@ -158,7 +162,7 @@ export function ProductFormPage() {
       if (productId) {
         await updateMutation.mutateAsync({ id: productId, data: productData });
         toast.success('Product updated successfully');
-        navigate(`/products/${productId}`);
+        navigate(`/products/${productId}`, forwardState);
       }
     } catch (error) {
       console.error('Error saving product:', error);
@@ -199,9 +203,9 @@ export function ProductFormPage() {
               onClick={() => {
                 if (currentStep === 2) {
                   // Already created product, go to its detail page
-                  navigate(`/products/${createdProductId}`);
+                  navigate(`/products/${createdProductId}`, forwardState);
                 } else {
-                  navigate('/products');
+                  navigate(`/products${fromSearch}`);
                 }
               }}
               disabled={isLoading}
@@ -305,7 +309,7 @@ export function ProductFormPage() {
             <div className="flex items-center justify-between pt-4 border-t">
               <Button
                 variant="outline"
-                onClick={() => navigate('/products')}
+                onClick={() => navigate(`/products${fromSearch}`)}
                 disabled={isLoading}
               >
                 Cancel
@@ -365,7 +369,7 @@ export function ProductFormPage() {
               </p>
               <Button
                 variant="mono"
-                onClick={() => navigate(`/products/${createdProductId}`)}
+                onClick={() => navigate(`/products/${createdProductId}`, forwardState)}
               >
                 <Check className="size-4 mr-2" />
                 {variants.length > 0 ? 'Done — View Product' : 'Skip & View Product'}
@@ -386,8 +390,8 @@ export function ProductFormPage() {
         status={status}
         setStatus={setStatus}
         isLoading={isLoading}
-        onBack={() => navigate(`/products/${productId}`)}
-        onCancel={() => navigate(`/products/${productId}`)}
+        onBack={() => navigate(`/products/${productId}`, forwardState)}
+        onCancel={() => navigate(`/products/${productId}`, forwardState)}
         onSave={handleSave}
       />
 

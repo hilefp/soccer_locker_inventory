@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -108,13 +108,42 @@ interface OrderListTableProps {
   meta?: OrderListMeta;
   isLoading?: boolean;
   error?: string | null;
+  /** Current filter/pagination state, owned by the page (persisted in the URL). */
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: OrderStatus;
+  clubId?: string;
+  startDate?: string;
+  endDate?: string;
+  sortId?: string;
+  sortDesc?: boolean;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   onSearchChange?: (search: string) => void;
   onStatusFilterChange?: (status: OrderStatus | undefined) => void;
   onClubFilterChange?: (clubId: string | undefined) => void;
   onDateRangeChange?: (startDate: string | undefined, endDate: string | undefined) => void;
+  onSortChange?: (id: string, desc: boolean) => void;
 }
+
+/**
+ * Parses a `YYYY-MM-DD` (optionally `...THH:mm:ss`) filter value as a local date,
+ * avoiding the UTC shift `new Date('2026-07-26')` would introduce.
+ */
+const parseFilterDate = (value?: string): Date | undefined => {
+  if (!value) return undefined;
+  const [y, m, d] = value.split('T')[0].split('-').map(Number);
+  if (!y || !m || !d) return undefined;
+  return new Date(y, m - 1, d);
+};
+
+/** Formats a picked date as `YYYY-MM-DD` in local time (round-trips with parseFilterDate). */
+const toDateParam = (date: Date): string => {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+};
 
 const convertOrderToIData = (order: Order): IOrderData => {
   const name = order.shippingName || order.customerUser?.email || 'N/A';
@@ -144,14 +173,25 @@ export function OrderListTable({
   meta,
   isLoading,
   error,
+  page = 1,
+  pageSize = 25,
+  search = '',
+  status,
+  clubId,
+  startDate,
+  endDate,
+  sortId = 'created',
+  sortDesc = true,
   onPageChange,
   onPageSizeChange,
   onSearchChange,
   onStatusFilterChange,
   onClubFilterChange,
   onDateRangeChange,
+  onSortChange,
 }: OrderListTableProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const data = useMemo(() => {
     if (!orders || orders.length === 0) return [];
     return orders.map(convertOrderToIData);
@@ -161,24 +201,36 @@ export function OrderListTable({
   const updateStatusMutation = useUpdateOrderStatus();
   const { data: clubs } = useClubs();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
-  const [clubFilter, setClubFilter] = useState<string>('all');
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
-  const [inputValue, setInputValue] = useState('');
+  // Filter/pagination/sorting state is derived from props (the URL) rather than
+  // held locally, so the toolbar reflects the current URL on mount and on back.
+  const statusFilter = status ?? 'all';
+  const clubFilter = clubId ?? 'all';
+  const dateRange = useMemo(
+    () => ({ from: parseFilterDate(startDate), to: parseFilterDate(endDate) }),
+    [startDate, endDate],
+  );
+  const pagination = useMemo<PaginationState>(
+    () => ({ pageIndex: Math.max(page - 1, 0), pageSize }),
+    [page, pageSize],
+  );
+  const sorting = useMemo<SortingState>(
+    () => [{ id: sortId, desc: sortDesc }],
+    [sortId, sortDesc],
+  );
+
+  const [inputValue, setInputValue] = useState(search);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 25,
-  });
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'created', desc: true },
-  ]);
   const [isBulkPrinting, setIsBulkPrinting] = useState(false);
 
+  // `columns` is memoized once, so the handlers below live in a first-render
+  // closure — read the query string through a ref to avoid a stale value.
+  const searchStringRef = useRef(location.search);
+  searchStringRef.current = location.search;
+
   const handleViewDetails = (order: IOrderData) => {
-    navigate(`/orders/${order.id}`);
+    // Carry the current filters so "Back to Orders" can restore them.
+    navigate(`/orders/${order.id}`, { state: { fromSearch: searchStringRef.current } });
   };
 
   const handleUpdateStatus = (order: IOrderData, newStatus: OrderStatus) => {
@@ -551,36 +603,35 @@ export function OrderListTable({
     }
   }, [rowSelection]);
 
+  // Keep the search box in sync when the URL changes (back/forward, cleared filters).
   useEffect(() => {
-    setInputValue(searchQuery);
-  }, [searchQuery]);
+    setInputValue(search);
+  }, [search]);
 
   const table = useReactTable({
     data,
     columns,
     state: {
-      pagination: {
-        pageIndex: pagination.pageIndex,
-        pageSize: meta?.limit || 25,
-      },
+      pagination,
       sorting,
       rowSelection,
     },
     pageCount: meta?.totalPages || 1,
     manualPagination: true,
     onPaginationChange: (updater) => {
-      if (typeof updater === 'function') {
-        const newState = updater(pagination);
-        setPagination(newState);
-        if (newState.pageSize !== pagination.pageSize) {
-          onPageSizeChange?.(newState.pageSize);
-        }
-        if (newState.pageIndex !== pagination.pageIndex) {
-          onPageChange?.(newState.pageIndex + 1);
-        }
+      const newState = typeof updater === 'function' ? updater(pagination) : updater;
+      if (newState.pageSize !== pagination.pageSize) {
+        onPageSizeChange?.(newState.pageSize);
+      }
+      if (newState.pageIndex !== pagination.pageIndex) {
+        onPageChange?.(newState.pageIndex + 1);
       }
     },
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => {
+      const newState = typeof updater === 'function' ? updater(sorting) : updater;
+      const next = newState[0];
+      onSortChange?.(next?.id ?? 'created', next?.desc ?? true);
+    },
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -589,50 +640,32 @@ export function OrderListTable({
 
   const handleClearInput = () => {
     setInputValue('');
-    setSearchQuery('');
-    if (onSearchChange) {
-      onSearchChange('');
-    }
+    onSearchChange?.('');
     inputRef.current?.focus();
   };
 
   const handleSearchSubmit = () => {
-    setSearchQuery(inputValue);
-    if (onSearchChange) {
-      onSearchChange(inputValue);
-    }
+    onSearchChange?.(inputValue);
   };
 
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value as OrderStatus | 'all');
-    if (onStatusFilterChange) {
-      onStatusFilterChange(value === 'all' ? undefined : (value as OrderStatus));
-    }
+    onStatusFilterChange?.(value === 'all' ? undefined : (value as OrderStatus));
   };
 
   const handleClubChange = (value: string) => {
-    setClubFilter(value);
-    if (onClubFilterChange) {
-      onClubFilterChange(value === 'all' ? undefined : value);
-    }
+    onClubFilterChange?.(value === 'all' ? undefined : value);
   };
 
   const handleDateRangeSelect = (range: { from?: Date; to?: Date } | undefined) => {
-    setDateRange(range || {});
     if (onDateRangeChange) {
-      const startDate = range?.from?.toISOString().split('T')[0];
-      const endDate = range?.to
-        ? `${range.to.toISOString().split('T')[0]}T23:59:59`
-        : undefined;
-      onDateRangeChange(startDate, endDate);
+      const from = range?.from ? toDateParam(range.from) : undefined;
+      const to = range?.to ? `${toDateParam(range.to)}T23:59:59` : undefined;
+      onDateRangeChange(from, to);
     }
   };
 
   const handleClearDateRange = () => {
-    setDateRange({});
-    if (onDateRangeChange) {
-      onDateRangeChange(undefined, undefined);
-    }
+    onDateRangeChange?.(undefined, undefined);
   };
 
   return (

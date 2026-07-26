@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Column,
   ColumnDef,
@@ -142,6 +142,7 @@ export function ProductListTable({
   products,
 }: ProductListProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const data = useMemo(() => {
     if (!products || products.length === 0) return [];
@@ -201,12 +202,20 @@ export function ProductListTable({
   ]);
   const [selectedLastMoved] = useState<string[]>([]);
 
+  // `columns` is memoized once, so the handlers below live in a first-render
+  // closure — read the query string through a ref to avoid a stale value.
+  const searchStringRef = useRef(location.search);
+  searchStringRef.current = location.search;
+
+  // Carry the current filters so the sub-pages' Back buttons can restore them.
+  const fromListState = () => ({ state: { fromSearch: searchStringRef.current } });
+
   const handleEditProduct = (product: IData) => {
-    navigate(`/products/${product.id}/edit`);
+    navigate(`/products/${product.id}/edit`, fromListState());
   };
 
   const handleViewDetails = (product: IData) => {
-    navigate(`/products/${product.id}`);
+    navigate(`/products/${product.id}`, fromListState());
   };
 
   const handleDeleteProduct = (product: IData) => {
