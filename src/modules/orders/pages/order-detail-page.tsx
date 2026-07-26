@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
   Package,
@@ -94,6 +94,8 @@ interface RefundPackageState {
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const { state } = useLocation() as { state: { fromSearch?: string } | null };
+  const fromSearch = state?.fromSearch ?? '';
 
   const [showPackingSlip, setShowPackingSlip] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
@@ -179,7 +181,8 @@ export function OrderDetailPage() {
 
   useDocumentTitle(order ? `Order ${order.orderNumber}` : 'Order Details');
 
-  const handleBack = () => navigate('/orders');
+  // Restore the order list's filters/pagination when they were passed along.
+  const handleBack = () => navigate(`/orders${fromSearch}`);
 
   const handleStatusChange = (newStatus: string) => {
     if (!orderId || !order) return;

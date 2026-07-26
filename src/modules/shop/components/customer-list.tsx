@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Column,
   ColumnDef,
@@ -104,10 +104,18 @@ interface CustomerListProps {
   meta?: CustomerListMeta;
   isLoading?: boolean;
   error?: string | null;
+  /** Current filter/pagination state, owned by the page (persisted in the URL). */
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: CustomerStatus;
+  sortId?: string;
+  sortDesc?: boolean;
   onPageChange?: (page: number) => void;
   onLimitChange?: (limit: number) => void;
   onSearchChange?: (search: string) => void;
   onStatusFilterChange?: (status: CustomerStatus | undefined) => void;
+  onSortChange?: (id: string, desc: boolean) => void;
 }
 
 const convertCustomerToIData = (customer: Customer): ICustomerData => {
@@ -173,12 +181,20 @@ const getStatusLabel = (status: CustomerStatus): string => {
 export function CustomerListTable({
   customers,
   meta,
+  page = 1,
+  pageSize = 10,
+  search = '',
+  status,
+  sortId = 'created',
+  sortDesc = true,
   onPageChange,
   onLimitChange,
   onSearchChange,
   onStatusFilterChange,
+  onSortChange,
 }: CustomerListProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const data = useMemo(() => {
     if (!customers || customers.length === 0) return [];
     return customers.map(convertCustomerToIData);
@@ -189,21 +205,32 @@ export function CustomerListTable({
   const suspendMutation = useSuspendCustomer();
   const resendVerificationMutation = useResendVerificationEmail();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<CustomerStatus | 'all'>('all');
-  const [inputValue, setInputValue] = useState('');
+  // Filter/pagination/sorting state is derived from props (the URL) rather than
+  // held locally, so the toolbar reflects the current URL on mount and on back.
+  const statusFilter = status ?? 'all';
+  const pagination = useMemo<PaginationState>(
+    () => ({ pageIndex: Math.max(page - 1, 0), pageSize }),
+    [page, pageSize],
+  );
+  const sorting = useMemo<SortingState>(
+    () => [{ id: sortId, desc: sortDesc }],
+    [sortId, sortDesc],
+  );
+
+  const [inputValue, setInputValue] = useState(search);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'created', desc: true },
-  ]);
+
+  // `columns` is memoized once, so the handlers below live in a first-render
+  // closure — read the query string through a ref to avoid a stale value.
+  const searchStringRef = useRef(location.search);
+  searchStringRef.current = location.search;
 
   const handleViewDetails = (customer: ICustomerData) => {
-    navigate(`/shop/customers/${customer.id}`);
+    // Carry the current filters so "Back to Customers" can restore them.
+    navigate(`/shop/customers/${customer.id}`, {
+      state: { fromSearch: searchStringRef.current },
+    });
   };
 
   const handleActivate = (customer: ICustomerData) => {
@@ -507,9 +534,10 @@ export function CustomerListTable({
     }
   }, [rowSelection]);
 
+  // Keep the search box in sync when the URL changes (back/forward, cleared filters).
   useEffect(() => {
-    setInputValue(searchQuery);
-  }, [searchQuery]);
+    setInputValue(search);
+  }, [search]);
 
   const table = useReactTable({
     data,
@@ -522,18 +550,18 @@ export function CustomerListTable({
     pageCount: meta?.totalPages || 1,
     manualPagination: true,
     onPaginationChange: (updater) => {
-      if (typeof updater === 'function') {
-        const newState = updater(pagination);
-        setPagination(newState);
-        if (newState.pageSize !== pagination.pageSize) {
-          if (onLimitChange) onLimitChange(newState.pageSize);
-          if (onPageChange) onPageChange(1);
-        } else if (newState.pageIndex !== pagination.pageIndex) {
-          if (onPageChange) onPageChange(newState.pageIndex + 1);
-        }
+      const newState = typeof updater === 'function' ? updater(pagination) : updater;
+      if (newState.pageSize !== pagination.pageSize) {
+        onLimitChange?.(newState.pageSize);
+      } else if (newState.pageIndex !== pagination.pageIndex) {
+        onPageChange?.(newState.pageIndex + 1);
       }
     },
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => {
+      const newState = typeof updater === 'function' ? updater(sorting) : updater;
+      const next = newState[0];
+      onSortChange?.(next?.id ?? 'created', next?.desc ?? true);
+    },
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -542,25 +570,16 @@ export function CustomerListTable({
 
   const handleClearInput = () => {
     setInputValue('');
-    setSearchQuery('');
-    if (onSearchChange) {
-      onSearchChange('');
-    }
+    onSearchChange?.('');
     inputRef.current?.focus();
   };
 
   const handleSearchSubmit = () => {
-    setSearchQuery(inputValue);
-    if (onSearchChange) {
-      onSearchChange(inputValue);
-    }
+    onSearchChange?.(inputValue);
   };
 
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value as CustomerStatus | 'all');
-    if (onStatusFilterChange) {
-      onStatusFilterChange(value === 'all' ? undefined : (value as CustomerStatus));
-    }
+    onStatusFilterChange?.(value === 'all' ? undefined : (value as CustomerStatus));
   };
 
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Loader2, Package, Save } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -22,6 +22,9 @@ export function EditClubProductPage() {
     clubProductId: string;
   }>();
   const navigate = useNavigate();
+  const { state } = useLocation() as { state: { fromSearch?: string } | null };
+  // Return to the club's Products tab (with its filters, when they were passed along).
+  const backToClub = `/clubs/${clubId}${state?.fromSearch || '?tab=products'}`;
 
   // Form state
   const [customName, setCustomName] = useState<string>('');
@@ -197,7 +200,7 @@ export function EditClubProductPage() {
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <Package className="size-12 text-muted-foreground" />
         <h2 className="text-xl font-semibold">Club product not found</h2>
-        <Button onClick={() => navigate(`/clubs/${clubId}`)}>
+        <Button onClick={() => navigate(backToClub)}>
           Back to Club
         </Button>
       </div>
@@ -226,7 +229,7 @@ export function EditClubProductPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/clubs/${clubId}`)}
+            onClick={() => navigate(backToClub)}
           >
             <ArrowLeft className="size-4 mr-2" />
             Back
@@ -244,7 +247,7 @@ export function EditClubProductPage() {
           </Badge>
           <Button
             variant="ghost"
-            onClick={() => navigate(`/clubs/${clubId}`)}
+            onClick={() => navigate(backToClub)}
           >
             Cancel
           </Button>

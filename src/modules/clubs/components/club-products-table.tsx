@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ClubProduct } from '../types/club-product';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -41,6 +42,9 @@ interface ClubProductsTableProps {
   onGroupSelected?: (selectedProducts: ClubProduct[]) => void;
 }
 
+const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_SORT_ID = 'productInfo';
+
 // Helper to format price
 const formatPrice = (price: number | null | undefined): string => {
   if (price === null || price === undefined) return '-';
@@ -55,15 +59,57 @@ export function ClubProductsTable({
   onEditProduct,
   onGroupSelected,
 }: ClubProductsTableProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+  // Search, pagination and sorting are kept in the URL so the view survives
+  // navigating to a product's edit page and coming back.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+  const pageSize = Number(searchParams.get('size')) || DEFAULT_PAGE_SIZE;
+  const pageIndex = Math.max((Number(searchParams.get('page')) || 1) - 1, 0);
+  const sortId = searchParams.get('sort') || DEFAULT_SORT_ID;
+  const sortDesc = searchParams.get('desc') === 'true';
+
+  const pagination = useMemo<PaginationState>(
+    () => ({ pageIndex, pageSize }),
+    [pageIndex, pageSize],
+  );
+  const sorting = useMemo<SortingState>(
+    () => [{ id: sortId, desc: sortDesc }],
+    [sortId, sortDesc],
+  );
+
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'productInfo', desc: false },
-  ]);
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          for (const [key, value] of Object.entries(updates)) {
+            if (value === null || value === '') {
+              next.delete(key);
+            } else {
+              next.set(key, value);
+            }
+          }
+          // Drop defaults to keep the URL tidy
+          if (next.get('page') === '1') next.delete('page');
+          if (next.get('size') === String(DEFAULT_PAGE_SIZE)) next.delete('size');
+          if (next.get('sort') === DEFAULT_SORT_ID && next.get('desc') !== 'true') {
+            next.delete('sort');
+            next.delete('desc');
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const setSearchQuery = useCallback(
+    (value: string) => updateParams({ q: value || null, page: null }),
+    [updateParams],
+  );
 
   const removeMutation = useRemoveClubProduct(clubId);
   const ungroupMutation = useUngroupClubProducts(clubId);
@@ -320,8 +366,24 @@ export function ClubProductsTable({
       sorting,
       rowSelection,
     },
-    onPaginationChange: setPagination,
-    onSortingChange: setSorting,
+    // The page comes from the URL; a refetch must not silently reset it.
+    // Searching resets to page 1 explicitly in setSearchQuery.
+    autoResetPageIndex: false,
+    onPaginationChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(pagination) : updater;
+      updateParams({
+        page: String(next.pageIndex + 1),
+        size: String(next.pageSize),
+      });
+    },
+    onSortingChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(sorting) : updater;
+      const first = next[0];
+      updateParams({
+        sort: first?.id ?? DEFAULT_SORT_ID,
+        desc: String(first?.desc ?? false),
+      });
+    },
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),

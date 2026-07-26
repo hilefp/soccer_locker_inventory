@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Loader2, Package } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -27,6 +27,10 @@ export function VariantDetailPage() {
   useDocumentTitle('Variant Details');
   const { productId, variantId } = useParams<{ productId: string; variantId: string }>();
   const navigate = useNavigate();
+  const { state } = useLocation() as { state: { fromSearch?: string } | null };
+  // Keep the product list's filters travelling with the navigation chain.
+  const fromSearch = state?.fromSearch ?? '';
+  const forwardState = { state: { fromSearch } };
 
   const { data: variant, isLoading: isLoadingVariant } = useProductVariant(variantId || '');
   const { data: product } = useProduct(productId || '');
@@ -39,9 +43,9 @@ export function VariantDetailPage() {
 
   useEffect(() => {
     if (!productId || !variantId) {
-      navigate('/products');
+      navigate(`/products${fromSearch}`);
     }
-  }, [productId, variantId, navigate]);
+  }, [productId, variantId, navigate, fromSearch]);
 
   useEffect(() => {
     if (variant) {
@@ -81,7 +85,7 @@ export function VariantDetailPage() {
 
     try {
       await deleteMutation.mutateAsync(variantId);
-      navigate(`/products/${productId}`);
+      navigate(`/products/${productId}`, forwardState);
     } catch (error) {
       console.error('Error deleting variant:', error);
     }
@@ -110,7 +114,7 @@ export function VariantDetailPage() {
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <Package className="size-12 text-muted-foreground" />
         <h2 className="text-xl font-semibold">Variant not found</h2>
-        <Button onClick={() => navigate(`/products/${productId}`)}>
+        <Button onClick={() => navigate(`/products/${productId}`, forwardState)}>
           Back to Product
         </Button>
       </div>
@@ -128,7 +132,7 @@ export function VariantDetailPage() {
         isActive={editingVariant.isActive !== false}
         isDefault={editingVariant.isDefault === true}
         productName={product?.name}
-        onBack={() => navigate(`/products/${productId}`)}
+        onBack={() => navigate(`/products/${productId}`, forwardState)}
         onDelete={() => setShowDeleteDialog(true)}
         onSave={handleSave}
         onSetDefault={handleSetDefault}

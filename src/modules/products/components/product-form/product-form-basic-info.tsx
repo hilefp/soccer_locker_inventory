@@ -62,7 +62,7 @@ export function ProductFormBasicInfo({
         <div className="flex flex-col gap-2 mb-3">
           <Label className="text-xs">Product Name *</Label>
           <Input
-            placeholder="Product Name"
+            placeholder="Product Name {NAME_TYPE_COLOR_SIZE}"
             value={productName}
             onChange={(e) => setProductName(e.target.value)}
             disabled={isLoading}

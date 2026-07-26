@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Loader2, Package, Image as ImageIcon, Tags as TagsIcon } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -26,15 +26,21 @@ export function ProductDetailPage() {
   useDocumentTitle('Product Details');
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
+  const { state } = useLocation() as { state: { fromSearch?: string } | null };
+  // Restore the product list's filters/pagination when they were passed along,
+  // and forward them to the pages this one links out to.
+  const fromSearch = state?.fromSearch ?? '';
+  const backToList = `/products${fromSearch}`;
+  const forwardState = { state: { fromSearch } };
   const [activeTab, setActiveTab] = useState('details');
 
   const { data: product, isLoading } = useProduct(productId || '');
 
   useEffect(() => {
     if (!productId) {
-      navigate('/products');
+      navigate(backToList);
     }
-  }, [productId, navigate]);
+  }, [productId, navigate, backToList]);
 
   if (isLoading) {
     return (
@@ -49,7 +55,7 @@ export function ProductDetailPage() {
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <Package className="size-12 text-muted-foreground" />
         <h2 className="text-xl font-semibold">Product not found</h2>
-        <Button onClick={() => navigate('/products')}>Back to Products</Button>
+        <Button onClick={() => navigate(backToList)}>Back to Products</Button>
       </div>
     );
   }
@@ -62,7 +68,7 @@ export function ProductDetailPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/products')}
+            onClick={() => navigate(backToList)}
           >
             <ArrowLeft className="size-4 mr-2" />
             Back
@@ -81,7 +87,7 @@ export function ProductDetailPage() {
           {product.isFeatured && (
             <Badge variant="outline">Featured</Badge>
           )}
-          <Button onClick={() => navigate(`/products/${productId}/edit`)}>
+          <Button onClick={() => navigate(`/products/${productId}/edit`, forwardState)}>
             <Edit className="size-4 mr-2" />
             Edit Product
           </Button>
@@ -257,7 +263,7 @@ export function ProductDetailPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/products/${productId}/variants/${variant.id}`)}
+                            onClick={() => navigate(`/products/${productId}/variants/${variant.id}`, forwardState)}
                           >
                             View Details
                           </Button>

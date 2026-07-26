@@ -6,57 +6,54 @@ import { RefreshCw, LayoutGrid } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { OrderKanbanBoard, OrderSearchComplex, QrScannerButton } from '@/modules/orders/components';
-import { useOrders, useOrderStatistics } from '@/modules/orders/hooks/use-orders';
+import { useAllOrders, useOrderStatistics } from '@/modules/orders/hooks/use-orders';
 import { OrderFilterParams, OrderStatus, KANBAN_STATUS_ORDER } from '@/modules/orders/types';
 import { Badge } from '@/shared/components/ui/badge';
 
-// Active (non-delivered) statuses are loaded in full; delivered is capped since
-// it grows unbounded over time and we only need the most recent ones on the board.
-const ACTIVE_STATUSES: OrderStatus[] = KANBAN_STATUS_ORDER.filter((s) => s !== 'DELIVERED');
-const ALL_ACTIVE_LIMIT = 1000; // high cap to effectively load all active orders
-const DELIVERED_LIMIT = 500;
+// The board shows every order created in the last 5 months, with no cap: the date
+// window is what bounds the result set, so Delivered can no longer grow unbounded
+// and needs no separate capped fetch. Older orders live in the order list.
+const HISTORY_WINDOW_MONTHS = 5;
+
+// Full ISO string: the API validates startDate with @IsDateString(), so a bare
+// date like "2026-02-26" is rejected.
+function monthsAgoISO(months: number): string {
+  const date = new Date();
+  date.setMonth(date.getMonth() - months);
+  return date.toISOString();
+}
 
 export function CurrentOrdersPage() {
   useDocumentTitle('Current Orders - Kanban');
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Two fetches so each column shows ALL its orders: one for every active status
-  // (uncapped in practice), and a separate, capped fetch for the Delivered column.
-  const activeFilters = useMemo<OrderFilterParams>(
-    () => ({
-      statuses: ACTIVE_STATUSES,
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-      limit: ALL_ACTIVE_LIMIT,
-    }),
-    []
-  );
+  // Computed once per mount so the filter objects stay referentially stable and
+  // don't retrigger the queries on every render.
+  const startDate = useMemo(() => monthsAgoISO(HISTORY_WINDOW_MONTHS), []);
 
-  const deliveredFilters = useMemo<OrderFilterParams>(
+  // One fetch for every kanban status inside the window. useAllOrders pages through
+  // the API until the whole set is loaded, so no column is truncated.
+  const filters = useMemo<OrderFilterParams>(
     () => ({
-      statuses: ['DELIVERED'],
+      statuses: KANBAN_STATUS_ORDER,
       sortBy: 'createdAt',
       sortOrder: 'desc',
-      limit: DELIVERED_LIMIT,
+      startDate,
     }),
-    []
+    [startDate]
   );
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
-  const activeQuery = useOrders(activeFilters);
-  const deliveredQuery = useOrders(deliveredFilters);
+  const ordersQuery = useAllOrders(filters);
   const { data: statistics } = useOrderStatistics();
 
-  const isLoading = activeQuery.isLoading || deliveredQuery.isLoading;
-  const isFetching = activeQuery.isFetching || deliveredQuery.isFetching;
-  const error = activeQuery.error || deliveredQuery.error;
+  const isLoading = ordersQuery.isLoading;
+  const isFetching = ordersQuery.isFetching;
+  const error = ordersQuery.error;
 
-  const allOrders = useMemo(
-    () => [...(activeQuery.data?.data ?? []), ...(deliveredQuery.data?.data ?? [])],
-    [activeQuery.data?.data, deliveredQuery.data?.data]
-  );
+  const allOrders = useMemo(() => ordersQuery.data?.data ?? [], [ordersQuery.data?.data]);
 
   // Sync URL search params with state
   useEffect(() => {
@@ -92,8 +89,7 @@ export function CurrentOrdersPage() {
   };
 
   const handleRefresh = () => {
-    activeQuery.refetch();
-    deliveredQuery.refetch();
+    ordersQuery.refetch();
   };
 
   // Calculate statistics for displayed statuses

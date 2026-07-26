@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useCallback, useState } from 'react';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Edit, Loader2, Building2, Plus, Package, Group } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -17,7 +17,30 @@ export function ClubDetailPage() {
   useDocumentTitle('Club Details');
   const { clubId } = useParams<{ clubId: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('details');
+  const location = useLocation();
+
+  // The active tab lives in the URL so it survives editing a product and
+  // coming back, a refresh, or a shared link.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') === 'products' ? 'products' : 'details';
+
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (tab === 'details') {
+            next.delete('tab');
+          } else {
+            next.set('tab', tab);
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   // Fetch club data
   const { data: club, isLoading: clubLoading } = useClub(clubId);
@@ -36,7 +59,10 @@ export function ClubDetailPage() {
   const [productsToGroup, setProductsToGroup] = useState<ClubProduct[]>([]);
 
   const handleEditProduct = (clubProduct: ClubProduct) => {
-    navigate(`/clubs/${clubId}/products/${clubProduct.id}/edit`);
+    // Carry the tab + table filters so the edit page can return to this exact view.
+    navigate(`/clubs/${clubId}/products/${clubProduct.id}/edit`, {
+      state: { fromSearch: location.search },
+    });
   };
 
   const handleGroupSelected = (selectedProducts: ClubProduct[]) => {
@@ -118,7 +144,7 @@ export function ClubDetailPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="products">
