@@ -34,6 +34,12 @@ const getCommonStyles = () => `
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* Browsers drop background colors when "Background graphics" is off in the
+       print dialog (the default). Force them so headers/banners render on every
+       machine, not just the ones where the user checked the box. */
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   body {
@@ -122,7 +128,8 @@ const getCommonStyles = () => `
 
   .product-table thead {
     background-color: #D3D3D3;
-    color: #fff;
+    color: #333;
+    border-bottom: 1px solid #999;
   }
 
   .product-table th {
