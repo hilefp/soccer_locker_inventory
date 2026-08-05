@@ -94,8 +94,13 @@ interface RefundPackageState {
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
-  const { state } = useLocation() as { state: { fromSearch?: string } | null };
+  const { state } = useLocation() as {
+    state: { fromPath?: string; fromSearch?: string } | null;
+  };
   const fromSearch = state?.fromSearch ?? '';
+  // Origin view — the kanban board sets this so back returns to the board;
+  // the order list table omits it and falls back to /orders.
+  const fromPath = state?.fromPath ?? '/orders';
 
   const [showPackingSlip, setShowPackingSlip] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
@@ -182,7 +187,7 @@ export function OrderDetailPage() {
   useDocumentTitle(order ? `Order ${order.orderNumber}` : 'Order Details');
 
   // Restore the order list's filters/pagination when they were passed along.
-  const handleBack = () => navigate(`/orders${fromSearch}`);
+  const handleBack = () => navigate(`${fromPath}${fromSearch}`);
 
   const handleStatusChange = (newStatus: string) => {
     if (!orderId || !order) return;
