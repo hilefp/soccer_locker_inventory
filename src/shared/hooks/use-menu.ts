@@ -56,34 +56,30 @@ export const useMenu = (pathname: string): UseMenuReturn => {
   };
 
   const getBreadcrumb = (items: MenuConfig): MenuItem[] => {
-    const findBreadcrumb = (
-      nodes: MenuItem[],
-      breadcrumb: MenuItem[] = [],
-    ): MenuItem[] => {
+    // Keep the most specific active match: isActive is a prefix match, so on
+    // /orders/tracking both /orders and /orders/tracking are active — the
+    // longest path is the page actually being viewed.
+    let best: MenuItem[] = [];
+
+    const visit = (nodes: MenuItem[], trail: MenuItem[]): void => {
       for (const item of nodes) {
-        const currentBreadcrumb = [...breadcrumb, item];
+        const currentTrail = [...trail, item];
 
-        // Check if this item is active
         if (item.path && isActive(item.path)) {
-          return currentBreadcrumb; // Return the breadcrumb up to this point
-        }
-
-        // If item has children, recurse and check them
-        if (item.children && item.children.length > 0) {
-          const childBreadcrumb = findBreadcrumb(
-            item.children,
-            currentBreadcrumb,
-          );
-          if (childBreadcrumb.length > currentBreadcrumb.length) {
-            return childBreadcrumb; // Return the deeper breadcrumb if found
+          const bestPath = best[best.length - 1]?.path ?? '';
+          if (item.path.length > bestPath.length) {
+            best = currentTrail;
           }
         }
+
+        if (item.children && item.children.length > 0) {
+          visit(item.children, currentTrail);
+        }
       }
-      return breadcrumb; // Return current breadcrumb if no match found
     };
 
-    const breadcrumb = findBreadcrumb(items);
-    return breadcrumb.length > 0 ? breadcrumb : [];
+    visit(items, []);
+    return best;
   };
 
   const getChildren = (items: MenuConfig, level: number): MenuConfig | null => {

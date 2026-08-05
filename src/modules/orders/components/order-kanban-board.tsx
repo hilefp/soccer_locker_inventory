@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   DndContext,
   DragEndEvent,
@@ -346,6 +346,7 @@ export function OrderKanbanBoard({
   statuses = KANBAN_STATUS_ORDER,
 }: OrderKanbanBoardProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuthStore();
   const updateStatusMutation = useUpdateOrderStatus();
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
@@ -426,7 +427,11 @@ export function OrderKanbanBoard({
   };
 
   const handleViewDetails = (order: Order) => {
-    navigate(`/orders/${order.id}`);
+    // Remember the board we came from (tracking/current, plus its search) so the
+    // detail page's back button returns here instead of the order list table.
+    navigate(`/orders/${order.id}`, {
+      state: { fromPath: location.pathname, fromSearch: location.search },
+    });
   };
 
   if (isLoading) {
