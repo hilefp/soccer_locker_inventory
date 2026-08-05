@@ -41,6 +41,7 @@ export function ClubEditPage() {
   const [isActive, setIsActive] = useState(true);
   const [isUnderConstruction, setIsUnderConstruction] = useState(false);
   const [underConstructionMessage, setUnderConstructionMessage] = useState('');
+  const [isRushFeeEnabled, setIsRushFeeEnabled] = useState(true);
 
   // Populate form when editing
   useEffect(() => {
@@ -63,6 +64,7 @@ export function ClubEditPage() {
       setIsActive(club.isActive);
       setIsUnderConstruction(club.isUnderConstruction ?? false);
       setUnderConstructionMessage(club.underConstructionMessage || '');
+      setIsRushFeeEnabled(club.isRushFeeEnabled ?? true);
     }
   }, [isEditMode, club]);
 
@@ -98,6 +100,7 @@ export function ClubEditPage() {
       underConstructionMessage: isUnderConstruction
         ? underConstructionMessage.trim() || undefined
         : undefined,
+      isRushFeeEnabled,
     };
 
     try {
@@ -399,6 +402,21 @@ export function ClubEditPage() {
                   />
                 </div>
               )}
+
+              <div className="flex items-center justify-between border-t pt-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="isRushFeeEnabled">Rush Order Fee</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Allow customers to pay for rush processing on this club's
+                    shop
+                  </p>
+                </div>
+                <Switch
+                  id="isRushFeeEnabled"
+                  checked={isRushFeeEnabled}
+                  onCheckedChange={setIsRushFeeEnabled}
+                />
+              </div>
             </CardContent>
           </Card>
 

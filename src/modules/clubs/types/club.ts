@@ -19,6 +19,7 @@ export interface Club {
   isActive: boolean;
   isUnderConstruction: boolean;
   underConstructionMessage?: string | null;
+  isRushFeeEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,6 +43,7 @@ export interface CreateClubDto {
   isActive?: boolean;
   isUnderConstruction?: boolean;
   underConstructionMessage?: string | null;
+  isRushFeeEnabled?: boolean;
   sortPosition?: number;
 }
 
@@ -64,6 +66,7 @@ export interface UpdateClubDto {
   isActive?: boolean;
   isUnderConstruction?: boolean;
   underConstructionMessage?: string | null;
+  isRushFeeEnabled?: boolean;
   sortPosition?: number;
 }
 
