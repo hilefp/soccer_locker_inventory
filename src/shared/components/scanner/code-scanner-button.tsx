@@ -107,6 +107,7 @@ export function CodeScannerButton({
   return (
     <>
       <Button
+        type="button"
         variant={buttonVariant}
         size="sm"
         onClick={() => setOpen(true)}

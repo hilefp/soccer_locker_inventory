@@ -5,6 +5,8 @@ import { WarehouseStatisticsPage } from './pages/warehouse-statistics-page';
 import { StockVariantListPage } from './pages/stock-variant-list-page';
 import { StockVariantDetailPage } from './pages/stock-variant-detail-page';
 import { StockEntryCreatePage } from './pages/stock-entry-create-page';
+import { StockEntryListPage } from './pages/stock-entry-list-page';
+import { StockEntryDetailPage } from './pages/stock-entry-detail-page';
 import { StockMovementPage } from './pages/stock-movement-page';
 
 export const inventoryRoutes: RouteObject = {
@@ -19,8 +21,16 @@ export const inventoryRoutes: RouteObject = {
       element: <StockVariantDetailPage />,
     },
     {
+      path: 'stock-entries',
+      element: <StockEntryListPage />,
+    },
+    {
       path: 'stock-entries/new',
       element: <StockEntryCreatePage />,
+    },
+    {
+      path: 'stock-entries/:id',
+      element: <StockEntryDetailPage />,
     },
     {
       path: 'stock-movements',

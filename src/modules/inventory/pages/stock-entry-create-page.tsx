@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 // Import components
+import { AddProductsToEntryDialog } from '../components/add-products-to-entry-dialog';
 import { StockEntryHeader } from '../components/stock-entry-header';
 import { StockEntryInformationCard } from '../components/stock-entry-information-card';
 import { StockEntrySummaryCard } from '../components/stock-entry-summary-card';
 import { StockEntryTable } from '../components/stock-entry-table';
 import { useCreateStockEntry } from '../hooks/use-stock-entry';
-import { useStockVariants } from '../hooks/use-stock-variants';
+import { useStockVariantByBarcode } from '../hooks/use-stock-variants';
 import { useWarehouses } from '../hooks/use-warehouses';
 import {
   getStockEntrySchema,
@@ -17,16 +19,18 @@ import {
 } from '../schemas/stock-entry-schema';
 import { stockEntryService } from '../services/stock-entry.service';
 import { CreateStockEntryDto, EntryType } from '../types/stock-entry.types';
+import { StockVariantItem } from '../types/stock-variant.types';
+import { WarehouseType } from '../types/warehouse.types';
 
 export function StockEntryCreatePage() {
   useDocumentTitle('Create Stock Entry');
   const navigate = useNavigate();
   const createMutation = useCreateStockEntry();
   const { data: warehouses, isLoading: loadingWarehouses } = useWarehouses();
-  const { data: variantsResponse, isLoading: loadingVariants } =
-    useStockVariants({ limit: 100 });
+  const lookupBarcode = useStockVariantByBarcode();
 
   const [entryNumber, setEntryNumber] = useState('');
+  const [addProductsOpen, setAddProductsOpen] = useState(false);
 
   const {
     register,
@@ -34,6 +38,7 @@ export function StockEntryCreatePage() {
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<StockEntrySchemaType>({
     resolver: zodResolver(getStockEntrySchema()),
@@ -61,6 +66,18 @@ export function StockEntryCreatePage() {
     generateNumber();
   }, [setValue]);
 
+  // Default the warehouse to the main one once warehouses load
+  useEffect(() => {
+    if (!warehouses || warehouses.length === 0) return;
+    if (getValues('warehouseId')) return;
+
+    const mainWarehouse =
+      warehouses.find(
+        (w) => w.warehouseType === WarehouseType.MAIN && w.isActive,
+      ) || warehouses[0];
+    setValue('warehouseId', mainWarehouse.id);
+  }, [warehouses, getValues, setValue]);
+
   const details = watch('details');
 
   // Calculate totals
@@ -73,39 +90,66 @@ export function StockEntryCreatePage() {
     0,
   );
 
-  const handleAddProduct = (variantId: string) => {
-    const variant = variantsResponse?.data.find(
-      (v) => v.productVariantId === variantId,
-    );
-    const newId = `temp-${Date.now()}`;
+  /**
+   * Append the given variants to the entry. Variants already in the table
+   * get their quantity incremented instead of being duplicated.
+   */
+  const handleAddVariants = (variants: StockVariantItem[]) => {
+    for (const variant of variants) {
+      const currentDetails = getValues('details');
+      const existingIndex = currentDetails.findIndex(
+        (d) => d.productVariantId === variant.productVariantId,
+      );
 
-    if (variant) {
-      const costPerUnit = variant.cost || 0;
-      const quantity = 1;
-      append({
-        id: newId,
-        productVariantId: variantId,
-        productName: variant.productName,
-        sku: variant.sku,
-        quantity,
-        costPerUnit,
-        totalCost: quantity * costPerUnit,
-      });
+      if (existingIndex >= 0) {
+        const current = currentDetails[existingIndex];
+        const quantity = (current.quantity || 0) + 1;
+        setValue(`details.${existingIndex}.quantity`, quantity);
+        setValue(
+          `details.${existingIndex}.totalCost`,
+          quantity * (current.costPerUnit || 0),
+        );
+      } else {
+        const costPerUnit = variant.cost || 0;
+        append({
+          id: `temp-${variant.productVariantId}`,
+          productVariantId: variant.productVariantId,
+          productName: variant.variantName
+            ? `${variant.productName} (${variant.variantName})`
+            : variant.productName,
+          sku: variant.sku,
+          quantity: 1,
+          costPerUnit,
+          totalCost: costPerUnit,
+        });
+      }
     }
   };
 
-  const handleProductChange = (index: number, variantId: string) => {
-    const variant = variantsResponse?.data.find(
-      (v) => v.productVariantId === variantId,
-    );
-    if (variant) {
-      const costPerUnit = variant.cost || 0;
-      const quantity = watch(`details.${index}.quantity`) || 0;
-      setValue(`details.${index}.productVariantId`, variantId);
-      setValue(`details.${index}.productName`, variant.productName);
-      setValue(`details.${index}.sku`, variant.sku);
-      setValue(`details.${index}.costPerUnit`, costPerUnit);
-      setValue(`details.${index}.totalCost`, quantity * costPerUnit);
+  const handleBarcodeScan = async (raw: string) => {
+    const cleaned = raw.trim().replace(/\D/g, '');
+    if (!cleaned) {
+      toast.error('Invalid barcode');
+      return;
+    }
+
+    try {
+      const result = await lookupBarcode.mutateAsync(cleaned);
+      const scanned = result.variants.data.find(
+        (v) => v.productVariantId === result.variant.id,
+      );
+      if (!scanned) {
+        toast.error('Scanned product not found in inventory');
+        return;
+      }
+      handleAddVariants([scanned]);
+      toast.success(`${scanned.productName} (${scanned.sku}) added`);
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        toast.error('Barcode not registered to any product');
+      } else {
+        toast.error('Failed to look up barcode');
+      }
     }
   };
 
@@ -113,12 +157,6 @@ export function StockEntryCreatePage() {
     const costPerUnit = watch(`details.${index}.costPerUnit`) || 0;
     setValue(`details.${index}.quantity`, quantity);
     setValue(`details.${index}.totalCost`, quantity * costPerUnit);
-  };
-
-  const handleCostChange = (index: number, cost: number) => {
-    const quantity = watch(`details.${index}.quantity`) || 0;
-    setValue(`details.${index}.costPerUnit`, cost);
-    setValue(`details.${index}.totalCost`, quantity * cost);
   };
 
   const handleBack = () => {
@@ -137,7 +175,7 @@ export function StockEntryCreatePage() {
         referenceDocument: data.referenceDocument || undefined,
         entryDate: data.entryDate.toISOString(),
         notes: data.notes || undefined,
-        createdBy: 'current-user-id', // TODO: Get from auth context
+        confirm: true,
         details: data.details.map((detail) => ({
           productVariantId: detail.productVariantId,
           quantity: detail.quantity,
@@ -150,12 +188,14 @@ export function StockEntryCreatePage() {
       };
 
       await createMutation.mutateAsync(payload);
-      navigate('/inventory');
+      navigate('/inventory/stock-entries');
     } catch (error) {
       // Error handling is done in the mutation hook
       console.error('Submit error:', error);
     }
   };
+
+  const existingVariantIds = details.map((d) => d.productVariantId);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -180,8 +220,6 @@ export function StockEntryCreatePage() {
               warehouses={warehouses}
               loadingWarehouses={loadingWarehouses}
             />
-
-            {/* Products Table */}
           </div>
 
           {/* Right Column - Summary */}
@@ -203,16 +241,20 @@ export function StockEntryCreatePage() {
             watch={watch}
             setValue={setValue}
             errors={errors}
-            variants={variantsResponse?.data}
-            loadingVariants={loadingVariants}
-            onAddProduct={handleAddProduct}
+            onOpenAddProducts={() => setAddProductsOpen(true)}
+            onScan={handleBarcodeScan}
             onRemove={remove}
-            onProductChange={handleProductChange}
             onQuantityChange={handleQuantityChange}
-            onCostChange={handleCostChange}
           />
         </div>
       </div>
+
+      <AddProductsToEntryDialog
+        open={addProductsOpen}
+        onOpenChange={setAddProductsOpen}
+        existingVariantIds={existingVariantIds}
+        onAdd={handleAddVariants}
+      />
     </form>
   );
 }
