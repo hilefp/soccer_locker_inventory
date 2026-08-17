@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Control,
   UseFormRegister,
@@ -142,13 +142,26 @@ export function StockEntryTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fields]);
 
+  // Latest-value refs so the column defs below stay referentially stable.
+  // flexRender mounts each `cell` renderer as a component *type*, so
+  // rebuilding the columns array on a keystroke remounts every cell — which
+  // blurs the focused quantity input. errors/onRemove/onQuantityChange get
+  // new identities on every parent render, so cells read them via refs
+  // instead of closing over them through the columns memo.
+  const errorsRef = useRef(errors);
+  errorsRef.current = errors;
+  const onRemoveRef = useRef(onRemove);
+  onRemoveRef.current = onRemove;
+  const onQuantityChangeRef = useRef(onQuantityChange);
+  onQuantityChangeRef.current = onQuantityChange;
+
   // Stable callback for the quantity input
   const handleQuantityInputChange = useCallback(
     (index: number, quantity: number) => {
       setValue(`details.${index}.quantity`, quantity);
-      onQuantityChange(index, quantity);
+      onQuantityChangeRef.current(index, quantity);
     },
-    [setValue, onQuantityChange],
+    [setValue],
   );
 
   const columns = useMemo<ColumnDef<ITableData>[]>(
@@ -160,6 +173,8 @@ export function StockEntryTable({
         cell: (info) => {
           const index = info.row.original.index;
           const productInfo = info.row.original.productInfo;
+          const variantError =
+            errorsRef.current.details?.[index]?.productVariantId;
 
           return (
             <div className="flex flex-col min-w-[200px]">
@@ -167,9 +182,9 @@ export function StockEntryTable({
               <span className="text-xs text-muted-foreground">
                 SKU: {productInfo.sku}
               </span>
-              {errors.details?.[index]?.productVariantId && (
+              {variantError && (
                 <p className="text-xs text-destructive mt-1">
-                  {errors.details[index]?.productVariantId?.message}
+                  {variantError.message}
                 </p>
               )}
             </div>
@@ -188,10 +203,12 @@ export function StockEntryTable({
           const quantity = watch(`details.${index}.quantity`) || 0;
           return (
             <QuantityInput
-              key={`qty-${info.row.original.id}`}
+              // Keyed by variant id: RHF regenerates field ids on setValue,
+              // which would remount the input and drop focus mid-typing
+              key={`qty-${info.row.original.productVariantId}`}
               index={index}
               value={quantity}
-              error={errors.details?.[index]?.quantity?.message}
+              error={errorsRef.current.details?.[index]?.quantity?.message}
               onChangeValue={handleQuantityInputChange}
             />
           );
@@ -212,7 +229,7 @@ export function StockEntryTable({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-destructive hover:text-destructive"
-                onClick={() => onRemove(index)}
+                onClick={() => onRemoveRef.current(index)}
                 title="Remove product"
               >
                 <Trash2 className="h-4 w-4" />
@@ -223,7 +240,9 @@ export function StockEntryTable({
         size: 80,
       },
     ],
-    [errors, handleQuantityInputChange, onRemove, watch],
+    // Both deps are stable, so the columns (and their cell component types)
+    // are created once and inputs never remount mid-typing
+    [watch, handleQuantityInputChange],
   );
 
   const table = useReactTable({
@@ -231,7 +250,9 @@ export function StockEntryTable({
     columns,
     getCoreRowModel: getCoreRowModel(),
     enableSorting: false,
-    getRowId: (row) => row.id,
+    // Row identity must survive RHF field-id regeneration or rows remount
+    // (and inputs lose focus) on every quantity keystroke
+    getRowId: (row) => row.productVariantId || row.id,
   });
 
   return (
