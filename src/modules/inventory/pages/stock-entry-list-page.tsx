@@ -191,19 +191,6 @@ export function StockEntryListPage() {
         size: 90,
       },
       {
-        id: 'totalCost',
-        accessorFn: (row) => row.totalCost,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Total Cost" column={column} />
-        ),
-        cell: ({ row }) => (
-          <span className="text-sm font-medium">
-            ${Number(row.original.totalCost || 0).toFixed(2)}
-          </span>
-        ),
-        size: 100,
-      },
-      {
         id: 'status',
         accessorFn: (row) => row.status,
         header: ({ column }) => (

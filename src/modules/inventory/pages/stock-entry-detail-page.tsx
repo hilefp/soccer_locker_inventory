@@ -236,33 +236,26 @@ export function StockEntryDetailPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Product</TableHead>
+                  <TableHead>SKU</TableHead>
                   <TableHead className="text-right">Quantity</TableHead>
-                  <TableHead className="text-right">Cost Per Unit</TableHead>
-                  <TableHead className="text-right">Total Cost</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {entry.details.map((detail) => (
                   <TableRow key={detail.id}>
                     <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          {detail.productVariant?.product?.name ||
-                            'Unknown Product'}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          SKU: {detail.productVariant?.sku || 'N/A'}
-                        </span>
-                      </div>
+                      <span className="text-sm font-medium">
+                        {detail.productVariant?.product?.name ||
+                          'Unknown Product'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm font-mono text-muted-foreground">
+                        {detail.productVariant?.sku || 'N/A'}
+                      </span>
                     </TableCell>
                     <TableCell className="text-right text-sm font-medium">
                       {detail.quantity}
-                    </TableCell>
-                    <TableCell className="text-right text-sm">
-                      ${Number(detail.costPerUnit || 0).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-medium">
-                      ${Number(detail.totalCost || 0).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 ))}
