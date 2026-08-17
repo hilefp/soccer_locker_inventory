@@ -62,6 +62,14 @@ export interface BarcodeLookupResponse {
   barcode: string;
   type: string;
   product: BarcodeLookupProduct;
+  /** The specific variant the barcode resolves to */
+  variant: {
+    id: string;
+    sku: string;
+    productId: string;
+    attributes: Record<string, string> | null;
+    cost: number | null;
+  };
   variants: StockVariantsResponse;
 }
 

@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Control,
   UseFormRegister,
@@ -7,6 +7,7 @@ import {
   UseFieldArrayRemove,
   FieldErrors,
 } from 'react-hook-form';
+import { Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import {
   Card,
   CardHeader,
@@ -16,24 +17,10 @@ import {
 } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
-import { Package, Trash2, Check, ChevronsUpDown } from 'lucide-react';
+import { Package, Plus, Trash2 } from 'lucide-react';
 import { StockEntrySchemaType } from '../schemas/stock-entry-schema';
-import { StockVariantItem } from '../types/stock-variant.types';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/shared/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/components/ui/popover';
-import { cn } from '@/shared/lib/utils';
 import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
+import { CodeScannerButton } from '@/shared/components/scanner/code-scanner-button';
 import { DataGrid } from '@/shared/components/ui/data-grid';
 import { DataGridTable } from '@/shared/components/ui/data-grid-table';
 import {
@@ -42,10 +29,20 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-// Memoized input cell to prevent focus loss
+const BARCODE_FORMATS = [
+  Html5QrcodeSupportedFormats.UPC_A,
+  Html5QrcodeSupportedFormats.UPC_E,
+  Html5QrcodeSupportedFormats.EAN_13,
+  Html5QrcodeSupportedFormats.EAN_8,
+  Html5QrcodeSupportedFormats.CODE_128,
+];
+
+// Memoized input cell to prevent focus loss while typing. The local value
+// re-syncs when the form value changes externally (e.g. a barcode scan
+// incrementing the quantity of an existing row).
 interface QuantityInputProps {
   index: number;
-  defaultValue: number;
+  value: number;
   error?: string;
   onChangeValue: (index: number, value: number) => void;
 }
@@ -53,11 +50,19 @@ interface QuantityInputProps {
 const QuantityInput = memo(
   function QuantityInput({
     index,
-    defaultValue,
+    value,
     error,
     onChangeValue,
   }: QuantityInputProps) {
-    const [localValue, setLocalValue] = useState(() => defaultValue.toString());
+    const [localValue, setLocalValue] = useState(() => value.toString());
+
+    useEffect(() => {
+      // Sync external updates without clobbering in-progress typing
+      if ((parseInt(localValue) || 0) !== value) {
+        setLocalValue(value.toString());
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [value]);
 
     return (
       <div className="space-y-1 min-w-[100px]">
@@ -76,76 +81,12 @@ const QuantityInput = memo(
     );
   },
   (prevProps, nextProps) => {
-    // Only re-render if index or error changes, NOT defaultValue
-    return prevProps.index === nextProps.index && prevProps.error === nextProps.error;
-  },
-);
-
-interface CostInputProps {
-  index: number;
-  defaultValue: number;
-  error?: string;
-  onChangeValue: (index: number, value: number) => void;
-}
-
-const CostInput = memo(
-  function CostInput({
-    index,
-    defaultValue,
-    error,
-    onChangeValue,
-  }: CostInputProps) {
-    const [localValue, setLocalValue] = useState(() => defaultValue.toString());
-
+    // Re-render only when the index, error, or externally-set value changes
     return (
-      <div className="space-y-1 min-w-[120px]">
-        <Input
-          type="text"
-          className="h-8"
-          value={localValue}
-          onChange={(e) => {
-            let value = e.target.value.replace(/[^0-9.]/g, '');
-            const parts = value.split('.');
-            if (parts.length > 2) {
-              value = parts[0] + '.' + parts.slice(1).join('');
-            }
-            if (parts[1] && parts[1].length > 2) {
-              value = parts[0] + '.' + parts[1].substring(0, 2);
-            }
-            setLocalValue(value);
-            const cost = parseFloat(value) || 0;
-            onChangeValue(index, cost);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              return;
-            }
-            if (
-              e.key === 'Backspace' ||
-              e.key === 'Delete' ||
-              e.key === 'Tab' ||
-              e.key === 'Escape' ||
-              e.key === 'ArrowLeft' ||
-              e.key === 'ArrowRight'
-            ) {
-              return;
-            }
-            if (e.key === '.' && !e.currentTarget.value.includes('.')) {
-              return;
-            }
-            if (!/^[0-9]$/.test(e.key)) {
-              e.preventDefault();
-            }
-          }}
-        />
-        {error && <p className="text-xs text-destructive">{error}</p>}
-      </div>
+      prevProps.index === nextProps.index &&
+      prevProps.error === nextProps.error &&
+      prevProps.value === nextProps.value
     );
-  },
-  (prevProps, nextProps) => {
-    // Only re-render if index or error changes, NOT defaultValue
-    return prevProps.index === nextProps.index && prevProps.error === nextProps.error;
   },
 );
 
@@ -156,13 +97,10 @@ interface StockEntryTableProps {
   watch: UseFormWatch<StockEntrySchemaType>;
   setValue: UseFormSetValue<StockEntrySchemaType>;
   errors: FieldErrors<StockEntrySchemaType>;
-  variants?: StockVariantItem[];
-  loadingVariants: boolean;
-  onAddProduct: (variantId: string) => void;
+  onOpenAddProducts: () => void;
+  onScan: (decoded: string) => void;
   onRemove: UseFieldArrayRemove;
-  onProductChange: (index: number, variantId: string) => void;
   onQuantityChange: (index: number, quantity: number) => void;
-  onCostChange: (index: number, cost: number) => void;
 }
 
 interface ITableData {
@@ -172,11 +110,8 @@ interface ITableData {
   productInfo: {
     name: string;
     sku: string;
-    variantName: string;
   };
   quantity: number;
-  costPerUnit: number;
-  totalCost: number;
 }
 
 export function StockEntryTable({
@@ -184,84 +119,49 @@ export function StockEntryTable({
   watch,
   setValue,
   errors,
-  variants = [],
-  loadingVariants,
-  onAddProduct,
+  onOpenAddProducts,
+  onScan,
   onRemove,
   onQuantityChange,
-  onCostChange,
 }: StockEntryTableProps) {
-  const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
-
-  // Get selected variant IDs without causing re-renders
-  const getSelectedVariantIds = useCallback(() => {
-    return fields.map((_, index) => watch(`details.${index}.productVariantId`));
-  }, [fields, watch]);
-
-  const availableVariants = useMemo(() => {
-    const selectedIds = getSelectedVariantIds();
-    return variants.filter((v) => !selectedIds.includes(v.productVariantId));
-  }, [variants, getSelectedVariantIds]);
-
-  const handleSelectProduct = useCallback(
-    (variantId: string) => {
-      onAddProduct(variantId);
-      setOpen(false);
-      setSearchValue('');
-    },
-    [onAddProduct],
-  );
-
-  const getProductDetails = useCallback(
-    (variantId: string) => {
-      return variants.find((v) => v.productVariantId === variantId);
-    },
-    [variants],
-  );
-
-  // Build static data for the table - only recompute when fields change
+  // Build static data for the table - only recompute when the field array
+  // structurally changes (append/remove/update)
   const data = useMemo<ITableData[]>(() => {
     return fields.map((field, index) => {
-      const variantId = watch(`details.${index}.productVariantId`);
-      const product = getProductDetails(variantId);
-      const quantity = watch(`details.${index}.quantity`) || 0;
-      const costPerUnit = watch(`details.${index}.costPerUnit`) || 0;
-      const totalCost = watch(`details.${index}.totalCost`) || 0;
-
       return {
         id: field.id,
         index,
-        productVariantId: variantId,
+        productVariantId: watch(`details.${index}.productVariantId`),
         productInfo: {
-          name: product?.productName || 'Unknown Product',
-          sku: product?.sku || 'N/A',
-          variantName: product?.variantName || 'N/A',
+          name: watch(`details.${index}.productName`) || 'Unknown Product',
+          sku: watch(`details.${index}.sku`) || 'N/A',
         },
-        quantity,
-        costPerUnit,
-        totalCost,
+        quantity: watch(`details.${index}.quantity`) || 0,
       };
     });
-    // Only depend on fields.length to avoid re-computing on every value change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields.length, getProductDetails]);
+  }, [fields]);
 
-  // Stable callbacks for inputs
+  // Latest-value refs so the column defs below stay referentially stable.
+  // flexRender mounts each `cell` renderer as a component *type*, so
+  // rebuilding the columns array on a keystroke remounts every cell — which
+  // blurs the focused quantity input. errors/onRemove/onQuantityChange get
+  // new identities on every parent render, so cells read them via refs
+  // instead of closing over them through the columns memo.
+  const errorsRef = useRef(errors);
+  errorsRef.current = errors;
+  const onRemoveRef = useRef(onRemove);
+  onRemoveRef.current = onRemove;
+  const onQuantityChangeRef = useRef(onQuantityChange);
+  onQuantityChangeRef.current = onQuantityChange;
+
+  // Stable callback for the quantity input
   const handleQuantityInputChange = useCallback(
     (index: number, quantity: number) => {
       setValue(`details.${index}.quantity`, quantity);
-      onQuantityChange(index, quantity);
+      onQuantityChangeRef.current(index, quantity);
     },
-    [setValue, onQuantityChange],
-  );
-
-  const handleCostInputChange = useCallback(
-    (index: number, cost: number) => {
-      setValue(`details.${index}.costPerUnit`, cost);
-      onCostChange(index, cost);
-    },
-    [setValue, onCostChange],
+    [setValue],
   );
 
   const columns = useMemo<ColumnDef<ITableData>[]>(
@@ -273,78 +173,48 @@ export function StockEntryTable({
         cell: (info) => {
           const index = info.row.original.index;
           const productInfo = info.row.original.productInfo;
+          const variantError =
+            errorsRef.current.details?.[index]?.productVariantId;
 
           return (
             <div className="flex flex-col min-w-[200px]">
               <span className="font-medium text-sm">{productInfo.name}</span>
               <span className="text-xs text-muted-foreground">
-                SKU: {productInfo.sku} | {productInfo.variantName}
+                SKU: {productInfo.sku}
               </span>
-              {errors.details?.[index]?.productVariantId && (
+              {variantError && (
                 <p className="text-xs text-destructive mt-1">
-                  {errors.details[index]?.productVariantId?.message}
+                  {variantError.message}
                 </p>
               )}
             </div>
           );
         },
         enableSorting: false,
-        size: 250,
+        size: 400,
       },
       {
         id: 'quantity',
         accessorFn: (row) => row.quantity,
         header: () => <span className="font-medium">Quantity *</span>,
         cell: (info) => {
-          const { index, quantity } = info.row.original;
+          const index = info.row.original.index;
+          // Read via watch so external updates (scan increments) reach the cell
+          const quantity = watch(`details.${index}.quantity`) || 0;
           return (
             <QuantityInput
-              key={`qty-${info.row.original.id}`}
+              // Keyed by variant id: RHF regenerates field ids on setValue,
+              // which would remount the input and drop focus mid-typing
+              key={`qty-${info.row.original.productVariantId}`}
               index={index}
-              defaultValue={quantity}
-              error={errors.details?.[index]?.quantity?.message}
+              value={quantity}
+              error={errorsRef.current.details?.[index]?.quantity?.message}
               onChangeValue={handleQuantityInputChange}
             />
           );
         },
         enableSorting: false,
-        size: 120,
-      },
-      {
-        id: 'costPerUnit',
-        accessorFn: (row) => row.costPerUnit,
-        header: () => <span className="font-medium">Cost Per Unit *</span>,
-        cell: (info) => {
-          const { index, costPerUnit } = info.row.original;
-          return (
-            <CostInput
-              key={`cost-${info.row.original.id}`}
-              index={index}
-              defaultValue={costPerUnit}
-              error={errors.details?.[index]?.costPerUnit?.message}
-              onChangeValue={handleCostInputChange}
-            />
-          );
-        },
-        enableSorting: false,
         size: 140,
-      },
-      {
-        id: 'totalCost',
-        accessorFn: (row) => row.totalCost,
-        header: () => <span className="font-medium">Total Cost</span>,
-        cell: (info) => {
-          const index = info.row.original.index;
-          // Use watch directly to get reactive updates for total cost
-          const totalCost = watch(`details.${index}.totalCost`) || 0;
-          return (
-            <div className="font-bold text-sm bg-accent px-3 py-1.5 rounded-md inline-block min-w-[100px]">
-              ${totalCost.toFixed(2)}
-            </div>
-          );
-        },
-        enableSorting: false,
-        size: 120,
       },
       {
         id: 'actions',
@@ -359,7 +229,7 @@ export function StockEntryTable({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-destructive hover:text-destructive"
-                onClick={() => onRemove(index)}
+                onClick={() => onRemoveRef.current(index)}
                 title="Remove product"
               >
                 <Trash2 className="h-4 w-4" />
@@ -370,7 +240,9 @@ export function StockEntryTable({
         size: 80,
       },
     ],
-    [errors, handleQuantityInputChange, handleCostInputChange, watch, onRemove],
+    // Both deps are stable, so the columns (and their cell component types)
+    // are created once and inputs never remount mid-typing
+    [watch, handleQuantityInputChange],
   );
 
   const table = useReactTable({
@@ -378,7 +250,9 @@ export function StockEntryTable({
     columns,
     getCoreRowModel: getCoreRowModel(),
     enableSorting: false,
-    getRowId: (row) => row.id,
+    // Row identity must survive RHF field-id regeneration or rows remount
+    // (and inputs lose focus) on every quantity keystroke
+    getRowId: (row) => row.productVariantId || row.id,
   });
 
   return (
@@ -386,54 +260,25 @@ export function StockEntryTable({
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div>
           <CardTitle className="text-xl">Products</CardTitle>
-          <CardDescription>Add products to this entry</CardDescription>
+          <CardDescription>
+            Add products by search or barcode scan
+          </CardDescription>
         </div>
 
-        {/* Combobox for adding products */}
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-[300px] justify-between"
-              disabled={loadingVariants || availableVariants.length === 0}
-            >
-              {loadingVariants ? 'Loading...' : 'Select product to add...'}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0">
-            <Command>
-              <CommandInput
-                placeholder="Search products..."
-                value={searchValue}
-                onValueChange={setSearchValue}
-              />
-              <CommandList>
-                <CommandEmpty>No products found.</CommandEmpty>
-                <CommandGroup>
-                  {availableVariants.map((variant) => (
-                    <CommandItem
-                      key={variant.productVariantId}
-                      value={`${variant.productName} ${variant.variantName} ${variant.sku}`}
-                      onSelect={() => handleSelectProduct(variant.productVariantId)}
-                    >
-                      <div className="flex flex-col w-full">
-                        <span className="font-medium">{variant.productName}</span>
-                        <span className="text-xs text-muted-foreground">
-                          SKU: {variant.sku} | {variant.variantName} | ${variant.cost}
-                        </span>
-                      </div>
-                      <Check className={cn('ml-auto h-4 w-4', 'opacity-0')} />
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <div className="flex items-center gap-2">
+          <CodeScannerButton
+            onScan={onScan}
+            label="Scan Barcode"
+            title="Scan Product Barcode"
+            helperText="Point the camera at the product barcode"
+            formats={BARCODE_FORMATS}
+            scannerId="stock-entry-barcode-scanner"
+          />
+          <Button type="button" variant="mono" onClick={onOpenAddProducts}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            Add Products
+          </Button>
+        </div>
       </CardHeader>
 
       <CardTable>
@@ -444,7 +289,7 @@ export function StockEntryTable({
               No products added
             </p>
             <p className="text-sm text-muted-foreground mb-4">
-              Use the combobox above to search and add products
+              Use the Add Products button or scan a barcode to add products
             </p>
           </div>
         ) : (

@@ -43,7 +43,7 @@ export const MENU_SIDEBAR: MenuConfig = [
     permissions: ['stock:read'],
     children: [
       { title: 'Inventory', path: '/inventory' },
-      { title: 'Stock Entries', path: '/inventory/stock-entries/new', permissions: ['stock:write'] },
+      { title: 'Stock Entries', path: '/inventory/stock-entries', permissions: ['stock:write'] },
       {
         title: 'Warehouse Management',
         path: '/inventory/warehouses',

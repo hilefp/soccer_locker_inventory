@@ -34,8 +34,18 @@ export interface CreateStockEntryDto {
   referenceDocument?: string;
   entryDate: string;
   notes?: string;
-  createdBy: string;
+  /** When true the entry is confirmed immediately and stock levels are updated */
+  confirm?: boolean;
   details: CreateStockEntryDetailDto[];
+}
+
+export interface StockEntryFilters {
+  warehouseId?: string;
+  entryType?: EntryType;
+  status?: EntryStatus;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
 }
 
 // Response Types

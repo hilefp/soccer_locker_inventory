@@ -19,13 +19,12 @@ interface StockEntryInformationCardProps {
   loadingWarehouses: boolean;
 }
 
-const entryTypeLabels: Record<EntryType, { label: string; description: string }> = {
+// PRODUCTION and INITIAL are no longer offered for new entries
+const entryTypeLabels: Record<string, { label: string; description: string }> = {
   [EntryType.PURCHASE]: { label: 'Purchase', description: 'Purchase from supplier' },
   [EntryType.TRANSFER_IN]: { label: 'Transfer In', description: 'Transfer from another warehouse' },
   [EntryType.RETURN]: { label: 'Return', description: 'Return from customer' },
-  [EntryType.PRODUCTION]: { label: 'Production', description: 'Produced internally' },
   [EntryType.ADJUSTMENT]: { label: 'Adjustment', description: 'Manual adjustment (increase)' },
-  [EntryType.INITIAL]: { label: 'Initial', description: 'Initial stock load' },
 };
 
 export function StockEntryInformationCard({
@@ -91,9 +90,17 @@ export function StockEntryInformationCard({
               name="warehouseId"
               control={control}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={loadingWarehouses}
+                >
                   <SelectTrigger id="warehouseId">
-                    <SelectValue placeholder="Select warehouse" />
+                    <SelectValue
+                      placeholder={
+                        loadingWarehouses ? 'Loading...' : 'Select warehouse'
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses?.map((warehouse) => (
