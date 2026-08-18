@@ -45,6 +45,7 @@ export const ordersService = {
       if (params.statuses && params.statuses.length > 0) {
         params.statuses.forEach((status) => queryParams.append('statuses', status));
       }
+      if (params.isRushOrder !== undefined) queryParams.append('isRushOrder', String(params.isRushOrder));
       if (params.clubId) queryParams.append('clubId', params.clubId);
       if (params.customerUserId) queryParams.append('customerUserId', params.customerUserId);
       if (params.assignedInventoryUserId) queryParams.append('assignedInventoryUserId', params.assignedInventoryUserId);

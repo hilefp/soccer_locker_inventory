@@ -78,7 +78,7 @@ import {
   PopoverTrigger,
 } from '@/shared/components/ui/popover';
 import { Calendar as CalendarUI } from '@/shared/components/ui/calendar';
-import { Order, OrderStatus, OrderListMeta, ORDER_STATUS_LABELS, DocumentType } from '@/modules/orders/types';
+import { Order, OrderStatus, OrderStatusFilter, OrderListMeta, ORDER_STATUS_LABELS, DocumentType } from '@/modules/orders/types';
 import { OrderStatusBadge } from './order-status-badge';
 import { useUpdateOrderStatus, orderKeys } from '@/modules/orders/hooks/use-orders';
 import { ordersService } from '@/modules/orders/services/orders.service';
@@ -93,6 +93,7 @@ export interface IOrderData {
     email?: string;
   };
   status: OrderStatus;
+  isRushOrder: boolean;
   itemCount: number;
   total: number;
   currency: string;
@@ -112,7 +113,7 @@ interface OrderListTableProps {
   page?: number;
   pageSize?: number;
   search?: string;
-  status?: OrderStatus;
+  status?: OrderStatusFilter;
   clubId?: string;
   startDate?: string;
   endDate?: string;
@@ -121,7 +122,7 @@ interface OrderListTableProps {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   onSearchChange?: (search: string) => void;
-  onStatusFilterChange?: (status: OrderStatus | undefined) => void;
+  onStatusFilterChange?: (status: OrderStatusFilter | undefined) => void;
   onClubFilterChange?: (clubId: string | undefined) => void;
   onDateRangeChange?: (startDate: string | undefined, endDate: string | undefined) => void;
   onSortChange?: (id: string, desc: boolean) => void;
@@ -157,6 +158,7 @@ const convertOrderToIData = (order: Order): IOrderData => {
       email: order.customerUser?.email,
     },
     status: order.status,
+    isRushOrder: order.isRushOrder && Number(order.rushFee) > 0,
     itemCount,
     total: Number(order.total) || 0,
     currency: order.currency,
@@ -413,9 +415,18 @@ export function OrderListTable({
         header: ({ column }) => (
           <DataGridColumnHeader title="Status" column={column} />
         ),
-        cell: (info) => <OrderStatusBadge status={info.row.original.status} />,
+        cell: (info) => (
+          <div className="flex items-center gap-1.5">
+            <OrderStatusBadge status={info.row.original.status} />
+            {info.row.original.isRushOrder && (
+              <Badge variant="warning" appearance="light" size="sm" className="rounded-full">
+                Rush
+              </Badge>
+            )}
+          </div>
+        ),
         enableSorting: true,
-        size: 120,
+        size: 150,
       },
       // {
       //   id: 'itemCount',
@@ -501,7 +512,7 @@ export function OrderListTable({
                 <TooltipTrigger asChild>
                   <div className="flex items-center gap-1.5">
                     <Truck className="size-4 text-muted-foreground" />
-                    <span className="text-sm truncate max-w-[100px]">
+                    <span className="text-sm whitespace-nowrap">
                       {order.trackingNumber}
                     </span>
                   </div>
@@ -515,7 +526,7 @@ export function OrderListTable({
           );
         },
         enableSorting: false,
-        size: 140,
+        size: 200,
       },
       {
         id: 'created',
@@ -649,7 +660,7 @@ export function OrderListTable({
   };
 
   const handleStatusChange = (value: string) => {
-    onStatusFilterChange?.(value === 'all' ? undefined : (value as OrderStatus));
+    onStatusFilterChange?.(value === 'all' ? undefined : (value as OrderStatusFilter));
   };
 
   const handleClubChange = (value: string) => {
@@ -703,7 +714,7 @@ export function OrderListTable({
 
             {/* Status Filter */}
             <Select value={statusFilter} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-auto whitespace-nowrap justify-start">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -713,6 +724,7 @@ export function OrderListTable({
                     {label}
                   </SelectItem>
                 ))}
+                <SelectItem value="RUSH">Rush</SelectItem>
               </SelectContent>
             </Select>
 

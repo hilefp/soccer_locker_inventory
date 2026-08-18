@@ -12,6 +12,10 @@ export type OrderStatus =
   | 'REFUND'
   | 'FAILED';
 
+// Value set of the status filter dropdown: real statuses plus the "RUSH"
+// pseudo-status, which filters by rush fee paid rather than order status.
+export type OrderStatusFilter = OrderStatus | 'RUSH';
+
 export type ShipmentStatus =
   | 'PENDING'
   | 'LABEL_CREATED'
@@ -367,6 +371,7 @@ export interface OrderFilterParams {
   search?: string;
   status?: OrderStatus;
   statuses?: OrderStatus[];
+  isRushOrder?: boolean;
   clubId?: string;
   customerUserId?: string;
   assignedInventoryUserId?: string;

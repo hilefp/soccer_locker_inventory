@@ -7,7 +7,7 @@ import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { OrderListTable, ExportOrdersDialog } from '@/modules/orders/components';
 import { useOrders } from '@/modules/orders/hooks/use-orders';
 import { useExportOrders } from '@/modules/orders/hooks/use-export-orders';
-import { OrderFilterParams, OrderStatus } from '@/modules/orders/types';
+import { OrderFilterParams, OrderStatus, OrderStatusFilter } from '@/modules/orders/types';
 
 const DEFAULT_PAGE_SIZE = 25;
 const DEFAULT_SORT_ID = 'created';
@@ -19,19 +19,24 @@ export function OrdersListPage() {
   // order and navigating back.
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // "RUSH" is a pseudo-status in the filter dropdown: it maps to the
+  // isRushOrder query param instead of a real order status.
+  const statusFilter = (searchParams.get('status') as OrderStatusFilter | null) || undefined;
+
   const filters = useMemo<OrderFilterParams>(
     () => ({
       page: Number(searchParams.get('page')) || 1,
       limit: Number(searchParams.get('limit')) || DEFAULT_PAGE_SIZE,
       search: searchParams.get('search') || undefined,
-      status: (searchParams.get('status') as OrderStatus | null) || undefined,
+      status: statusFilter === 'RUSH' ? undefined : (statusFilter as OrderStatus | undefined),
+      isRushOrder: statusFilter === 'RUSH' ? true : undefined,
       clubId: searchParams.get('clubId') || undefined,
       startDate: searchParams.get('startDate') || undefined,
       endDate: searchParams.get('endDate') || undefined,
       sortBy: 'createdAt',
       sortOrder: 'desc',
     }),
-    [searchParams],
+    [searchParams, statusFilter],
   );
 
   const sortId = searchParams.get('sort') || DEFAULT_SORT_ID;
@@ -80,7 +85,7 @@ export function OrdersListPage() {
     updateParams({ search: search || null, page: null });
   };
 
-  const handleStatusFilterChange = (status: OrderStatus | undefined) => {
+  const handleStatusFilterChange = (status: OrderStatusFilter | undefined) => {
     updateParams({ status: status ?? null, page: null });
   };
 
@@ -125,7 +130,7 @@ export function OrdersListPage() {
         page={filters.page}
         pageSize={filters.limit}
         search={filters.search}
-        status={filters.status}
+        status={statusFilter}
         clubId={filters.clubId}
         startDate={filters.startDate}
         endDate={filters.endDate}
