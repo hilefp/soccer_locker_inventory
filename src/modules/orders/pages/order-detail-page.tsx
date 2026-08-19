@@ -73,11 +73,13 @@ import {
   OrderInvoice,
   OrderNotesPanel,
   OrderShipmentsPanel,
+  OrderItemFulfillmentBadges,
 } from '@/modules/orders/components';
 import { ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
 import type { OrderItem } from '@/modules/orders/types';
 import { useAuthStore } from '@/shared/stores/auth-store';
 import { extractSize } from '@/modules/orders/lib/extract-size';
+import { getItemFulfillment } from '@/modules/orders/lib/item-fulfillment';
 
 interface RefundItemState {
   selected: boolean;
@@ -371,6 +373,17 @@ export function OrderDetailPage() {
     return result;
   }, [order?.items]);
 
+  // orderItemId → shipment numbers containing it (for the per-item chip)
+  const shipmentNumbersByItem = useMemo<Record<string, number[]>>(() => {
+    const map: Record<string, number[]> = {};
+    for (const shipment of order?.shipments ?? []) {
+      for (const shipmentItem of shipment.items ?? []) {
+        (map[shipmentItem.orderItemId] ??= []).push(shipment.shipmentNumber);
+      }
+    }
+    return map;
+  }, [order?.shipments]);
+
   const refundTotals = useMemo(() => {
     let totalItemRefund = 0;
     let totalTaxRefund = 0;
@@ -625,14 +638,20 @@ export function OrderDetailPage() {
             </p>
             <div className="space-y-1">
               {order.items.map((item) => {
-                const shipped = item.shippedQuantity || 0;
-                const remaining = item.quantity - shipped - (item.refundedQuantity || 0);
+                const f = getItemFulfillment(item);
+                const remaining = f.missing + f.pending;
+                const shippedLabel =
+                  f.delivered > 0 && f.inTransit === 0
+                    ? `${f.delivered} of ${f.quantity} delivered`
+                    : f.delivered > 0
+                      ? `${f.delivered} delivered, ${f.inTransit} in transit`
+                      : `${f.inTransit} of ${f.quantity} in transit`;
                 const { sizeValue } = extractSize(item.attributes, item.productVariant?.attributes);
                 return (
                   <div key={item.id} className="flex items-center justify-between text-sm text-blue-700 dark:text-blue-400">
                     <span>{item.clubProduct?.name || item.name || item.productVariant?.product?.name || 'Unknown'}{sizeValue ? ` — ${sizeValue}` : ''}</span>
                     <span className="font-medium">
-                      {shipped} of {item.quantity} shipped
+                      {f.delivered + f.inTransit > 0 ? shippedLabel : 'Not shipped'}
                       {remaining > 0 && <span className="text-blue-500 dark:text-blue-500"> ({remaining} pending)</span>}
                     </span>
                   </div>
@@ -924,9 +943,7 @@ export function OrderDetailPage() {
                                           {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
                                         </div>
                                       )}
-                                      {(item.missingQuantity || 0) > 0 && !isResolvingMode && (
-                                        <p className="text-xs text-orange-600 font-medium">{isFullyMissing ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
-                                      )}
+                                      {!isResolvingMode && <OrderItemFulfillmentBadges item={item} />}
                                       {isResolvingMode && (item.missingQuantity || 0) > 0 && (
                                         <p className="text-xs text-orange-600 font-medium">{item.missingQuantity} currently missing</p>
                                       )}
@@ -976,12 +993,7 @@ export function OrderDetailPage() {
                                         {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
                                       </div>
                                     )}
-                                    {item.refundedQuantity > 0 && (
-                                      <p className="text-xs text-destructive font-medium">{item.refundedQuantity >= item.quantity ? 'Fully refunded' : `${item.refundedQuantity} of ${item.quantity} refunded`}</p>
-                                    )}
-                                    {(item.missingQuantity || 0) > 0 && (
-                                      <p className="text-xs text-orange-600 font-medium">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
-                                    )}
+                                    <OrderItemFulfillmentBadges item={item} />
                                   </div>
                                 </div>
                                 <div className="text-center text-sm text-muted-foreground">&times; {item.quantity}</div>
@@ -1028,11 +1040,11 @@ export function OrderDetailPage() {
                                     {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
                                   </div>
                                 )}
-                                {item.refundedQuantity > 0 && (
-                                  <p className="text-xs text-destructive font-medium mt-0.5">{item.refundedQuantity >= item.quantity ? 'Fully refunded' : `${item.refundedQuantity} of ${item.quantity} refunded`}</p>
-                                )}
-                                {(item.missingQuantity || 0) > 0 && (
-                                  <p className="text-xs text-orange-600 font-medium mt-0.5">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
+                                <OrderItemFulfillmentBadges item={item} className="mt-0.5" />
+                                {(shipmentNumbersByItem[item.id]?.length ?? 0) > 0 && (
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    {shipmentNumbersByItem[item.id].map((n) => `Shipment #${n}`).join(', ')}
+                                  </p>
                                 )}
                               </div>
                               <div className="flex items-center gap-2">
@@ -1199,9 +1211,7 @@ export function OrderDetailPage() {
                                               {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
                                             </div>
                                           )}
-                                          {(item.missingQuantity || 0) > 0 && !isResolvingMode && (
-                                            <p className="text-xs text-orange-600 font-medium">{isFullyMissing ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
-                                          )}
+                                          {!isResolvingMode && <OrderItemFulfillmentBadges item={item} />}
                                           {isResolvingMode && (item.missingQuantity || 0) > 0 && (
                                             <p className="text-xs text-orange-600 font-medium">{item.missingQuantity} currently missing</p>
                                           )}
@@ -1258,12 +1268,7 @@ export function OrderDetailPage() {
                                               {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
                                             </div>
                                           )}
-                                          {item.refundedQuantity > 0 && (
-                                            <p className="text-xs text-destructive font-medium">{isFullyRefunded ? 'Fully refunded' : `${item.refundedQuantity} of ${item.quantity} refunded`}</p>
-                                          )}
-                                          {(item.missingQuantity || 0) > 0 && (
-                                            <p className="text-xs text-orange-600 font-medium">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
-                                          )}
+                                          <OrderItemFulfillmentBadges item={item} />
                                         </div>
                                       </div>
                                     </div>
@@ -1298,11 +1303,11 @@ export function OrderDetailPage() {
                                         {Object.entries(item.customFields).map(([key, value]) => <p key={key}>{key}: {value}</p>)}
                                       </div>
                                     )}
-                                    {item.refundedQuantity > 0 && (
-                                      <p className="text-xs text-destructive font-medium mt-0.5">{item.refundedQuantity >= item.quantity ? 'Fully refunded' : `${item.refundedQuantity} of ${item.quantity} refunded`}</p>
-                                    )}
-                                    {(item.missingQuantity || 0) > 0 && (
-                                      <p className="text-xs text-orange-600 font-medium mt-0.5">{item.missingQuantity >= item.quantity ? 'All missing' : `${item.missingQuantity} of ${item.quantity} missing`}</p>
+                                    <OrderItemFulfillmentBadges item={item} className="mt-0.5" />
+                                    {(shipmentNumbersByItem[item.id]?.length ?? 0) > 0 && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">
+                                        {shipmentNumbersByItem[item.id].map((n) => `Shipment #${n}`).join(', ')}
+                                      </p>
                                     )}
                                   </div>
                                   {canSwapVariant && item.productVariant?.product?.id && (
@@ -1646,6 +1651,9 @@ export function OrderDetailPage() {
             </CardContent>
           </Card>
 
+          {/* Shipments Panel */}
+          <OrderShipmentsPanel orderId={order.id} shipments={order.shipments} />
+
           {/* Status History */}
           <Card>
             <CardHeader className="py-4">
@@ -1718,8 +1726,9 @@ export function OrderDetailPage() {
           {/* QR Code Card */}
           <OrderQRCodeCard order={order} />
 
-          {/* Shipping Info */}
-          {(order.carrier || order.trackingNumber) && (
+          {/* Shipping Info (legacy single-shipment orders only — with shipments,
+              per-package tracking lives in the Shipments panel) */}
+          {(order.carrier || order.trackingNumber) && !(order.shipments && order.shipments.length > 0) && (
             <Card>
               <CardHeader className="py-4">
                 <div className="flex items-center gap-2">
@@ -1755,9 +1764,6 @@ export function OrderDetailPage() {
               </CardContent>
             </Card>
           )}
-
-          {/* Shipments Panel */}
-          <OrderShipmentsPanel orderId={order.id} />
 
           {/* Order Notes Panel */}
           <OrderNotesPanel orderId={order.id} />

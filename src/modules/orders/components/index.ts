@@ -9,4 +9,5 @@ export { OrderInvoice } from './order-invoice';
 export { ExportOrdersDialog } from './export-orders-dialog';
 export { OrderNotesPanel } from './order-notes-panel';
 export { OrderShipmentsPanel } from './order-shipments-panel';
+export { OrderItemFulfillmentBadges } from './order-item-fulfillment-badges';
 export { QrScannerButton } from './qr-scanner-button';

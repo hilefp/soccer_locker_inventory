@@ -18,7 +18,7 @@ const getStatusBadgeVariant = (status: OrderStatus): BadgeVariant => {
     case 'PROCESSING':
       return 'primary';
     case 'PARTIALLY_SHIPPED':
-      return 'warning';
+      return 'info';
     case 'SHIPPING':
       return 'info';
     case 'DELIVERED':

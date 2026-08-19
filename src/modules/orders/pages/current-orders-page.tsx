@@ -7,7 +7,7 @@ import { Button } from '@/shared/components/ui/button';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { OrderKanbanBoard, OrderSearchComplex, QrScannerButton } from '@/modules/orders/components';
 import { useAllOrders, useOrderStatistics } from '@/modules/orders/hooks/use-orders';
-import { OrderFilterParams, OrderStatus, KANBAN_STATUS_ORDER } from '@/modules/orders/types';
+import { OrderFilterParams, OrderStatus, KANBAN_STATUS_ORDER, ORDER_STATUS_LABELS } from '@/modules/orders/types';
 import { Badge } from '@/shared/components/ui/badge';
 
 // The board shows every order created in the last 5 months, with no cap: the date
@@ -155,7 +155,7 @@ export function CurrentOrdersPage() {
         <div className="hidden md:flex items-center gap-2 ml-auto">
           {KANBAN_STATUS_ORDER.map((status) => (
             <Badge key={status} variant="secondary" appearance="outline" size="sm">
-              {status}: {statusCounts[status] ?? 0}
+              {ORDER_STATUS_LABELS[status]}: {statusCounts[status] ?? 0}
             </Badge>
           ))}
         </div>
