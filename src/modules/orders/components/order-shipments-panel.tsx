@@ -12,10 +12,13 @@ import {
 import { Truck, Package, ExternalLink, Clock, CheckCircle, AlertTriangle, Tag } from 'lucide-react';
 import { useOrderShipments } from '@/modules/orders/hooks/use-orders';
 import { formatDateTime } from '@/shared/lib/helpers';
-import type { ShipmentStatus } from '@/modules/orders/types';
+import type { OrderShipment, ShipmentStatus } from '@/modules/orders/types';
 
 interface OrderShipmentsPanelProps {
   orderId: string;
+  // Shipments embedded in the order detail response; when provided, the panel
+  // renders them directly instead of fetching GET /orders/:id/shipments.
+  shipments?: OrderShipment[];
 }
 
 const SHIPMENT_STATUS_CONFIG: Record<ShipmentStatus, { label: string; variant: 'secondary' | 'info' | 'warning' | 'success' | 'destructive' }> = {
@@ -26,8 +29,12 @@ const SHIPMENT_STATUS_CONFIG: Record<ShipmentStatus, { label: string; variant: '
   FAILED: { label: 'Failed', variant: 'destructive' },
 };
 
-export function OrderShipmentsPanel({ orderId }: OrderShipmentsPanelProps) {
-  const { data: shipments, isLoading } = useOrderShipments(orderId);
+export function OrderShipmentsPanel({ orderId, shipments: embeddedShipments }: OrderShipmentsPanelProps) {
+  const { data: fetchedShipments, isLoading: isFetching } = useOrderShipments(orderId, {
+    enabled: embeddedShipments === undefined,
+  });
+  const shipments = embeddedShipments ?? fetchedShipments;
+  const isLoading = embeddedShipments === undefined && isFetching;
 
   if (isLoading) {
     return (

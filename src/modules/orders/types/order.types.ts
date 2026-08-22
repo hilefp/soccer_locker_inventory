@@ -80,6 +80,8 @@ export interface OrderItem {
   refundedQuantity: number;
   missingQuantity: number;
   shippedQuantity: number;
+  // Derived from DELIVERED shipments; only present on the order detail endpoint
+  deliveredQuantity?: number;
   createdAt: string;
   productVariant?: {
     id: string;

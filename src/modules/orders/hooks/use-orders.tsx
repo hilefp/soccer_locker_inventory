@@ -164,6 +164,7 @@ export function useUpdateOrderStatus() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.statusHistory(variables.id) });
+      queryClient.invalidateQueries({ queryKey: orderKeys.shipments(variables.id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
       queryClient.invalidateQueries({ queryKey: orderKeys.statistics() });
       queryClient.invalidateQueries({ queryKey: ['stock-variants'] });
@@ -304,6 +305,7 @@ export function useRefundOrder() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.statusHistory(variables.id) });
+      queryClient.invalidateQueries({ queryKey: orderKeys.shipments(variables.id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
       queryClient.invalidateQueries({ queryKey: orderKeys.statistics() });
       queryClient.invalidateQueries({ queryKey: ['stock-variants'] });
@@ -349,6 +351,7 @@ export function useMarkMissing() {
       queryClient.invalidateQueries({ queryKey: orderKeys.statusHistory(variables.id) });
       queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.id, 'notes'] });
       queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.id, 'missing'] });
+      queryClient.invalidateQueries({ queryKey: orderKeys.shipments(variables.id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
       queryClient.invalidateQueries({ queryKey: orderKeys.statistics() });
       toast.custom(
@@ -382,6 +385,7 @@ export function useResolveMissing() {
       queryClient.invalidateQueries({ queryKey: orderKeys.statusHistory(variables.id) });
       queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.id, 'notes'] });
       queryClient.invalidateQueries({ queryKey: [...orderKeys.all, variables.id, 'missing'] });
+      queryClient.invalidateQueries({ queryKey: orderKeys.shipments(variables.id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
       queryClient.invalidateQueries({ queryKey: orderKeys.statistics() });
       toast.custom(
@@ -450,12 +454,14 @@ export function useSwapOrderItemVariant() {
   });
 }
 
-// Hook to fetch shipments for an order
-export function useOrderShipments(id: string) {
+// Hook to fetch shipments for an order.
+// Pass `enabled: false` when the caller already has the shipments embedded in
+// the order detail response to avoid a redundant request.
+export function useOrderShipments(id: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: orderKeys.shipments(id),
     queryFn: () => ordersService.getShipments(id),
-    enabled: !!id,
+    enabled: !!id && (options?.enabled ?? true),
     staleTime: 1000 * 60 * 2,
   });
 }
