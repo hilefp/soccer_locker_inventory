@@ -11,3 +11,7 @@ export { OrderNotesPanel } from './order-notes-panel';
 export { OrderShipmentsPanel } from './order-shipments-panel';
 export { OrderItemFulfillmentBadges } from './order-item-fulfillment-badges';
 export { QrScannerButton } from './qr-scanner-button';
+export { PaymentStatusBadge } from './payment-status-badge';
+export { InventoryStatusBadge } from './inventory-status-badge';
+export { ConfirmationEmailStatusBadge } from './confirmation-email-status-badge';
+export { OrderPaymentPanel, OrderExceptionsBanner } from './order-payment-panel';

@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RiGatsbyLine, RiNextjsLine } from '@remixicon/react';
 import { Euro, Info } from "lucide-react";
 import { CardPayment } from "./components/card";
-import { DigitalWallets } from "./components/digital-wallets";
 
 export function GeneralPaymentSettings() {
   
@@ -61,19 +60,6 @@ export function GeneralPaymentSettings() {
             </div>
             <div className="basis-2/3">
               <CardPayment />
-            </div> 
-          </div>
-
-          <Separator />
-
-          {/* Digital Wallets */}
-          <div className="flex items-start gap-5">
-            <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">Digital Wallets</Label>
-              <span className="text-xs font-normal text-muted-foreground">Enable or disable wallet-based payments</span>
-            </div>
-            <div className="basis-2/3">
-              <DigitalWallets />
             </div> 
           </div>
         </div>

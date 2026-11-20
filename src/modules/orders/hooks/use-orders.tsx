@@ -14,6 +14,40 @@ import {
 import { toast } from 'sonner';
 import { Alert, AlertIcon, AlertTitle } from '@/shared/components/ui/alert';
 import { Info } from 'lucide-react';
+import { hasRefundInFlight } from '@/modules/orders/lib/order-exceptions';
+
+// How often an open order is re-fetched while Square is still confirming a refund.
+const REFUND_IN_FLIGHT_REFETCH_MS = 15_000;
+
+type ApiError = Error & {
+  response?: {
+    status?: number;
+    data?: { error?: string; message?: string | string[] };
+  };
+};
+
+/** Backend error code/message from an axios error (NestJS may send message as an array). */
+function readApiError(error: ApiError) {
+  const data = error?.response?.data;
+  const message = Array.isArray(data?.message) ? data.message.join(', ') : data?.message;
+  return { status: error?.response?.status, code: data?.error, message };
+}
+
+/**
+ * True when staff must NOT simply retry a failed refund request: another refund
+ * is still processing (409 REFUND_IN_PROGRESS), Square's answer was lost and the
+ * backend is reconciling it (503 REFUND_STATUS_UNKNOWN), or the request got no
+ * response at all (the refund may still have gone through).
+ */
+export function isRefundUncertainError(error: unknown): boolean {
+  const { status, code } = readApiError(error as ApiError);
+  return (
+    status === undefined ||
+    status === 503 ||
+    code === 'REFUND_STATUS_UNKNOWN' ||
+    code === 'REFUND_IN_PROGRESS'
+  );
+}
 
 // Query keys
 export const orderKeys = {
@@ -64,6 +98,9 @@ export function useOrder(id: string) {
     queryFn: () => ordersService.getOrder(id),
     enabled: !!id,
     staleTime: 1000 * 60 * 2,
+    // Keep polling while Square is still confirming a refund so the page settles on its own.
+    refetchInterval: (query) =>
+      hasRefundInFlight(query.state.data) ? REFUND_IN_FLIGHT_REFETCH_MS : false,
   });
 }
 
@@ -322,9 +359,45 @@ export function useRefundOrder() {
         { duration: 5000 }
       );
     },
-    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+    onError: (error: ApiError, variables) => {
       console.error('Error processing refund:', error);
-      toast.error(error?.response?.data?.message || 'Failed to process refund');
+      const { status, code, message } = readApiError(error);
+
+      if (code === 'REFUND_STATUS_UNKNOWN' || status === 503) {
+        // Square's answer was lost; the backend reconciles it automatically.
+        // Refresh so the pending refund attempt shows up, and never invite a retry.
+        queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.id) });
+        toast.warning('Refund is being confirmed with Square', {
+          description:
+            message ||
+            'The refund could not be confirmed yet. It will be reconciled automatically — do not refund again.',
+          duration: 10000,
+        });
+        return;
+      }
+
+      if (code === 'REFUND_IN_PROGRESS') {
+        queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.id) });
+        toast.warning(
+          message ||
+            'Another refund for this order is still being processed. Wait for it to finish before refunding again.',
+          { duration: 10000 },
+        );
+        return;
+      }
+
+      if (status === undefined) {
+        // No response (timeout / network): the refund may still have been processed.
+        queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.id) });
+        toast.warning('No response from the server', {
+          description:
+            'The refund may still have been processed. Check the Payment & Refunds section before trying again.',
+          duration: 10000,
+        });
+        return;
+      }
+
+      toast.error(message || 'Failed to process refund');
     },
   });
 }
