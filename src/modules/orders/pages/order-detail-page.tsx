@@ -65,6 +65,7 @@ import {
   useResolveMissing,
   useSwapOrderItemVariant,
   useSwappableVariants,
+  isRefundUncertainError,
 } from '@/modules/orders/hooks/use-orders';
 import {
   OrderStatusBadge,
@@ -74,12 +75,22 @@ import {
   OrderNotesPanel,
   OrderShipmentsPanel,
   OrderItemFulfillmentBadges,
+  PaymentStatusBadge,
+  InventoryStatusBadge,
+  ConfirmationEmailStatusBadge,
+  OrderPaymentPanel,
+  OrderExceptionsBanner,
 } from '@/modules/orders/components';
 import { ORDER_STATUS_LABELS, OrderStatus } from '@/modules/orders/types';
 import type { OrderItem } from '@/modules/orders/types';
 import { useAuthStore } from '@/shared/stores/auth-store';
 import { extractSize } from '@/modules/orders/lib/extract-size';
 import { getItemFulfillment } from '@/modules/orders/lib/item-fulfillment';
+import {
+  hasRefundInFlight,
+  isEmailGivenUp,
+  normalizePaymentStatus,
+} from '@/modules/orders/lib/order-exceptions';
 
 interface RefundItemState {
   selected: boolean;
@@ -458,7 +469,14 @@ export function OrderDetailPage() {
           reason: refundReason.trim() || undefined,
         },
       },
-      { onSuccess: () => setIsRefunding(false) }
+      {
+        onSuccess: () => setIsRefunding(false),
+        // 409/503/no response: the refund may be in flight — close the form
+        // instead of leaving a "Process Refund" button that invites a retry.
+        onError: (err) => {
+          if (isRefundUncertainError(err)) setIsRefunding(false);
+        },
+      }
     );
   };
 
@@ -575,6 +593,9 @@ export function OrderDetailPage() {
     .filter(Boolean)
     .join(', ');
 
+  // A refund Square hasn't confirmed yet blocks new refunds (the backend answers 409).
+  const refundInFlight = hasRefundInFlight(order);
+
   return (
     <div className="container-fluid space-y-5 lg:space-y-7">
       {/* Header */}
@@ -584,9 +605,18 @@ export function OrderDetailPage() {
             <ArrowLeft className="size-4" />
           </Button>
           <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center flex-wrap gap-3">
               <h1 className="text-xl font-bold text-foreground">{order.orderNumber}</h1>
               <OrderStatusBadge status={order.status} size="md" />
+              {/* Only unusual states: "Paid" on every order is noise, and an
+                  oversold order in Missing already has its own banner. */}
+              {['PROCESSING', 'NEEDS_REVIEW', 'REFUNDED'].includes(
+                normalizePaymentStatus(order.paymentStatus) ?? '',
+              ) && <PaymentStatusBadge status={order.paymentStatus} size="md" />}
+              {(order.inventoryStatus === 'FAILED' ||
+                (order.inventoryStatus === 'OVERSOLD' && order.status !== 'MISSING')) && (
+                <InventoryStatusBadge status={order.inventoryStatus} size="md" />
+              )}
             </div>
             <span className="text-sm text-muted-foreground">
               Ordered {formatDateTime(order.createdAt)} ({timeAgo(order.createdAt)})
@@ -619,6 +649,8 @@ export function OrderDetailPage() {
               variant="outline"
               size="sm"
               onClick={handleStartRefund}
+              disabled={refundInFlight}
+              title={refundInFlight ? 'A refund is still being confirmed with Square' : undefined}
               className="text-destructive hover:text-destructive"
             >
               <RotateCcw className="size-4 mr-2" />
@@ -627,6 +659,9 @@ export function OrderDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Payment / inventory / e-mail exceptions and refunds awaiting Square */}
+      <OrderExceptionsBanner order={order} />
 
       {/* Partially Shipped Banner */}
       {order.status === 'PARTIALLY_SHIPPED' && order.items && order.items.some((i) => (i.shippedQuantity || 0) > 0) && (
@@ -769,6 +804,19 @@ export function OrderDetailPage() {
                   <div>
                     <span className="text-sm text-muted-foreground">Phone</span>
                     <p className="font-medium">{order.shippingPhone}</p>
+                  </div>
+                )}
+                {/* Only when it needs a person: while the backend is still
+                    retrying, there is nothing for staff to do. */}
+                {isEmailGivenUp(order) && (
+                  <div title={order.confirmationEmailLastError ?? undefined}>
+                    <span className="text-sm text-muted-foreground">Confirmation e-mail</span>
+                    <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                      <ConfirmationEmailStatusBadge status={order.confirmationEmailStatus} />
+                      <span className="text-xs text-muted-foreground">
+                        Not sent — resend it manually
+                      </span>
+                    </div>
                   </div>
                 )}
               </>
@@ -1554,6 +1602,11 @@ export function OrderDetailPage() {
                         className="h-9 text-sm"
                       />
                     </div>
+                    {refundInFlight && (
+                      <p className="text-xs text-destructive">
+                        A previous refund is still being confirmed with Square. Wait for it to finish before refunding again.
+                      </p>
+                    )}
                     <div className="flex items-center gap-2 justify-end pt-2">
                       <Button
                         variant="outline"
@@ -1570,6 +1623,7 @@ export function OrderDetailPage() {
                         onClick={handleSubmitRefund}
                         disabled={
                           refundMutation.isPending ||
+                          refundInFlight ||
                           refundTotals.totalRefund <= 0 ||
                           parseFloat(refundTotals.totalRefund.toFixed(2)) > parseFloat(refundTotals.totalAvailable.toFixed(2))
                         }
@@ -1650,6 +1704,9 @@ export function OrderDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Payment & Refunds */}
+          <OrderPaymentPanel order={order} />
 
           {/* Shipments Panel */}
           <OrderShipmentsPanel orderId={order.id} shipments={order.shipments} />

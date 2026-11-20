@@ -28,6 +28,7 @@ import {
   FileText,
   CalendarDays,
   Building2,
+  AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/shared/lib/helpers';
@@ -84,6 +85,7 @@ import { useUpdateOrderStatus, orderKeys } from '@/modules/orders/hooks/use-orde
 import { ordersService } from '@/modules/orders/services/orders.service';
 import { useQueryClient } from '@tanstack/react-query';
 import { useClubs } from '@/modules/clubs/hooks/use-clubs';
+import { getOrderExceptions } from '@/modules/orders/lib/order-exceptions';
 
 export interface IOrderData {
   id: string;
@@ -94,6 +96,8 @@ export interface IOrderData {
   };
   status: OrderStatus;
   isRushOrder: boolean;
+  // Payment / inventory / confirmation e-mail problems needing staff attention
+  exceptions: string[];
   itemCount: number;
   total: number;
   currency: string;
@@ -114,6 +118,8 @@ interface OrderListTableProps {
   pageSize?: number;
   search?: string;
   status?: OrderStatusFilter;
+  /** Only orders whose payment, stock reservation or confirmation e-mail needs attention. */
+  hasException?: boolean;
   clubId?: string;
   startDate?: string;
   endDate?: string;
@@ -123,6 +129,7 @@ interface OrderListTableProps {
   onPageSizeChange?: (pageSize: number) => void;
   onSearchChange?: (search: string) => void;
   onStatusFilterChange?: (status: OrderStatusFilter | undefined) => void;
+  onExceptionFilterChange?: (hasException: boolean) => void;
   onClubFilterChange?: (clubId: string | undefined) => void;
   onDateRangeChange?: (startDate: string | undefined, endDate: string | undefined) => void;
   onSortChange?: (id: string, desc: boolean) => void;
@@ -159,6 +166,7 @@ const convertOrderToIData = (order: Order): IOrderData => {
     },
     status: order.status,
     isRushOrder: order.isRushOrder && Number(order.rushFee) > 0,
+    exceptions: getOrderExceptions(order),
     itemCount,
     total: Number(order.total) || 0,
     currency: order.currency,
@@ -179,6 +187,7 @@ export function OrderListTable({
   pageSize = 25,
   search = '',
   status,
+  hasException = false,
   clubId,
   startDate,
   endDate,
@@ -188,6 +197,7 @@ export function OrderListTable({
   onPageSizeChange,
   onSearchChange,
   onStatusFilterChange,
+  onExceptionFilterChange,
   onClubFilterChange,
   onDateRangeChange,
   onSortChange,
@@ -423,10 +433,29 @@ export function OrderListTable({
                 Rush
               </Badge>
             )}
+            {info.row.original.exceptions.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="inline-flex text-destructive"
+                      aria-label={`Needs attention: ${info.row.original.exceptions.join(', ')}`}
+                    >
+                      <AlertTriangle className="size-4" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {info.row.original.exceptions.map((exception) => (
+                      <div key={exception}>{exception}</div>
+                    ))}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         ),
         enableSorting: true,
-        size: 150,
+        size: 170,
       },
       // {
       //   id: 'itemCount',
@@ -727,6 +756,17 @@ export function OrderListTable({
                 <SelectItem value="RUSH">Rush</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Exceptions Filter — combines with the status/club/date filters */}
+            <Button
+              variant={hasException ? 'primary' : 'outline'}
+              className="w-auto whitespace-nowrap"
+              aria-pressed={hasException}
+              onClick={() => onExceptionFilterChange?.(!hasException)}
+            >
+              <AlertTriangle className="size-3.5" />
+              Exceptions
+            </Button>
 
             {/* Club Filter */}
             <Select value={clubFilter} onValueChange={handleClubChange}>
