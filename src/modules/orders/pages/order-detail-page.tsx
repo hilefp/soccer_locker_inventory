@@ -191,7 +191,10 @@ export function OrderDetailPage() {
   };
 
   // Missing products state
-  const [isMissingMode, setIsMissingMode] = useState(false);
+  // 'mark' adds more missing items (also while some are already missing);
+  // 'resolve' clears existing ones
+  const [missingMode, setMissingMode] = useState<null | 'mark' | 'resolve'>(null);
+  const isMissingMode = missingMode !== null;
   const [missingItemStates, setMissingItemStates] = useState<Record<string, { selected: boolean; quantity: number }>>({});
   const [missingReason, setMissingReason] = useState('');
 
@@ -481,11 +484,14 @@ export function OrderDetailPage() {
   };
 
   // Missing products helpers
-  const isResolvingMode = isMissingMode && hasMissingItems;
+  const isResolvingMode = missingMode === 'resolve';
+  // Units that can still be marked missing: same rule the backend enforces
+  const markableQty = (item: { quantity: number; refundedQuantity?: number; missingQuantity?: number }) =>
+    Math.max(0, item.quantity - (item.refundedQuantity || 0) - (item.missingQuantity || 0));
 
-  const handleStartMissing = () => {
+  const handleStartMissing = (mode: 'mark' | 'resolve') => {
     const states: Record<string, { selected: boolean; quantity: number }> = {};
-    if (hasMissingItems) {
+    if (mode === 'resolve') {
       // Resolve mode: pre-populate with currently missing items
       order?.items?.forEach((item) => {
         const mq = item.missingQuantity || 0;
@@ -499,11 +505,11 @@ export function OrderDetailPage() {
     }
     setMissingItemStates(states);
     setMissingReason('');
-    setIsMissingMode(true);
+    setMissingMode(mode);
   };
 
   const handleCancelMissing = () => {
-    setIsMissingMode(false);
+    setMissingMode(null);
   };
 
   const handleToggleMissingItem = (itemId: string, checked: boolean) => {
@@ -513,7 +519,7 @@ export function OrderDetailPage() {
       if (checked) {
         const qty = isResolvingMode
           ? (item.missingQuantity || 0)
-          : item.quantity - (item.missingQuantity || 0);
+          : markableQty(item);
         return { ...prev, [itemId]: { selected: true, quantity: Math.max(1, qty) } };
       }
       return { ...prev, [itemId]: { selected: false, quantity: 0 } };
@@ -525,7 +531,7 @@ export function OrderDetailPage() {
     if (!item) return;
     const maxQty = isResolvingMode
       ? (item.missingQuantity || 0)
-      : item.quantity - (item.missingQuantity || 0);
+      : markableQty(item);
     const clamped = Math.max(0, Math.min(qty, maxQty));
     setMissingItemStates((prev) => ({
       ...prev,
@@ -546,12 +552,12 @@ export function OrderDetailPage() {
     if (isResolvingMode) {
       resolveMissingMutation.mutate(
         { id: orderId, data: { items, reason: missingReason.trim() || undefined } },
-        { onSuccess: () => setIsMissingMode(false) }
+        { onSuccess: () => setMissingMode(null) }
       );
     } else {
       markMissingMutation.mutate(
         { id: orderId, data: { items, reason: missingReason.trim() || undefined } },
-        { onSuccess: () => setIsMissingMode(false) }
+        { onSuccess: () => setMissingMode(null) }
       );
     }
   };
@@ -637,11 +643,22 @@ export function OrderDetailPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleStartMissing}
+              onClick={() => handleStartMissing('mark')}
               className="text-orange-600 hover:text-orange-700"
             >
               <AlertTriangle className="size-4 mr-2" />
-              {hasMissingItems ? 'Resolve Missing' : 'Missing Products'}
+              {hasMissingItems ? 'Add Missing' : 'Missing Products'}
+            </Button>
+          )}
+          {!isRefunding && !isMissingMode && hasMissingItems && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleStartMissing('resolve')}
+              className="text-orange-600 hover:text-orange-700"
+            >
+              <AlertTriangle className="size-4 mr-2" />
+              Resolve Missing
             </Button>
           )}
           {!isRefunding && !isMissingMode && (
@@ -721,7 +738,7 @@ export function OrderDetailPage() {
                 ))}
             </div>
             <p className="text-xs text-orange-600 dark:text-orange-500">
-              Use the <strong>Resolve Missing</strong> button to restock items or swap variants, then move this order back to processing.
+              Use <strong>Add Missing</strong> to flag more items, or <strong>Resolve Missing</strong> to restock items or swap variants, then move this order back to processing.
             </p>
           </div>
         </div>
@@ -957,8 +974,8 @@ export function OrderDetailPage() {
                               const ms = missingItemStates[item.id];
                               const maxQty = isResolvingMode
                                 ? (item.missingQuantity || 0)
-                                : item.quantity - (item.missingQuantity || 0);
-                              const isFullyMissing = !isResolvingMode && (item.missingQuantity || 0) >= item.quantity;
+                                : markableQty(item);
+                              const isFullyMissing = !isResolvingMode && maxQty <= 0;
                               return (
                                 <div className={`grid grid-cols-[auto_1fr_80px_100px] gap-2 items-center ${isFullyMissing ? 'opacity-50' : ''}`}>
                                   <Checkbox
@@ -1225,8 +1242,8 @@ export function OrderDetailPage() {
                                   const ms = missingItemStates[item.id];
                                   const maxQty = isResolvingMode
                                     ? (item.missingQuantity || 0)
-                                    : item.quantity - (item.missingQuantity || 0);
-                                  const isFullyMissing = !isResolvingMode && (item.missingQuantity || 0) >= item.quantity;
+                                    : markableQty(item);
+                                  const isFullyMissing = !isResolvingMode && maxQty <= 0;
                                   return (
                                     <div className={`grid grid-cols-[auto_1fr_80px_100px] gap-2 items-center ${isFullyMissing ? 'opacity-50' : ''}`}>
                                       <Checkbox
