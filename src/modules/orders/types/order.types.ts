@@ -209,6 +209,68 @@ export interface OrderInventoryUser {
   position?: string;
 }
 
+// Payment / inventory / confirmation e-mail tracking (payment-safety remediation)
+
+// Canonical payment status of an order. The backend may still return legacy
+// values on old orders: COMPLETED (= PAID), ATTEMPTING (= PROCESSING) and
+// DECLINED (= FAILED). null = legacy/unknown.
+export type PaymentStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'PAID'
+  | 'FAILED'
+  | 'NEEDS_REVIEW'
+  | 'REFUNDED';
+
+export type LegacyPaymentStatus = 'COMPLETED' | 'ATTEMPTING' | 'DECLINED';
+
+// FAILED = paid but the stock reservation failed (backend retries every 10 min).
+// OVERSOLD = reserved, but it took available stock below zero.
+// null = legacy order, created before this tracking existed.
+export type InventoryStatus = 'PENDING' | 'RESERVED' | 'OVERSOLD' | 'FAILED' | 'RELEASED';
+
+export type ConfirmationEmailStatus = 'PENDING' | 'SENDING' | 'SENT' | 'FAILED';
+
+export type PaymentAttemptMethod = 'CARD' | 'LINK';
+
+export type PaymentAttemptStatus =
+  | 'CREATED'
+  | 'PROCESSING'
+  | 'PAID'
+  | 'FAILED'
+  | 'SUPERSEDED'
+  | 'NEEDS_REVIEW';
+
+// One attempt to collect payment for an order. A NEEDS_REVIEW attempt whose
+// lastError starts with 'DUPLICATE CHARGE' is a second real charge that staff
+// must refund from the Square Dashboard.
+export interface PaymentAttempt {
+  id: string;
+  method: PaymentAttemptMethod;
+  status: PaymentAttemptStatus;
+  squareOrderId: string | null;
+  squarePaymentId: string | null;
+  amountCents: number;
+  currency: string;
+  lastError: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type RefundAttemptStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'UNKNOWN';
+
+export interface RefundAttempt {
+  id: string;
+  status: RefundAttemptStatus;
+  amountCents: number;
+  currency: string;
+  squareRefundId: string | null;
+  squareStatus: string | null;
+  reason: string | null;
+  lastError: string | null;
+  createdAt: string;
+}
+
 // Order Interface
 export interface Order {
   id: string;
@@ -243,8 +305,15 @@ export interface Order {
   rushRefunded: boolean;
   totalRefunded: number;
   shippingRefunded: boolean;
-  paymentStatus: string | null;
+  paymentStatus: PaymentStatus | LegacyPaymentStatus | null;
   paymentId: string | null;
+  // Optional: absent when talking to a backend without payment-safety tracking.
+  inventoryStatus?: InventoryStatus | null;
+  inventoryError?: string | null;
+  confirmationEmailStatus?: ConfirmationEmailStatus | null;
+  confirmationEmailAttempts?: number;
+  confirmationEmailLastError?: string | null;
+  confirmationEmailSentAt?: string | null;
   createdAt: string;
   updatedAt: string;
   items?: OrderItem[];
@@ -253,6 +322,9 @@ export interface Order {
   customerUser?: OrderCustomerUser | null;
   assignedInventoryUser?: OrderInventoryUser | null;
   statusHistory?: OrderStatusHistory[];
+  // Only present on the order detail endpoint
+  paymentAttempts?: PaymentAttempt[];
+  refundAttempts?: RefundAttempt[];
   _count?: {
     items: number;
     statusHistory: number;
@@ -374,6 +446,8 @@ export interface OrderFilterParams {
   status?: OrderStatus;
   statuses?: OrderStatus[];
   isRushOrder?: boolean;
+  // Only orders whose payment, inventory reservation or confirmation e-mail needs attention
+  hasException?: boolean;
   clubId?: string;
   customerUserId?: string;
   assignedInventoryUserId?: string;

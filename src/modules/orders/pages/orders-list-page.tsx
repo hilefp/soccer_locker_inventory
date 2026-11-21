@@ -22,6 +22,8 @@ export function OrdersListPage() {
   // "RUSH" is a pseudo-status in the filter dropdown: it maps to the
   // isRushOrder query param instead of a real order status.
   const statusFilter = (searchParams.get('status') as OrderStatusFilter | null) || undefined;
+  // Orders whose payment, stock reservation or confirmation e-mail needs attention.
+  const exceptionsOnly = searchParams.get('exceptions') === '1';
 
   const filters = useMemo<OrderFilterParams>(
     () => ({
@@ -30,13 +32,14 @@ export function OrdersListPage() {
       search: searchParams.get('search') || undefined,
       status: statusFilter === 'RUSH' ? undefined : (statusFilter as OrderStatus | undefined),
       isRushOrder: statusFilter === 'RUSH' ? true : undefined,
+      hasException: exceptionsOnly || undefined,
       clubId: searchParams.get('clubId') || undefined,
       startDate: searchParams.get('startDate') || undefined,
       endDate: searchParams.get('endDate') || undefined,
       sortBy: 'createdAt',
       sortOrder: 'desc',
     }),
-    [searchParams, statusFilter],
+    [searchParams, statusFilter, exceptionsOnly],
   );
 
   const sortId = searchParams.get('sort') || DEFAULT_SORT_ID;
@@ -89,6 +92,10 @@ export function OrdersListPage() {
     updateParams({ status: status ?? null, page: null });
   };
 
+  const handleExceptionFilterChange = (hasException: boolean) => {
+    updateParams({ exceptions: hasException ? '1' : null, page: null });
+  };
+
   const handleClubFilterChange = (clubId: string | undefined) => {
     updateParams({ clubId: clubId ?? null, page: null });
   };
@@ -131,6 +138,7 @@ export function OrdersListPage() {
         pageSize={filters.limit}
         search={filters.search}
         status={statusFilter}
+        hasException={exceptionsOnly}
         clubId={filters.clubId}
         startDate={filters.startDate}
         endDate={filters.endDate}
@@ -140,6 +148,7 @@ export function OrdersListPage() {
         onPageSizeChange={handlePageSizeChange}
         onSearchChange={handleSearchChange}
         onStatusFilterChange={handleStatusFilterChange}
+        onExceptionFilterChange={handleExceptionFilterChange}
         onClubFilterChange={handleClubFilterChange}
         onDateRangeChange={handleDateRangeChange}
         onSortChange={handleSortChange}
