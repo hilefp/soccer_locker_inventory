@@ -176,6 +176,11 @@ export const MENU_SIDEBAR: MenuConfig = [
         title: 'Customers',
         path: '/shop/customers',
       },
+      {
+        title: 'Email Campaigns',
+        path: '/shop/email-campaigns',
+        permissions: ['users:manage'],
+      },
     ],
   },
   {

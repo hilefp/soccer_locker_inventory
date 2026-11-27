@@ -1,14 +1,16 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Download, Users } from 'lucide-react';
+import { Download, Mail, Users } from 'lucide-react';
 import { CustomerListTable } from '../components/customer-list';
 import { useCustomers } from '@/modules/shop/hooks/use-customers';
 import { useExportCustomers } from '@/modules/shop/hooks/use-export-customers';
 import { useDocumentTitle } from '@/shared/hooks/use-document-title';
 import { Button } from '@/shared/components/ui/button';
 import { CustomerFilterParams, CustomerStatus } from '@/modules/shop/types/customer.type';
+import { EmailCampaignDialog } from '@/modules/shop/components/email-campaign-dialog';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
 
 const DEFAULT_PAGE_SIZE = 10;
 const DEFAULT_SORT_ID = 'created';
@@ -37,6 +39,9 @@ export function CustomerListPage() {
 
   const { data, isLoading, error } = useCustomers(filters);
   const { exportCustomers, isExporting } = useExportCustomers();
+  const { hasPermission } = useAuth();
+  const canEmailCustomers = hasPermission('users:manage');
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   // Updates the URL in place so filter changes don't pile up in the history stack.
   const updateParams = useCallback(
@@ -106,15 +111,23 @@ export function CustomerListPage() {
           </span>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={() => exportCustomers(filters)}
-          disabled={isExporting || totalCustomers === 0}
-          className="gap-2"
-        >
-          <Download className="h-4 w-4" />
-          {isExporting ? 'Exporting…' : 'Export'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {canEmailCustomers && (
+            <Button variant="outline" onClick={() => setEmailDialogOpen(true)} className="gap-2">
+              <Mail className="h-4 w-4" />
+              Email customers
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => exportCustomers(filters)}
+            disabled={isExporting || totalCustomers === 0}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {isExporting ? 'Exporting…' : 'Export'}
+          </Button>
+        </div>
       </div>
 
       <CustomerListTable
@@ -134,6 +147,10 @@ export function CustomerListPage() {
         onStatusFilterChange={handleStatusFilterChange}
         onSortChange={handleSortChange}
       />
+
+      {canEmailCustomers && (
+        <EmailCampaignDialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen} />
+      )}
     </div>
   );
 }
